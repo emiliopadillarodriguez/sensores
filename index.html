@@ -1,168 +1,113 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Sensores – Depósito ACS</title>
+  <meta charset="UTF-8" />
+  <title>Sensores ACS</title>
 
-  <!-- Chart.js + plugins -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
 
   <style>
     body {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family: Arial, sans-serif;
       margin: 20px;
-      background: #fafafa;
     }
-    h1 {
-      margin-bottom: 5px;
-    }
-    .info {
-      color: #555;
-      font-size: 14px;
-      margin-bottom: 20px;
-    }
-    button {
-      padding: 6px 12px;
-      cursor: pointer;
-    }
-    #container {
-      max-width: 1000px;
+    canvas {
+      max-width: 100%;
+      height: 80vh;
     }
   </style>
 </head>
-
 <body>
-  <div id="container">
-    <h1>Temperatura Depósito ACS</h1>
-    <div class="info">
-      Datos históricos cada 15 minutos · Zoom con rueda · Pan arrastrando
-    </div>
 
-    <div style="margin-bottom:10px;">
-      <button onclick="resetZoom()">Reset zoom</button>
-    </div>
+<h1>Sensores ACS</h1>
+<p>
+  Histórico automático cada 15 minutos.<br>
+  Zoom con rueda · Pan arrastrando · Click en leyenda para ocultar/mostrar sensores
+</p>
 
-    <canvas id="chartDeposito"></canvas>
-  </div>
+<button onclick="resetZoom()">Reset zoom</button>
 
-  <script>
-    let chart;
+<canvas id="chart"></canvas>
 
-    async function fetchTxt(url) {
-      const res = await fetch(url + "?t=" + Date.now()); // evita caché
-      if (!res.ok) throw new Error("No se puede leer " + url);
-      return await res.text();
-    }
+<script>
+async function loadTextFile(url) {
+  const res = await fetch(url);
+  const text = await res.text();
+  return text
+    .split("\n")
+    .map(l => l.trim())
+    .filter(l => l && !l.endsWith("NOT_FOUND"))
+    .map(l => {
+      const [ts, val] = l.split(";");
+      return { x: new Date(ts), y: parseFloat(val) };
+    });
+}
 
-    function parseDepositoTxt(text) {
-      const points = [];
-      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+async function init() {
+  const manifest = await fetch("data/acs_manifest.json").then(r => r.json());
 
-      for (const line of lines) {
-        const parts = line.split(";");
-        if (parts.length < 2) continue;
+  const datasets = [];
 
-        const ts = parts[0].trim();
-        const val = parts[1].trim();
+  for (const sensor of manifest.acs) {
+    const data = await loadTextFile("data/" + sensor.file);
 
-        if (val === "NOT_FOUND") continue;
+    if (data.length === 0) continue;
 
-        const y = Number(val);
-        if (Number.isNaN(y)) continue;
+    datasets.push({
+      label: `${sensor.item} – ${sensor.label}`,
+      data,
+      borderWidth: 2,
+      pointRadius: 2,
+      tension: 0.2
+    });
+  }
 
-        const x = new Date(ts);
-        if (isNaN(x.getTime())) continue;
+  const ctx = document.getElementById("chart");
 
-        points.push({ x, y });
-      }
-      return points;
-    }
-
-    function buildChart(points) {
-      const ctx = document.getElementById("chartDeposito").getContext("2d");
-
-      chart = new Chart(ctx, {
-        type: "line",
-        data: {
-          datasets: [{
-            label: "Tª Depósito ACS (°C)",
-            data: points,
-            borderWidth: 2,
-            tension: 0.2,
-            pointRadius: 3
-          }]
+  window.chart = new Chart(ctx, {
+    type: "line",
+    data: { datasets },
+    options: {
+      parsing: false,
+      responsive: true,
+      interaction: {
+        mode: "nearest",
+        intersect: false
+      },
+      scales: {
+        x: {
+          type: "time",
+          time: { tooltipFormat: "yyyy-MM-dd HH:mm" },
+          title: { display: true, text: "Fecha y hora" }
         },
-        options: {
-          responsive: true,
-          parsing: false,
-          interaction: {
-            mode: "nearest",
-            intersect: false
+        y: {
+          title: { display: true, text: "Temperatura (°C)" }
+        }
+      },
+      plugins: {
+        zoom: {
+          zoom: {
+            wheel: { enabled: true },
+            pinch: { enabled: true },
+            mode: "x"
           },
-          scales: {
-            x: {
-              type: "time",
-              title: {
-                display: true,
-                text: "Fecha y hora"
-              }
-            },
-            y: {
-              title: {
-                display: true,
-                text: "Temperatura (°C)"
-              }
-            }
-          },
-          plugins: {
-            tooltip: {
-              enabled: true
-            },
-            zoom: {
-              pan: {
-                enabled: true,
-                mode: "x"
-              },
-              zoom: {
-                wheel: {
-                  enabled: true
-                },
-                pinch: {
-                  enabled: true
-                },
-                mode: "x"
-              }
-            }
+          pan: {
+            enabled: true,
+            mode: "x"
           }
         }
-      });
-    }
-
-    async function loadDepositoChart() {
-      try {
-        const txt = await fetchTxt("data/deposito_acs.txt");
-        const points = parseDepositoTxt(txt);
-
-        if (!chart) {
-          buildChart(points);
-        } else {
-          chart.data.datasets[0].data = points;
-          chart.update();
-        }
-      } catch (e) {
-        console.log(e);
       }
     }
+  });
+}
 
-    function resetZoom() {
-      if (chart) chart.resetZoom();
-    }
+function resetZoom() {
+  chart.resetZoom();
+}
 
-    // Carga inicial + refresco visual
-    loadDepositoChart();
-    setInterval(loadDepositoChart, 30000);
-  </script>
+init();
+</script>
+
 </body>
 </html>
