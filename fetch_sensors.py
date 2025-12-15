@@ -15,10 +15,11 @@ OUT_DIR = "data"
 OUT_JSON = os.path.join(OUT_DIR, "latest.json")
 OUT_TXT = os.path.join(OUT_DIR, "deposito_acs.txt")
 
-TARGET_LABELS = {"Tª Depósito ACS", "TÂª DepÃ³sito ACS"}
-
 
 def parse_sensor_table(html: str):
+    """
+    Busca la tabla Sensor Overview (Item | Label | Value | Units) y extrae filas.
+    """
     soup = BeautifulSoup(html, "html.parser")
 
     tables = soup.find_all("table")
@@ -63,9 +64,10 @@ def main():
     seen = set()
     sensors = []
     for s in combined:
-        if s["label"] in seen:
+        lbl = s.get("label", "")
+        if lbl in seen:
             continue
-        seen.add(s["label"])
+        seen.add(lbl)
         sensors.append(s)
 
     os.makedirs(OUT_DIR, exist_ok=True)
@@ -75,38 +77,26 @@ def main():
     # Guardar JSON general
     with open(OUT_JSON, "w", encoding="utf-8") as f:
         json.dump(
-            {
-                "timestamp_utc": now_utc,
-                "sensors": sensors,
-            },
+            {"timestamp_utc": now_utc, "sensors": sensors},
             f,
             ensure_ascii=False,
             indent=2,
         )
 
-# 👉 Guardar Depósito ACS en TXT (crear SIEMPRE el fichero)
-value_to_save = "NOT_FOUND"
+    # Guardar en TXT el valor de “Depósito ACS” (robusto)
+    value_to_save = "NOT_FOUND"
+    for s in sensors:
+        lbl = (s.get("label") or "").lower()
+        # "depos" cubre deposito / depósito / depÃ³sito y similares
+        if ("acs" in lbl) and ("depos" in lbl):
+            value_to_save = s.get("value", "")
+            break
 
-for s in sensors:
-    lbl = (s.get("label") or "").lower()
-
-    # "depos" cubre: deposito / depósito / depÃ³sito
-    if ("acs" in lbl) and ("depos" in lbl):
-        value_to_save = s.get("value", "")
-        break
-
-# Siempre escribe una línea (así el archivo siempre existe)
-with open(OUT_TXT, "a", encoding="utf-8") as f:
-    f.write(f"{now_utc};{value_to_save}\n")
-
-
-# (Opcional pero recomendado) si no lo encuentra, escribe NOT_FOUND para que el TXT exista siempre
-if not found:
+    # Siempre escribe una línea para que el archivo exista
     with open(OUT_TXT, "a", encoding="utf-8") as f:
-        f.write(f"{now_utc};NOT_FOUND\n")
+        f.write(f"{now_utc};{value_to_save}\n")
 
-
-    print("OK: datos actualizados")
+    print(f"OK: {len(sensors)} sensores. deposito_acs={value_to_save}")
 
 
 if __name__ == "__main__":
