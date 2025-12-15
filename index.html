@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sensores</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    h1 { margin: 0 0 8px; }
+    .meta { margin: 10px 0 16px; color: #444; }
+    table { border-collapse: collapse; width: 100%; max-width: 900px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f5f5f5; }
+    .small { font-size: 12px; color: #666; margin-top: 6px; }
+    button { padding: 8px 12px; cursor: pointer; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <h1>Sensor Overview</h1>
+  <div class="meta">
+    Última actualización (UTC): <strong id="ts">—</strong>
+    <div class="small">La web se refresca sola cada 30 s (solo visual). Los datos se actualizan cada 15 min en GitHub.</div>
+  </div>
+
+  <div>
+    <button onclick="loadLatest()">Refrescar</button>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Label</th>
+        <th>Value</th>
+        <th>Units</th>
+      </tr>
+    </thead>
+    <tbody id="tbody">
+      <tr><td colspan="3">Cargando…</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function loadLatest() {
+      const tbody = document.getElementById("tbody");
+      tbody.innerHTML = `<tr><td colspan="3">Cargando…</td></tr>`;
+
+      // Cache-buster para evitar que el navegador use datos antiguos
+      const res = await fetch("data/latest.json?t=" + Date.now());
+      if (!res.ok) {
+        tbody.innerHTML = `<tr><td colspan="3">Aún no hay datos. En unos minutos aparecerán.</td></tr>`;
+        return;
+      }
+
+      const data = await res.json();
+      document.getElementById("ts").textContent = data.timestamp_utc ?? "—";
+
+      tbody.innerHTML = "";
+      const sensors = data.sensors ?? [];
+      if (sensors.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3">Sin sensores en el JSON.</td></tr>`;
+        return;
+      }
+
+      for (const s of sensors) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(s.label ?? "")}</td>
+          <td>${escapeHtml(s.value ?? "")}</td>
+          <td>${escapeHtml(s.units ?? "")}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    loadLatest();
+    setInterval(loadLatest, 30000);
+  </script>
+</body>
+</html>
