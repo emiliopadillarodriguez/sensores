@@ -84,15 +84,21 @@ def main():
             indent=2,
         )
 
-  # 👉 Guardar SOLO Depósito ACS en TXT (acepta label correcto y el “raro”)
-found = False
+# 👉 Guardar Depósito ACS en TXT (crear SIEMPRE el fichero)
+value_to_save = "NOT_FOUND"
+
 for s in sensors:
-    label = (s.get("label") or "").strip()
-    if label in TARGET_LABELS:
-        with open(OUT_TXT, "a", encoding="utf-8") as f:
-            f.write(f"{now_utc};{s.get('value','')}\n")
-        found = True
+    lbl = (s.get("label") or "").lower()
+
+    # "depos" cubre: deposito / depósito / depÃ³sito
+    if ("acs" in lbl) and ("depos" in lbl):
+        value_to_save = s.get("value", "")
         break
+
+# Siempre escribe una línea (así el archivo siempre existe)
+with open(OUT_TXT, "a", encoding="utf-8") as f:
+    f.write(f"{now_utc};{value_to_save}\n")
+
 
 # (Opcional pero recomendado) si no lo encuentra, escribe NOT_FOUND para que el TXT exista siempre
 if not found:
