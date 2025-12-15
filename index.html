@@ -84,5 +84,123 @@
     loadLatest();
     setInterval(loadLatest, 30000);
   </script>
+  <!-- Chart.js + zoom/pan -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+
+<div style="max-width: 1000px; margin-top: 24px;">
+  <h2 style="margin: 0 0 10px;">Gráfica interactiva: Depósito ACS (S9)</h2>
+  <div style="margin-bottom: 10px;">
+    <button onclick="resetZoom()">Reset zoom</button>
+    <span style="font-size:12px;color:#666;margin-left:8px;">
+      Zoom: rueda del ratón · Pan: arrastrar
+    </span>
+  </div>
+  <canvas id="chartDeposito"></canvas>
+</div>
+
+<script>
+  let chart;
+
+  async function fetchTxt(url) {
+    const res = await fetch(url + "?t=" + Date.now()); // evita caché
+    if (!res.ok) throw new Error("No puedo leer " + url);
+    return await res.text();
+  }
+
+  function parseDepositoTxt(text) {
+    // Formato: ISO;valor  (valor puede ser NOT_FOUND)
+    const points = [];
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+    for (const line of lines) {
+      const parts = line.split(";");
+      if (parts.length < 2) continue;
+
+      const ts = parts[0].trim();
+      const val = parts[1].trim();
+
+      if (val === "NOT_FOUND") continue;
+
+      const y = Number(val);
+      if (Number.isNaN(y)) continue;
+
+      const x = new Date(ts); // ISO 8601
+      if (isNaN(x.getTime())) continue;
+
+      points.push({ x, y });
+    }
+    return points;
+  }
+
+  function buildChart(points) {
+    const ctx = document.getElementById("chartDeposito").getContext("2d");
+
+    chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        datasets: [{
+          label: "Tª Depósito ACS",
+          data: points,
+          tension: 0.2,
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        parsing: false,
+        interaction: { mode: "nearest", intersect: false },
+        scales: {
+          x: {
+            type: "time",
+            time: { tooltipFormat: "yyyy-MM-dd HH:mm:ss" },
+            title: { display: true, text: "Fecha/hora" }
+          },
+          y: {
+            title: { display: true, text: "°C" }
+          }
+        },
+        plugins: {
+          tooltip: { enabled: true },
+          zoom: {
+            pan: { enabled: true, mode: "x" },
+            zoom: {
+              wheel: { enabled: true },
+              pinch: { enabled: true },
+              mode: "x"
+            }
+          }
+        }
+      }
+    });
+  }
+
+  async function loadDepositoChart() {
+    try {
+      const txt = await fetchTxt("data/deposito_acs.txt");
+      const points = parseDepositoTxt(txt);
+
+      if (!chart) {
+        buildChart(points);
+      } else {
+        chart.data.datasets[0].data = points;
+        chart.update();
+      }
+    } catch (e) {
+      console.log(e);
+      // si aún no existe el TXT, no rompe la web
+    }
+  }
+
+  function resetZoom() {
+    if (chart) chart.resetZoom();
+  }
+
+  // Carga inicial + refresco periódico (solo visual)
+  loadDepositoChart();
+  setInterval(loadDepositoChart, 30000);
+</script>
+
 </body>
 </html>
