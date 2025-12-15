@@ -12,17 +12,15 @@ URLS = [
 ]
 
 OUT_DIR = "data"
-OUT_FILE = os.path.join(OUT_DIR, "latest.json")
+OUT_JSON = os.path.join(OUT_DIR, "latest.json")
+OUT_TXT = os.path.join(OUT_DIR, "deposito_acs.txt")
+
+TARGET_LABEL = "Tª Depósito ACS"
 
 
 def parse_sensor_table(html: str):
-    """
-    Intenta encontrar la tabla con columnas: Item | Label | Value | Units | ...
-    y extrae label/value/units.
-    """
     soup = BeautifulSoup(html, "html.parser")
 
-    # Busca una tabla que contenga esos encabezados
     tables = soup.find_all("table")
     target = None
     for t in tables:
@@ -36,15 +34,18 @@ def parse_sensor_table(html: str):
 
     rows = target.find_all("tr")
     out = []
-    for r in rows[1:]:  # salta cabecera
+    for r in rows[1:]:
         cols = [c.get_text(" ", strip=True) for c in r.find_all(["td", "th"])]
         if len(cols) < 4:
             continue
+
         label = cols[1].strip()
         value = cols[2].strip()
         units = cols[3].strip()
+
         if label:
             out.append({"label": label, "value": value, "units": units})
+
     return out
 
 
@@ -58,7 +59,7 @@ def main():
         r.raise_for_status()
         combined.extend(parse_sensor_table(r.text))
 
-    # Quita duplicados por label
+    # Quitar duplicados por label
     seen = set()
     sensors = []
     for s in combined:
@@ -69,15 +70,28 @@ def main():
 
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    payload = {
-        "timestamp_utc": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "sensors": sensors,
-    }
+    now_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
-    with open(OUT_FILE, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
+    # Guardar JSON general
+    with open(OUT_JSON, "w", encoding="utf-8") as f:
+        json.dump(
+            {
+                "timestamp_utc": now_utc,
+                "sensors": sensors,
+            },
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
 
-    print(f"OK: {OUT_FILE} -> {len(sensors)} sensores")
+    # 👉 Guardar SOLO Tª Depósito ACS en TXT
+    for s in sensors:
+        if s["label"] == TARGET_LABEL:
+            with open(OUT_TXT, "a", encoding="utf-8") as f:
+                f.write(f"{now_utc};{s['value']}\n")
+            break
+
+    print("OK: datos actualizados")
 
 
 if __name__ == "__main__":
