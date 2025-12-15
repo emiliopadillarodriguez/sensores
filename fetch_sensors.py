@@ -14,9 +14,15 @@ URLS = [
 
 OUT_DIR = "data"
 OUT_JSON = os.path.join(OUT_DIR, "latest.json")
+
+# Histórico “clásico” solo para Depósito ACS (S9)
 OUT_TXT_DEPOSITO = os.path.join(OUT_DIR, "deposito_acs.txt")
 
+# Nuevos ficheros para ACS (varias series)
 OUT_ACS_MANIFEST = os.path.join(OUT_DIR, "acs_manifest.json")
+
+# Lista de sensores “ACS relacionados” por Item
+ACS_ITEMS = {"S2", "S4", "S8", "S9", "S10", "S13", "S15"}
 
 
 def slugify(text: str) -> str:
@@ -27,6 +33,9 @@ def slugify(text: str) -> str:
 
 
 def parse_sensor_table(html: str):
+    """
+    Busca una tabla con columnas Item | Label | Value | Units y extrae filas.
+    """
     soup = BeautifulSoup(html, "html.parser")
 
     tables = soup.find_all("table")
@@ -68,7 +77,7 @@ def main():
         r.raise_for_status()
         combined.extend(parse_sensor_table(r.text))
 
-    # Quitar duplicados por label
+    # Quitar duplicados por label (si aparece en varias páginas)
     seen = set()
     sensors = []
     for s in combined:
@@ -82,7 +91,7 @@ def main():
 
     now_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
-    # 1) latest.json (foto actual)
+    # 1) Guardar foto completa en JSON
     with open(OUT_JSON, "w", encoding="utf-8") as f:
         json.dump(
             {"timestamp_utc": now_utc, "sensors": sensors},
@@ -91,7 +100,7 @@ def main():
             indent=2,
         )
 
-    # 2) deposito_acs.txt por item S9 (como ya tenías)
+    # 2) Guardar histórico clásico Depósito ACS por Item=S9
     deposito_val = "NOT_FOUND"
     for s in sensors:
         if (s.get("item") or "").strip().upper() == "S9":
@@ -101,16 +110,17 @@ def main():
     with open(OUT_TXT_DEPOSITO, "a", encoding="utf-8") as f:
         f.write(f"{now_utc};{deposito_val}\n")
 
-    # 3) Históricos de TODOS los sensores ACS + manifest
+    # 3) Guardar históricos de todos los sensores de ACS_ITEMS + manifest
     acs_entries = []
-    for s in sensors:
-        label = s.get("label", "")
-        value = (s.get("value") or "").strip() or "NOT_FOUND"
-        units = s.get("units", "")
-        item = s.get("item", "")
 
-        if "acs" not in label.lower():
+    for s in sensors:
+        item = (s.get("item") or "").strip().upper()
+        if item not in ACS_ITEMS:
             continue
+
+        label = s.get("label", "")
+        units = s.get("units", "")
+        value = (s.get("value") or "").strip() or "NOT_FOUND"
 
         file_name = f"acs_{slugify(item)}_{slugify(label)}.txt"
         file_path = os.path.join(OUT_DIR, file_name)
@@ -133,7 +143,7 @@ def main():
             indent=2,
         )
 
-    print(f"OK: {len(sensors)} sensores. ACS: {len(acs_entries)}")
+    print(f"OK: {len(sensors)} sensores totales. ACS seleccionados: {len(acs_entries)}")
 
 
 if __name__ == "__main__":
