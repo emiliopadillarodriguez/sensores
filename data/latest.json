@@ -1,162 +1,194 @@
 {
-  "timestamp_utc": "2025-12-15T21:53:22+00:00",
+  "timestamp_utc": "2025-12-15T22:06:26+00:00",
   "sensors": [
     {
+      "item": "",
       "label": "Login Alarms Time Zones Modules GraphIQs",
       "value": "Login",
       "units": "Alarms"
     },
     {
+      "item": "Login",
       "label": "Alarms",
       "value": "Time Zones",
       "units": "Modules"
     },
     {
+      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones Item Label Value Units Graph Alarm S1 TÂª Exterior 5.75 ÂºC Value - 15 Minutes (P1) No Alarm S2 TÂª Imp. Cald. 1 ACS 23.24 DegC Value - 15 Minutes (P2) No Alarm S3 TÂª Imp. Cald. 2 Calef. 70.00 DegC Value - 15 Minutes (P3) No Alarm S4 TÂª Ret. Cald. 1 ACS 64.92 DegC Value - 15 Minutes (P4) No Alarm S5 TÂª Ret. Cald. 2 Calef. 67.87 DegC Value - 15 Minutes (P5) No Alarm S7 TÂª Ida CalefacciÃ³n 66.70 DegC Value - 15 Minutes (P7) Value - 15 Minutes (P11) No Alarm S8 TÂª Ida Primario ACS 69.84 DegC Value - 15 Minutes (P8) No Alarm S9 TÂª DepÃ³sito ACS 52.17 DegC Value - 15 Minutes (P9) No Alarm S10 TÂª Consumo ACS 52.30 DegC Value - 10 Minutes (P10) No Alarm S12 EnergÃ­a C. Calefaccion 351400000.00 WH No Alarm",
       "label": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones",
       "value": "Digital Inputs",
       "units": "Drivers"
     },
     {
+      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones",
       "label": "Digital Inputs",
       "value": "Drivers",
       "units": "Knobs"
     },
     {
+      "item": "Item",
       "label": "Label",
       "value": "Value",
       "units": "Units"
     },
     {
+      "item": "S1",
       "label": "TÂª Exterior",
-      "value": "5.76",
+      "value": "5.75",
       "units": "ÂºC"
     },
     {
+      "item": "S2",
       "label": "TÂª Imp. Cald. 1 ACS",
-      "value": "23.32",
+      "value": "23.24",
       "units": "DegC"
     },
     {
+      "item": "S3",
       "label": "TÂª Imp. Cald. 2 Calef.",
-      "value": "68.83",
+      "value": "70.00",
       "units": "DegC"
     },
     {
+      "item": "S4",
       "label": "TÂª Ret. Cald. 1 ACS",
-      "value": "63.73",
+      "value": "64.92",
       "units": "DegC"
     },
     {
+      "item": "S5",
       "label": "TÂª Ret. Cald. 2 Calef.",
-      "value": "66.64",
+      "value": "67.87",
       "units": "DegC"
     },
     {
+      "item": "S7",
       "label": "TÂª Ida CalefacciÃ³n",
-      "value": "65.51",
+      "value": "66.70",
       "units": "DegC"
     },
     {
+      "item": "S8",
       "label": "TÂª Ida Primario ACS",
-      "value": "68.64",
+      "value": "69.84",
       "units": "DegC"
     },
     {
+      "item": "S9",
       "label": "TÂª DepÃ³sito ACS",
-      "value": "51.57",
+      "value": "52.17",
       "units": "DegC"
     },
     {
+      "item": "S10",
       "label": "TÂª Consumo ACS",
-      "value": "51.57",
+      "value": "52.30",
       "units": "DegC"
     },
     {
+      "item": "S12",
       "label": "EnergÃ­a C. Calefaccion",
       "value": "351400000.00",
       "units": "WH"
     },
     {
+      "item": "S13",
       "label": "TÂª Retorno ACS",
-      "value": "47.34",
+      "value": "47.82",
       "units": "DegC"
     },
     {
+      "item": "S14",
       "label": "TÂª Retorno CalefacciÃ³n",
-      "value": "67.05",
+      "value": "68.25",
       "units": "DegC"
     },
     {
+      "item": "S15",
       "label": "TÂª Retorno Primario ACS",
-      "value": "64.15",
+      "value": "65.32",
       "units": "DegC"
     },
     {
+      "item": "S16",
       "label": "TÂª Paneles Solares",
-      "value": "7.90",
+      "value": "7.82",
       "units": "DegC"
     },
     {
+      "item": "S17",
       "label": "TÂª Deposito 1 Solar",
-      "value": "13.49",
+      "value": "13.55",
       "units": "DegC"
     },
     {
+      "item": "S18",
       "label": "TÂª Deposito 2 Solar",
-      "value": "17.18",
+      "value": "17.24",
       "units": "DegC"
     },
     {
+      "item": "S19",
       "label": "EnergÃ­a C. Solar",
       "value": "6830000.00",
       "units": "WH"
     },
     {
+      "item": "S20",
       "label": "EnergÃ­a C. ACS",
       "value": "198240000.00",
       "units": "WH"
     },
     {
+      "item": "S21",
       "label": "Volumen C. Calefaccion",
       "value": "202070.00",
       "units": "m3"
     },
     {
+      "item": "S22",
       "label": "Volumen C. Solar",
       "value": "0.00",
       "units": "m3"
     },
     {
+      "item": "S23",
       "label": "Volumen C. ACS",
       "value": "46108.30",
       "units": "m3"
     },
     {
+      "item": "S24",
       "label": "TÂª Imp. C. Calefaccion",
       "value": "61.82",
       "units": "DegC"
     },
     {
+      "item": "S25",
       "label": "TÂª Imp. C. Solar",
       "value": "32.74",
       "units": "DegC"
     },
     {
+      "item": "S26",
       "label": "TÂª Imp. C. ACS",
       "value": "68.75",
       "units": "DegC"
     },
     {
+      "item": "S27",
       "label": "TÂª Dif. C. Calefaccion",
       "value": "2.88",
       "units": "DegC"
     },
     {
+      "item": "S28",
       "label": "TÂª Dif. C. Solar",
       "value": "3.33",
       "units": "DegC"
     },
     {
+      "item": "S29",
       "label": "TÂª Dif. C. ACS",
       "value": "7.73",
       "units": "DegC"
