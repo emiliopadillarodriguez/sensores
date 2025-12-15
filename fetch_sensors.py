@@ -40,12 +40,13 @@ def parse_sensor_table(html: str):
         if len(cols) < 4:
             continue
 
+        item = cols[0].strip()
         label = cols[1].strip()
         value = cols[2].strip()
         units = cols[3].strip()
 
         if label:
-            out.append({"label": label, "value": value, "units": units})
+            out.append({"item": item, "label": label, "value": value, "units": units})
 
     return out
 
@@ -84,13 +85,12 @@ def main():
         )
 
     # Guardar en TXT el valor de “Depósito ACS” (robusto)
-    value_to_save = "NOT_FOUND"
+      value_to_save = "NOT_FOUND"
     for s in sensors:
-        lbl = (s.get("label") or "").lower()
-        # "depos" cubre deposito / depósito / depÃ³sito y similares
-        if ("acs" in lbl) and ("depos" in lbl):
+        if (s.get("item") or "").strip().upper() == "S9":
             value_to_save = s.get("value", "")
             break
+
 
     # Siempre escribe una línea para que el archivo exista
     with open(OUT_TXT, "a", encoding="utf-8") as f:
