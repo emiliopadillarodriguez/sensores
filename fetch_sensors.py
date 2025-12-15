@@ -15,7 +15,7 @@ OUT_DIR = "data"
 OUT_JSON = os.path.join(OUT_DIR, "latest.json")
 OUT_TXT = os.path.join(OUT_DIR, "deposito_acs.txt")
 
-TARGET_LABEL = "Tª Depósito ACS"
+TARGET_LABELS = {"Tª Depósito ACS", "TÂª DepÃ³sito ACS"}
 
 
 def parse_sensor_table(html: str):
