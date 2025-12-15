@@ -137,6 +137,7 @@ def main():
             ensure_ascii=False,
             indent=2,
         )
+print("DEBUG: generando acs_manifest.json y acs_*.txt")
 
     print(f"OK: {len(sensors)} sensores. ACS: {len(acs_entries)}")
 
