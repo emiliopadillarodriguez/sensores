@@ -8,6 +8,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: poll-sensors
+  cancel-in-progress: true
+
 jobs:
   poll:
     runs-on: ubuntu-latest
@@ -29,12 +33,12 @@ jobs:
         run: |
           python fetch_sensors.py
 
-            - name: Commit and push if changed
+      - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Añade los archivos generados (JSON + TXT)
+          # Añade los archivos generados
           git add data/latest.json data/deposito_acs.txt
 
           # Si no hay cambios, salimos
@@ -45,8 +49,8 @@ jobs:
 
           git commit -m "Update sensor data"
 
-          # Trae cambios remotos (si alguien/otro job ha cambiado el repo)
+          # Trae cambios del remoto por si se ha actualizado mientras tanto
           git pull --rebase origin main
 
-          # Ahora sí, empuja
+          # Empuja cambios
           git push origin main
