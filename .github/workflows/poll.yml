@@ -29,17 +29,24 @@ jobs:
         run: |
           python fetch_sensors.py
 
-      - name: Commit and push if changed
+            - name: Commit and push if changed
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add data/latest.json
+          # Añade los archivos generados (JSON + TXT)
+          git add data/latest.json data/deposito_acs.txt
 
+          # Si no hay cambios, salimos
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
           fi
 
           git commit -m "Update sensor data"
-          git push
+
+          # Trae cambios remotos (si alguien/otro job ha cambiado el repo)
+          git pull --rebase origin main
+
+          # Ahora sí, empuja
+          git push origin main
