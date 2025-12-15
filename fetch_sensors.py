@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from datetime import datetime, timezone
 
 import requests
@@ -13,13 +14,18 @@ URLS = [
 
 OUT_DIR = "data"
 OUT_JSON = os.path.join(OUT_DIR, "latest.json")
-OUT_TXT = os.path.join(OUT_DIR, "deposito_acs.txt")
+OUT_ACS_MANIFEST = os.path.join(OUT_DIR, "acs_manifest.json")
+
+
+def slugify(text: str) -> str:
+    # fichero seguro: letras/números/_ y sin espacios raros
+    text = text.strip().lower()
+    text = re.sub(r"\s+", "_", text)
+    text = re.sub(r"[^a-z0-9_]+", "", text)
+    return text[:80] or "sensor"
 
 
 def parse_sensor_table(html: str):
-    """
-    Busca una tabla con columnas Item | Label | Value | Units y extrae filas.
-    """
     soup = BeautifulSoup(html, "html.parser")
 
     tables = soup.find_all("table")
@@ -75,7 +81,7 @@ def main():
 
     now_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
-    # Guardar JSON general
+    # 1) Guardar JSON general (última lectura)
     with open(OUT_JSON, "w", encoding="utf-8") as f:
         json.dump(
             {"timestamp_utc": now_utc, "sensors": sensors},
@@ -84,18 +90,55 @@ def main():
             indent=2,
         )
 
-    # Guardar valor de Depósito ACS por Item=S9
-    value_to_save = "NOT_FOUND"
+    # 2) Guardar históricos por sensor ACS + crear manifest
+    acs_entries = []
+
     for s in sensors:
-        if (s.get("item") or "").strip().upper() == "S9":
-            value_to_save = s.get("value", "")
-            break
+        label = s.get("label", "")
+        units = s.get("units", "")
+        value = (s.get("value") or "").strip()
 
-    # Siempre escribe una línea para que exista el TXT
-    with open(OUT_TXT, "a", encoding="utf-8") as f:
-        f.write(f"{now_utc};{value_to_save}\n")
+        # Filtrar SOLO los sensores con “ACS” en el label
+        if "acs" not in label.lower():
+            continue
 
-    print(f"OK: {len(sensors)} sensores. S9={value_to_save}")
+        # Solo graficamos temperaturas (si quieres incluir otros, lo adaptamos)
+        # Aceptamos DegC, °C, etc.
+        if not any(u in units.lower() for u in ["degc", "°c", "c"]):
+            # lo dejamos en manifest igualmente (por si quieres en el futuro)
+            pass
+
+        # Nombre de archivo por item+label (evita colisiones)
+        file_name = f"acs_{slugify(s.get('item',''))}_{slugify(label)}.txt"
+        file_path = os.path.join(OUT_DIR, file_name)
+
+        # Guardar histórico (si no es numérico, guardamos NOT_FOUND)
+        # (Si tu value ya viene bien, quedará numérico)
+        if value == "" or value.upper() == "NOT_FOUND":
+            line_val = "NOT_FOUND"
+        else:
+            line_val = value
+
+        with open(file_path, "a", encoding="utf-8") as f:
+            f.write(f"{now_utc};{line_val}\n")
+
+        acs_entries.append({
+            "item": s.get("item", ""),
+            "label": label,
+            "units": units,
+            "file": file_name
+        })
+
+    # Manifest para que la web sepa qué ficheros cargar
+    with open(OUT_ACS_MANIFEST, "w", encoding="utf-8") as f:
+        json.dump(
+            {"timestamp_utc": now_utc, "acs": acs_entries},
+            f,
+            ensure_ascii=False,
+            indent=2,
+        )
+
+    print(f"OK: {len(sensors)} sensores. ACS: {len(acs_entries)}")
 
 
 if __name__ == "__main__":
