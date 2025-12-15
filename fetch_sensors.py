@@ -84,12 +84,21 @@ def main():
             indent=2,
         )
 
-    # 👉 Guardar SOLO Tª Depósito ACS en TXT
-    for s in sensors:
-        if "deposito acs" in s["label"].lower() or "depósito acs" in s["label"].lower():
-            with open(OUT_TXT, "a", encoding="utf-8") as f:
-                f.write(f"{now_utc};{s['value']}\n")
-            break
+  # 👉 Guardar SOLO Depósito ACS en TXT (acepta label correcto y el “raro”)
+found = False
+for s in sensors:
+    label = (s.get("label") or "").strip()
+    if label in TARGET_LABELS:
+        with open(OUT_TXT, "a", encoding="utf-8") as f:
+            f.write(f"{now_utc};{s.get('value','')}\n")
+        found = True
+        break
+
+# (Opcional pero recomendado) si no lo encuentra, escribe NOT_FOUND para que el TXT exista siempre
+if not found:
+    with open(OUT_TXT, "a", encoding="utf-8") as f:
+        f.write(f"{now_utc};NOT_FOUND\n")
+
 
     print("OK: datos actualizados")
 
