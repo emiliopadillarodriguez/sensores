@@ -18,7 +18,7 @@ OUT_TXT = os.path.join(OUT_DIR, "deposito_acs.txt")
 
 def parse_sensor_table(html: str):
     """
-    Busca la tabla Sensor Overview (Item | Label | Value | Units) y extrae filas.
+    Busca una tabla con columnas Item | Label | Value | Units y extrae filas.
     """
     soup = BeautifulSoup(html, "html.parser")
 
@@ -33,8 +33,8 @@ def parse_sensor_table(html: str):
     if not target:
         return []
 
-    rows = target.find_all("tr")
     out = []
+    rows = target.find_all("tr")
     for r in rows[1:]:
         cols = [c.get_text(" ", strip=True) for c in r.find_all(["td", "th"])]
         if len(cols) < 4:
@@ -84,19 +84,18 @@ def main():
             indent=2,
         )
 
-    # Guardar en TXT el valor de “Depósito ACS” (robusto)
-      value_to_save = "NOT_FOUND"
+    # Guardar valor de Depósito ACS por Item=S9
+    value_to_save = "NOT_FOUND"
     for s in sensors:
         if (s.get("item") or "").strip().upper() == "S9":
             value_to_save = s.get("value", "")
             break
 
-
-    # Siempre escribe una línea para que el archivo exista
+    # Siempre escribe una línea para que exista el TXT
     with open(OUT_TXT, "a", encoding="utf-8") as f:
         f.write(f"{now_utc};{value_to_save}\n")
 
-    print(f"OK: {len(sensors)} sensores. deposito_acs={value_to_save}")
+    print(f"OK: {len(sensors)} sensores. S9={value_to_save}")
 
 
 if __name__ == "__main__":
