@@ -40,8 +40,9 @@ jobs:
 
           # Añade los archivos generados
           git add data/latest.json
+          git add data/acs_manifest.json 2>/dev/null || true
+          git add data/acs_*.txt 2>/dev/null || true
           git add data/deposito_acs.txt 2>/dev/null || true
-
 
           # Si no hay cambios, salimos
           if git diff --cached --quiet; then
