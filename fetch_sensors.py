@@ -86,7 +86,7 @@ def main():
 
     # 👉 Guardar SOLO Tª Depósito ACS en TXT
     for s in sensors:
-        if s["label"] == TARGET_LABEL:
+        if "deposito acs" in s["label"].lower() or "depósito acs" in s["label"].lower():
             with open(OUT_TXT, "a", encoding="utf-8") as f:
                 f.write(f"{now_utc};{s['value']}\n")
             break
