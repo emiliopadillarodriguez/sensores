@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Sensores ACS</title>
 
-  <!-- Chart.js (v4) -->
+  <!-- Chart.js v4 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-
-  <!-- Adaptador de fechas (NECESARIO para eje time) -->
+  <!-- Adapter fechas (necesario para eje time) -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
-
-  <!-- Zoom/Pan compatible con Chart.js v4 -->
+  <!-- Zoom/Pan -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
 
   <style>
@@ -19,11 +17,22 @@
     #container { max-width: 1200px; }
     h1 { margin: 0 0 6px; }
     .info { color:#555; font-size: 14px; margin-bottom: 14px; }
-    button { padding: 6px 12px; cursor: pointer; }
-    #status { margin-left: 10px; font-size: 12px; color:#666; }
-    .error { margin-top: 12px; color: #b00020; white-space: pre-wrap; }
-    /* IMPORTANTE: si el canvas no tiene altura, a veces se ve “vacío” */
-    #chartACS { width: 100%; height: 70vh; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e6e6e6;
+      border-radius: 10px;
+      padding: 14px 14px 10px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .card h2 { margin: 0 0 8px; font-size: 16px; }
+    .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+    .toolbar button { padding: 6px 10px; cursor:pointer; }
+    .small { font-size: 12px; color:#666; }
+    .canvas-wrap { height: 320px; } /* altura fija por gráfica */
+    canvas { width:100% !important; height:100% !important; }
+    .error { color:#b00020; font-size:12px; margin-top:8px; white-space:pre-wrap; }
   </style>
 </head>
 
@@ -31,145 +40,241 @@
   <div id="container">
     <h1>Sensores ACS</h1>
     <div class="info">
-      Histórico automático cada 15 minutos · Zoom con rueda · Pan arrastrando · Click en leyenda para ocultar/mostrar series
+      Cada sensor en su gráfica. Solo <b>S9</b> + <b>S10</b> van juntos.
+      Zoom: rueda · Pan: arrastrar · Reset en cada gráfica
     </div>
 
-    <div style="margin-bottom:10px;">
-      <button id="btnReset">Reset zoom</button>
-      <span id="status"></span>
-    </div>
-
-    <canvas id="chartACS"></canvas>
-    <div id="err" class="error"></div>
+    <div class="small" id="lastUpdate"></div>
+    <div class="grid" id="charts"></div>
   </div>
 
-  <script>
-    let chart;
+<script>
+  // --- CONFIG ---
+  const GROUP_TOGETHER = new Set(["S9", "S10"]); // estas van juntas
+  const REFRESH_MS = 30000;
 
-    function showError(msg) {
-      document.getElementById("err").textContent = msg || "";
+  // guardamos referencias a charts para poder resetear y actualizar
+  const chartsMap = new Map(); // key -> Chart instance
+
+  function showCardError(cardEl, msg) {
+    const err = cardEl.querySelector(".error");
+    if (err) err.textContent = msg || "";
+  }
+
+  async function fetchJson(url) {
+    const res = await fetch(url + "?t=" + Date.now());
+    if (!res.ok) throw new Error(`No se puede leer ${url} (HTTP ${res.status})`);
+    return await res.json();
+  }
+
+  async function fetchText(url) {
+    const res = await fetch(url + "?t=" + Date.now());
+    if (!res.ok) throw new Error(`No se puede leer ${url} (HTTP ${res.status})`);
+    return await res.text();
+  }
+
+  function parseTxtToPoints(text) {
+    const points = [];
+    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
+
+    for (const line of lines) {
+      const parts = line.split(";");
+      if (parts.length < 2) continue;
+
+      const ts = parts[0].trim();
+      let val = parts[1].trim();
+
+      if (val === "NOT_FOUND") continue;
+      val = val.replace(",", "."); // por si hay coma decimal
+
+      const y = Number(val);
+      if (Number.isNaN(y)) continue;
+
+      const x = new Date(ts);
+      if (isNaN(x.getTime())) continue;
+
+      points.push({ x, y });
     }
+    return points;
+  }
 
-    async function fetchJson(url) {
-      const res = await fetch(url + "?t=" + Date.now());
-      if (!res.ok) throw new Error("No se puede leer " + url + " (HTTP " + res.status + ")");
-      return await res.json();
-    }
+  function datasetLabel(sensor) {
+    const units = sensor.units ? ` (${sensor.units})` : "";
+    return `${sensor.item} – ${sensor.label}${units}`;
+  }
 
-    async function fetchText(url) {
-      const res = await fetch(url + "?t=" + Date.now());
-      if (!res.ok) throw new Error("No se puede leer " + url + " (HTTP " + res.status + ")");
-      return await res.text();
-    }
-
-    function parseTxtToPoints(text) {
-      const points = [];
-      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-
-      for (const line of lines) {
-        const parts = line.split(";");
-        if (parts.length < 2) continue;
-
-        const ts = parts[0].trim();
-        let val = parts[1].trim();
-
-        if (val === "NOT_FOUND") continue;
-
-        // por si alguna vez viene con coma decimal
-        val = val.replace(",", ".");
-
-        const y = Number(val);
-        if (Number.isNaN(y)) continue;
-
-        const x = new Date(ts);
-        if (isNaN(x.getTime())) continue;
-
-        points.push({ x, y });
-      }
-      return points;
-    }
-
-    function buildChart(datasets) {
-      const ctx = document.getElementById("chartACS").getContext("2d");
-
-      chart = new Chart(ctx, {
-        type: "line",
-        data: { datasets },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          parsing: false,
-          interaction: { mode: "nearest", intersect: false },
-          scales: {
-            x: {
-              type: "time",
-              title: { display: true, text: "Fecha y hora" }
-            },
-            y: {
-              title: { display: true, text: "Valor" }
-            }
+  function makeChart(canvas, datasets) {
+    return new Chart(canvas.getContext("2d"), {
+      type: "line",
+      data: { datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        parsing: false,
+        interaction: { mode: "nearest", intersect: false },
+        scales: {
+          x: { type: "time", title: { display: true, text: "Fecha y hora" } },
+          y: { title: { display: true, text: "Valor" } }
+        },
+        plugins: {
+          zoom: {
+            pan: { enabled: true, mode: "x" },
+            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" }
           },
-          plugins: {
-            zoom: {
-              pan: { enabled: true, mode: "x" },
-              zoom: {
-                wheel: { enabled: true },
-                pinch: { enabled: true },
-                mode: "x"
-              }
-            },
-            tooltip: { enabled: true }
-          }
+          tooltip: { enabled: true }
         }
+      }
+    });
+  }
+
+  function createCard(key, title) {
+    const wrap = document.createElement("div");
+    wrap.className = "card";
+    wrap.dataset.key = key;
+
+    wrap.innerHTML = `
+      <h2>${title}</h2>
+      <div class="toolbar">
+        <button class="btnReset">Reset zoom</button>
+        <span class="small status">Cargando…</span>
+      </div>
+      <div class="canvas-wrap">
+        <canvas></canvas>
+      </div>
+      <div class="error"></div>
+    `;
+
+    const btn = wrap.querySelector(".btnReset");
+    btn.addEventListener("click", () => {
+      const ch = chartsMap.get(key);
+      if (ch) ch.resetZoom();
+    });
+
+    return wrap;
+  }
+
+  function setStatus(cardEl, text) {
+    const el = cardEl.querySelector(".status");
+    if (el) el.textContent = text || "";
+  }
+
+  async function buildOrUpdateCharts() {
+    const root = document.getElementById("charts");
+    const manifest = await fetchJson("data/acs_manifest.json");
+
+    document.getElementById("lastUpdate").textContent =
+      "Última actualización (UTC): " + (manifest.timestamp_utc || "-");
+
+    // Agrupar sensores: uno “S9+S10” y el resto individuales
+    const sensors = (manifest.acs || [])
+      .map(s => ({ ...s, item: (s.item || "").toUpperCase() }))
+      .filter(s => !!s.item);
+
+    const groupTogether = sensors.filter(s => GROUP_TOGETHER.has(s.item));
+    const singles = sensors.filter(s => !GROUP_TOGETHER.has(s.item));
+
+    // Definimos “bloques” de gráficas
+    const blocks = [];
+    if (groupTogether.length) {
+      blocks.push({
+        key: "S9_S10",
+        title: "ACS – S9 + S10 (juntos)",
+        sensors: groupTogether
+      });
+    }
+    for (const s of singles) {
+      blocks.push({
+        key: s.item,
+        title: datasetLabel(s),
+        sensors: [s]
       });
     }
 
-    async function loadAllAcsSeries() {
-      showError("");
+    // Creamos cards que falten y actualizamos las existentes
+    const existingKeys = new Set([...root.querySelectorAll(".card")].map(c => c.dataset.key));
+    const neededKeys = new Set(blocks.map(b => b.key));
 
-      const status = document.getElementById("status");
-      status.textContent = "Cargando…";
-
-      const manifest = await fetchJson("data/acs_manifest.json");
-      status.textContent = "Última actualización (UTC): " + (manifest.timestamp_utc || "-");
-
-      const datasets = [];
-
-      for (const s of (manifest.acs || [])) {
-        const txt = await fetchText("data/" + s.file);
-        const points = parseTxtToPoints(txt);
-
-        if (!points.length) continue;
-
-        datasets.push({
-          label: `${s.item} – ${s.label} (${s.units || ""})`,
-          data: points,
-          tension: 0.2,
-          pointRadius: 2,
-          borderWidth: 2
-        });
-      }
-
-      if (!datasets.length) {
-        showError("No hay datos numéricos todavía en los TXT (solo NOT_FOUND o vacío). Espera 1–2 ejecuciones del workflow.");
-      }
-
-      if (!chart) buildChart(datasets);
-      else {
-        chart.data.datasets = datasets;
-        chart.update();
+    // borrar cards que ya no existan
+    for (const el of [...root.querySelectorAll(".card")]) {
+      if (!neededKeys.has(el.dataset.key)) {
+        const ch = chartsMap.get(el.dataset.key);
+        if (ch) ch.destroy();
+        chartsMap.delete(el.dataset.key);
+        el.remove();
       }
     }
 
-    document.getElementById("btnReset").addEventListener("click", () => {
-      if (chart) chart.resetZoom();
-    });
+    // crear o actualizar cada bloque
+    for (const block of blocks) {
+      let cardEl = root.querySelector(`.card[data-key="${block.key}"]`);
+      if (!cardEl) {
+        cardEl = createCard(block.key, block.title);
+        root.appendChild(cardEl);
+      } else {
+        // actualizar título por si cambió
+        cardEl.querySelector("h2").textContent = block.title;
+      }
 
-    // Carga inicial y refresco
-    loadAllAcsSeries().catch(e => showError(String(e)));
-    setInterval(() => {
-      loadAllAcsSeries().catch(e => showError(String(e)));
-    }, 30000);
-  </script>
+      showCardError(cardEl, "");
+      setStatus(cardEl, "Cargando…");
+
+      // Cargar datos de cada sensor del bloque
+      const datasets = [];
+      for (const s of block.sensors) {
+        try {
+          const txt = await fetchText("data/" + s.file);
+          const points = parseTxtToPoints(txt);
+          if (!points.length) continue;
+
+          datasets.push({
+            label: datasetLabel(s),
+            data: points,
+            tension: 0.2,
+            pointRadius: 2,
+            borderWidth: 2
+          });
+        } catch (e) {
+          // si un fichero falla, lo mostramos en error pero seguimos
+          showCardError(cardEl, String(e));
+        }
+      }
+
+      if (!datasets.length) {
+        setStatus(cardEl, "Sin datos numéricos todavía");
+        // si no hay chart, no crear; si existe, vaciar
+        const ch = chartsMap.get(block.key);
+        if (ch) {
+          ch.data.datasets = [];
+          ch.update();
+        }
+        continue;
+      }
+
+      setStatus(cardEl, "OK");
+
+      const canvas = cardEl.querySelector("canvas");
+      const existing = chartsMap.get(block.key);
+
+      if (!existing) {
+        const ch = makeChart(canvas, datasets);
+        chartsMap.set(block.key, ch);
+      } else {
+        existing.data.datasets = datasets;
+        existing.update();
+      }
+    }
+  }
+
+  async function tick() {
+    try {
+      await buildOrUpdateCharts();
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  tick();
+  setInterval(tick, REFRESH_MS);
+</script>
 </body>
 </html>
