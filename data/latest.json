@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2025-12-15T19:35:13+00:00",
+  "timestamp_utc": "2025-12-15T19:50:07+00:00",
   "sensors": [
     {
       "label": "Login Alarms Time Zones Modules GraphIQs",
@@ -28,7 +28,7 @@
     },
     {
       "label": "TÂª Exterior",
-      "value": "6.83",
+      "value": "6.26",
       "units": "ÂºC"
     },
     {
@@ -38,17 +38,17 @@
     },
     {
       "label": "TÂª Imp. Cald. 2 Calef.",
-      "value": "68.83",
+      "value": "69.21",
       "units": "DegC"
     },
     {
       "label": "TÂª Ret. Cald. 1 ACS",
-      "value": "63.77",
+      "value": "63.58",
       "units": "DegC"
     },
     {
       "label": "TÂª Ret. Cald. 2 Calef.",
-      "value": "64.75",
+      "value": "63.58",
       "units": "DegC"
     },
     {
@@ -58,17 +58,17 @@
     },
     {
       "label": "TÂª Ida Primario ACS",
-      "value": "68.66",
+      "value": "68.98",
       "units": "DegC"
     },
     {
       "label": "TÂª DepÃ³sito ACS",
-      "value": "51.88",
+      "value": "50.51",
       "units": "DegC"
     },
     {
       "label": "TÂª Consumo ACS",
-      "value": "52.01",
+      "value": "50.66",
       "units": "DegC"
     },
     {
@@ -78,32 +78,32 @@
     },
     {
       "label": "TÂª Retorno ACS",
-      "value": "50.82",
+      "value": "49.35",
       "units": "DegC"
     },
     {
       "label": "TÂª Retorno CalefacciÃ³n",
-      "value": "65.13",
+      "value": "63.94",
       "units": "DegC"
     },
     {
       "label": "TÂª Retorno Primario ACS",
-      "value": "64.15",
+      "value": "63.96",
       "units": "DegC"
     },
     {
       "label": "TÂª Paneles Solares",
-      "value": "8.67",
+      "value": "8.38",
       "units": "DegC"
     },
     {
       "label": "TÂª Deposito 1 Solar",
-      "value": "13.87",
+      "value": "13.89",
       "units": "DegC"
     },
     {
       "label": "TÂª Deposito 2 Solar",
-      "value": "17.43",
+      "value": "17.37",
       "units": "DegC"
     },
     {
