@@ -2,112 +2,174 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Sensores ACS</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
+  <!-- Chart.js (v4) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+  <!-- Adaptador de fechas (NECESARIO para eje time) -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+
+  <!-- Zoom/Pan compatible con Chart.js v4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    canvas {
-      max-width: 100%;
-      height: 80vh;
-    }
+    body { font-family: Arial, Helvetica, sans-serif; margin: 20px; background:#fafafa; }
+    #container { max-width: 1200px; }
+    h1 { margin: 0 0 6px; }
+    .info { color:#555; font-size: 14px; margin-bottom: 14px; }
+    button { padding: 6px 12px; cursor: pointer; }
+    #status { margin-left: 10px; font-size: 12px; color:#666; }
+    .error { margin-top: 12px; color: #b00020; white-space: pre-wrap; }
+    /* IMPORTANTE: si el canvas no tiene altura, a veces se ve “vacío” */
+    #chartACS { width: 100%; height: 70vh; }
   </style>
 </head>
+
 <body>
+  <div id="container">
+    <h1>Sensores ACS</h1>
+    <div class="info">
+      Histórico automático cada 15 minutos · Zoom con rueda · Pan arrastrando · Click en leyenda para ocultar/mostrar series
+    </div>
 
-<h1>Sensores ACS</h1>
-<p>
-  Histórico automático cada 15 minutos.<br>
-  Zoom con rueda · Pan arrastrando · Click en leyenda para ocultar/mostrar sensores
-</p>
+    <div style="margin-bottom:10px;">
+      <button id="btnReset">Reset zoom</button>
+      <span id="status"></span>
+    </div>
 
-<button onclick="resetZoom()">Reset zoom</button>
+    <canvas id="chartACS"></canvas>
+    <div id="err" class="error"></div>
+  </div>
 
-<canvas id="chart"></canvas>
+  <script>
+    let chart;
 
-<script>
-async function loadTextFile(url) {
-  const res = await fetch(url);
-  const text = await res.text();
-  return text
-    .split("\n")
-    .map(l => l.trim())
-    .filter(l => l && !l.endsWith("NOT_FOUND"))
-    .map(l => {
-      const [ts, val] = l.split(";");
-      return { x: new Date(ts), y: parseFloat(val) };
-    });
-}
+    function showError(msg) {
+      document.getElementById("err").textContent = msg || "";
+    }
 
-async function init() {
-  const manifest = await fetch("data/acs_manifest.json").then(r => r.json());
+    async function fetchJson(url) {
+      const res = await fetch(url + "?t=" + Date.now());
+      if (!res.ok) throw new Error("No se puede leer " + url + " (HTTP " + res.status + ")");
+      return await res.json();
+    }
 
-  const datasets = [];
+    async function fetchText(url) {
+      const res = await fetch(url + "?t=" + Date.now());
+      if (!res.ok) throw new Error("No se puede leer " + url + " (HTTP " + res.status + ")");
+      return await res.text();
+    }
 
-  for (const sensor of manifest.acs) {
-    const data = await loadTextFile("data/" + sensor.file);
+    function parseTxtToPoints(text) {
+      const points = [];
+      const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
 
-    if (data.length === 0) continue;
+      for (const line of lines) {
+        const parts = line.split(";");
+        if (parts.length < 2) continue;
 
-    datasets.push({
-      label: `${sensor.item} – ${sensor.label}`,
-      data,
-      borderWidth: 2,
-      pointRadius: 2,
-      tension: 0.2
-    });
-  }
+        const ts = parts[0].trim();
+        let val = parts[1].trim();
 
-  const ctx = document.getElementById("chart");
+        if (val === "NOT_FOUND") continue;
 
-  window.chart = new Chart(ctx, {
-    type: "line",
-    data: { datasets },
-    options: {
-      parsing: false,
-      responsive: true,
-      interaction: {
-        mode: "nearest",
-        intersect: false
-      },
-      scales: {
-        x: {
-          type: "time",
-          time: { tooltipFormat: "yyyy-MM-dd HH:mm" },
-          title: { display: true, text: "Fecha y hora" }
-        },
-        y: {
-          title: { display: true, text: "Temperatura (°C)" }
-        }
-      },
-      plugins: {
-        zoom: {
-          zoom: {
-            wheel: { enabled: true },
-            pinch: { enabled: true },
-            mode: "x"
+        // por si alguna vez viene con coma decimal
+        val = val.replace(",", ".");
+
+        const y = Number(val);
+        if (Number.isNaN(y)) continue;
+
+        const x = new Date(ts);
+        if (isNaN(x.getTime())) continue;
+
+        points.push({ x, y });
+      }
+      return points;
+    }
+
+    function buildChart(datasets) {
+      const ctx = document.getElementById("chartACS").getContext("2d");
+
+      chart = new Chart(ctx, {
+        type: "line",
+        data: { datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          parsing: false,
+          interaction: { mode: "nearest", intersect: false },
+          scales: {
+            x: {
+              type: "time",
+              title: { display: true, text: "Fecha y hora" }
+            },
+            y: {
+              title: { display: true, text: "Valor" }
+            }
           },
-          pan: {
-            enabled: true,
-            mode: "x"
+          plugins: {
+            zoom: {
+              pan: { enabled: true, mode: "x" },
+              zoom: {
+                wheel: { enabled: true },
+                pinch: { enabled: true },
+                mode: "x"
+              }
+            },
+            tooltip: { enabled: true }
           }
         }
+      });
+    }
+
+    async function loadAllAcsSeries() {
+      showError("");
+
+      const status = document.getElementById("status");
+      status.textContent = "Cargando…";
+
+      const manifest = await fetchJson("data/acs_manifest.json");
+      status.textContent = "Última actualización (UTC): " + (manifest.timestamp_utc || "-");
+
+      const datasets = [];
+
+      for (const s of (manifest.acs || [])) {
+        const txt = await fetchText("data/" + s.file);
+        const points = parseTxtToPoints(txt);
+
+        if (!points.length) continue;
+
+        datasets.push({
+          label: `${s.item} – ${s.label} (${s.units || ""})`,
+          data: points,
+          tension: 0.2,
+          pointRadius: 2,
+          borderWidth: 2
+        });
+      }
+
+      if (!datasets.length) {
+        showError("No hay datos numéricos todavía en los TXT (solo NOT_FOUND o vacío). Espera 1–2 ejecuciones del workflow.");
+      }
+
+      if (!chart) buildChart(datasets);
+      else {
+        chart.data.datasets = datasets;
+        chart.update();
       }
     }
-  });
-}
 
-function resetZoom() {
-  chart.resetZoom();
-}
+    document.getElementById("btnReset").addEventListener("click", () => {
+      if (chart) chart.resetZoom();
+    });
 
-init();
-</script>
-
+    // Carga inicial y refresco
+    loadAllAcsSeries().catch(e => showError(String(e)));
+    setInterval(() => {
+      loadAllAcsSeries().catch(e => showError(String(e)));
+    }, 30000);
+  </script>
 </body>
 </html>
