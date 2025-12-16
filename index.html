@@ -7,7 +7,7 @@
 
   <!-- Chart.js v4 -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-  <!-- Adapter fechas (necesario para eje time) -->
+  <!-- Adaptador fechas -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
   <!-- Zoom/Pan -->
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
@@ -16,23 +16,45 @@
     body { font-family: Arial, Helvetica, sans-serif; margin: 20px; background:#fafafa; }
     #container { max-width: 1200px; }
     h1 { margin: 0 0 6px; }
-    .info { color:#555; font-size: 14px; margin-bottom: 14px; }
-    .grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+    .info { color:#555; font-size: 14px; margin-bottom: 12px; }
 
-    .card {
-      background: #fff;
-      border: 1px solid #e6e6e6;
-      border-radius: 10px;
-      padding: 14px 14px 10px;
+    .topbar {
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+      background:#fff; border:1px solid #e6e6e6; border-radius:10px;
+      padding:12px; margin-bottom:14px;
       box-shadow: 0 1px 2px rgba(0,0,0,0.04);
     }
-    .card h2 { margin: 0 0 8px; font-size: 16px; }
-    .toolbar { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
-    .toolbar button { padding: 6px 10px; cursor:pointer; }
+    .topbar label { font-size: 13px; color:#333; }
+    select, input[type="checkbox"] { cursor:pointer; }
     .small { font-size: 12px; color:#666; }
-    .canvas-wrap { height: 320px; } /* altura fija por gráfica */
+    .spacer { flex: 1; }
+
+    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+
+    .card {
+      background:#fff; border:1px solid #e6e6e6; border-radius:10px;
+      padding: 14px 14px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .card h2 { margin:0 0 8px; font-size:16px; }
+
+    .meta {
+      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+      margin: 6px 0 10px;
+      font-size: 12px; color:#333;
+    }
+    .pill {
+      border:1px solid #e6e6e6; border-radius:999px;
+      padding:4px 8px; background:#fafafa;
+    }
+
+    .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:10px; }
+    .toolbar button { padding: 6px 10px; cursor:pointer; }
+
+    .canvas-wrap { height: 320px; }
     canvas { width:100% !important; height:100% !important; }
+
     .error { color:#b00020; font-size:12px; margin-top:8px; white-space:pre-wrap; }
+    .linkbtn { padding: 6px 10px; border:1px solid #e6e6e6; border-radius:8px; text-decoration:none; color:#333; background:#fff; }
   </style>
 </head>
 
@@ -41,69 +63,177 @@
     <h1>Sensores ACS</h1>
     <div class="info">
       Cada sensor en su gráfica. Solo <b>S9</b> + <b>S10</b> van juntos.
-      Zoom: rueda · Pan: arrastrar · Reset en cada gráfica
+      Incluye: filtro/orden, último valor + mín/máx 24h + Δ1h, export CSV, y carga rápida por rango.
     </div>
 
-    <div class="small" id="lastUpdate"></div>
+    <div class="topbar">
+      <label>
+        Rango:
+        <select id="range">
+          <option value="24h" selected>Últimas 24h</option>
+          <option value="7d">Últimos 7 días</option>
+          <option value="all">Todo</option>
+        </select>
+      </label>
+
+      <label>
+        Rendimiento:
+        <select id="density">
+          <option value="auto" selected>Auto (recomendado)</option>
+          <option value="max">Máxima resolución</option>
+          <option value="low">Ligero</option>
+        </select>
+      </label>
+
+      <span class="small" id="lastUpdate">Última actualización (UTC): -</span>
+
+      <span class="spacer"></span>
+
+      <a class="linkbtn" href="./status.html">Abrir panel de estado</a>
+    </div>
+
+    <div class="topbar" id="filtersBar">
+      <strong style="font-size:13px;">Mostrar:</strong>
+      <!-- checkboxes dinámicos -->
+      <span class="spacer"></span>
+      <button id="btnShowAll">Mostrar todos</button>
+      <button id="btnHideAll">Ocultar todos</button>
+    </div>
+
     <div class="grid" id="charts"></div>
   </div>
 
 <script>
-  // --- CONFIG ---
-  const GROUP_TOGETHER = new Set(["S9", "S10"]); // estas van juntas
+  // ---- CONFIG ----
+  const GROUP_KEY = "S9_S10";
+  const GROUP_ITEMS = new Set(["S9", "S10"]);
+
+  // Orden fijo (lo que pediste)
+  const ORDER = ["S2","S4","S8",GROUP_KEY,"S13","S15"];
+
   const REFRESH_MS = 30000;
 
-  // guardamos referencias a charts para poder resetear y actualizar
-  const chartsMap = new Map(); // key -> Chart instance
+  // Charts creados
+  const chartsMap = new Map(); // key -> Chart
+  const blocksCache = new Map(); // key -> { sensors, datasetsRaw, lastStats }
 
-  function showCardError(cardEl, msg) {
-    const err = cardEl.querySelector(".error");
-    if (err) err.textContent = msg || "";
+  function $(id){ return document.getElementById(id); }
+
+  function toUpperItem(s){ return ((s.item||"").trim()).toUpperCase(); }
+
+  function parseLine(line){
+    // "2025-12-15T22:20:43+00:00;53.19"
+    const parts = line.split(";");
+    if (parts.length < 2) return null;
+    const ts = parts[0].trim();
+    let val = parts[1].trim();
+    if (!ts) return null;
+    if (!val || val === "NOT_FOUND") return null;
+    val = val.replace(",", ".");
+    const y = Number(val);
+    if (Number.isNaN(y)) return null;
+    const x = new Date(ts);
+    if (isNaN(x.getTime())) return null;
+    return { x, y };
   }
 
-  async function fetchJson(url) {
+  async function fetchJson(url){
     const res = await fetch(url + "?t=" + Date.now());
     if (!res.ok) throw new Error(`No se puede leer ${url} (HTTP ${res.status})`);
     return await res.json();
   }
 
-  async function fetchText(url) {
+  async function fetchText(url){
     const res = await fetch(url + "?t=" + Date.now());
     if (!res.ok) throw new Error(`No se puede leer ${url} (HTTP ${res.status})`);
     return await res.text();
   }
 
-  function parseTxtToPoints(text) {
-    const points = [];
-    const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-
-    for (const line of lines) {
-      const parts = line.split(";");
-      if (parts.length < 2) continue;
-
-      const ts = parts[0].trim();
-      let val = parts[1].trim();
-
-      if (val === "NOT_FOUND") continue;
-      val = val.replace(",", "."); // por si hay coma decimal
-
-      const y = Number(val);
-      if (Number.isNaN(y)) continue;
-
-      const x = new Date(ts);
-      if (isNaN(x.getTime())) continue;
-
-      points.push({ x, y });
-    }
-    return points;
-  }
-
-  function datasetLabel(sensor) {
+  function datasetLabel(sensor){
     const units = sensor.units ? ` (${sensor.units})` : "";
     return `${sensor.item} – ${sensor.label}${units}`;
   }
 
-  function makeChart(canvas, datasets) {
+  function filterByRange(points, range){
+    if (range === "all") return points;
+    const now = Date.now();
+    let ms = 24*3600*1000;
+    if (range === "7d") ms = 7*24*3600*1000;
+    const minT = now - ms;
+    return points.filter(p => p.x.getTime() >= minT);
+  }
+
+  function downsample(points, mode){
+    // mode: "max" (no) | "low" (agresivo) | "auto"
+    if (mode === "max") return points;
+
+    const n = points.length;
+    if (n <= 600) return points; // pequeño, no tocamos
+
+    // Objetivo de puntos (aprox)
+    let target = 800;
+    if (mode === "low") target = 300;
+    if (mode === "auto") target = 700;
+
+    const step = Math.ceil(n / target);
+    if (step <= 1) return points;
+
+    const out = [];
+    for (let i = 0; i < n; i += step) out.push(points[i]);
+    // asegurar último punto
+    if (out[out.length-1] !== points[n-1]) out.push(points[n-1]);
+    return out;
+  }
+
+  function computeStats(points){
+    // Último, min/max 24h, delta 1h
+    if (!points.length) return null;
+
+    const last = points[points.length-1];
+    const nowT = last.x.getTime();
+
+    const lastVal = last.y;
+    const lastTs = last.x;
+
+    // min/max 24h desde el último punto
+    const minT = nowT - 24*3600*1000;
+    let min = Infinity, max = -Infinity;
+    for (const p of points){
+      const t = p.x.getTime();
+      if (t >= minT){
+        if (p.y < min) min = p.y;
+        if (p.y > max) max = p.y;
+      }
+    }
+    if (min === Infinity) { min = lastVal; max = lastVal; }
+
+    // delta 1h: comparar con el punto más cercano a (último - 1h)
+    const targetT = nowT - 3600*1000;
+    let nearest = null;
+    for (const p of points){
+      if (!nearest) { nearest = p; continue; }
+      if (Math.abs(p.x.getTime() - targetT) < Math.abs(nearest.x.getTime() - targetT)){
+        nearest = p;
+      }
+    }
+    const delta1h = nearest ? (lastVal - nearest.y) : null;
+
+    return { lastVal, lastTs, min24: min, max24: max, delta1h };
+  }
+
+  function formatNum(n){
+    if (n === null || n === undefined || Number.isNaN(n)) return "-";
+    return n.toFixed(2);
+  }
+
+  function formatAgeMinutes(date){
+    const mins = Math.round((Date.now() - date.getTime())/60000);
+    if (mins < 1) return "hace <1 min";
+    if (mins === 1) return "hace 1 min";
+    return `hace ${mins} min`;
+  }
+
+  function makeChart(canvas, datasets){
     return new Chart(canvas.getContext("2d"), {
       type: "line",
       data: { datasets },
@@ -113,168 +243,343 @@
         parsing: false,
         interaction: { mode: "nearest", intersect: false },
         scales: {
-          x: { type: "time", title: { display: true, text: "Fecha y hora" } },
-          y: { title: { display: true, text: "Valor" } }
+          x: { type: "time", title: { display:true, text:"Fecha y hora" } },
+          y: { title: { display:true, text:"Valor" } }
         },
         plugins: {
           zoom: {
-            pan: { enabled: true, mode: "x" },
-            zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" }
+            pan: { enabled:true, mode:"x" },
+            zoom: { wheel:{ enabled:true }, pinch:{ enabled:true }, mode:"x" }
           },
-          tooltip: { enabled: true }
+          tooltip: { enabled:true }
         }
       }
     });
   }
 
-  function createCard(key, title) {
-    const wrap = document.createElement("div");
-    wrap.className = "card";
-    wrap.dataset.key = key;
+  function createCard(key, title){
+    const el = document.createElement("div");
+    el.className = "card";
+    el.dataset.key = key;
 
-    wrap.innerHTML = `
+    el.innerHTML = `
       <h2>${title}</h2>
+      <div class="meta">
+        <span class="pill" data-k="last">Último: -</span>
+        <span class="pill" data-k="minmax">24h min/max: -</span>
+        <span class="pill" data-k="delta">Δ 1h: -</span>
+        <span class="pill" data-k="time">Actualización: -</span>
+      </div>
+
       <div class="toolbar">
         <button class="btnReset">Reset zoom</button>
+        <button class="btnCSV">Descargar CSV</button>
         <span class="small status">Cargando…</span>
       </div>
-      <div class="canvas-wrap">
-        <canvas></canvas>
-      </div>
+
+      <div class="canvas-wrap"><canvas></canvas></div>
       <div class="error"></div>
     `;
 
-    const btn = wrap.querySelector(".btnReset");
-    btn.addEventListener("click", () => {
+    el.querySelector(".btnReset").addEventListener("click", () => {
       const ch = chartsMap.get(key);
       if (ch) ch.resetZoom();
     });
 
-    return wrap;
+    el.querySelector(".btnCSV").addEventListener("click", () => {
+      downloadCSVForBlock(key);
+    });
+
+    return el;
   }
 
-  function setStatus(cardEl, text) {
+  function setStatus(cardEl, txt){
     const el = cardEl.querySelector(".status");
-    if (el) el.textContent = text || "";
+    if (el) el.textContent = txt || "";
   }
 
-  async function buildOrUpdateCharts() {
-    const root = document.getElementById("charts");
-    const manifest = await fetchJson("data/acs_manifest.json");
+  function setError(cardEl, txt){
+    const el = cardEl.querySelector(".error");
+    if (el) el.textContent = txt || "";
+  }
 
-    document.getElementById("lastUpdate").textContent =
-      "Última actualización (UTC): " + (manifest.timestamp_utc || "-");
+  function setMeta(cardEl, stats){
+    const lastEl = cardEl.querySelector('[data-k="last"]');
+    const mmEl = cardEl.querySelector('[data-k="minmax"]');
+    const dEl = cardEl.querySelector('[data-k="delta"]');
+    const tEl = cardEl.querySelector('[data-k="time"]');
 
-    // Agrupar sensores: uno “S9+S10” y el resto individuales
-    const sensors = (manifest.acs || [])
-      .map(s => ({ ...s, item: (s.item || "").toUpperCase() }))
-      .filter(s => !!s.item);
+    if (!stats){
+      lastEl.textContent = "Último: -";
+      mmEl.textContent = "24h min/max: -";
+      dEl.textContent = "Δ 1h: -";
+      tEl.textContent = "Actualización: -";
+      return;
+    }
 
-    const groupTogether = sensors.filter(s => GROUP_TOGETHER.has(s.item));
-    const singles = sensors.filter(s => !GROUP_TOGETHER.has(s.item));
+    lastEl.textContent = `Último: ${formatNum(stats.lastVal)}`;
+    mmEl.textContent = `24h min/max: ${formatNum(stats.min24)} / ${formatNum(stats.max24)}`;
 
-    // Definimos “bloques” de gráficas
+    if (stats.delta1h === null) dEl.textContent = "Δ 1h: -";
+    else dEl.textContent = `Δ 1h: ${formatNum(stats.delta1h)}`;
+
+    tEl.textContent = `Actualización: ${formatAgeMinutes(stats.lastTs)}`;
+  }
+
+  function buildBlocksFromManifest(manifest){
+    const sensors = (manifest.acs || []).map(s => ({
+      ...s,
+      item: toUpperItem(s)
+    })).filter(s => !!s.item);
+
+    const group = sensors.filter(s => GROUP_ITEMS.has(s.item));
+    const singles = sensors.filter(s => !GROUP_ITEMS.has(s.item));
+
     const blocks = [];
-    if (groupTogether.length) {
-      blocks.push({
-        key: "S9_S10",
-        title: "ACS – S9 + S10 (juntos)",
-        sensors: groupTogether
-      });
+    if (group.length){
+      blocks.push({ key: GROUP_KEY, title: "ACS – S9 + S10 (juntos)", sensors: group });
     }
-    for (const s of singles) {
-      blocks.push({
-        key: s.item,
-        title: datasetLabel(s),
-        sensors: [s]
-      });
+    for (const s of singles){
+      blocks.push({ key: s.item, title: datasetLabel(s), sensors: [s] });
     }
 
-    // Creamos cards que falten y actualizamos las existentes
-    const existingKeys = new Set([...root.querySelectorAll(".card")].map(c => c.dataset.key));
-    const neededKeys = new Set(blocks.map(b => b.key));
+    // Orden fijo
+    blocks.sort((a,b) => ORDER.indexOf(a.key) - ORDER.indexOf(b.key));
+    return blocks;
+  }
 
-    // borrar cards que ya no existan
-    for (const el of [...root.querySelectorAll(".card")]) {
-      if (!neededKeys.has(el.dataset.key)) {
-        const ch = chartsMap.get(el.dataset.key);
+  function renderFilters(blocks){
+    const bar = $("filtersBar");
+    // limpiar checkboxes anteriores
+    const old = [...bar.querySelectorAll(".flt")];
+    old.forEach(x => x.remove());
+
+    for (const b of blocks){
+      const wrap = document.createElement("label");
+      wrap.className = "flt";
+      wrap.style.display = "inline-flex";
+      wrap.style.alignItems = "center";
+      wrap.style.gap = "6px";
+      wrap.style.marginRight = "10px";
+      wrap.style.fontSize = "13px";
+
+      wrap.innerHTML = `<input type="checkbox" checked data-key="${b.key}"> ${b.key}`;
+      const cb = wrap.querySelector("input");
+      cb.addEventListener("change", () => {
+        const card = document.querySelector(`.card[data-key="${b.key}"]`);
+        if (card) card.style.display = cb.checked ? "" : "none";
+      });
+
+      bar.insertBefore(wrap, bar.querySelector(".spacer"));
+    }
+
+    $("btnShowAll").onclick = () => {
+      bar.querySelectorAll('input[type="checkbox"][data-key]').forEach(cb => {
+        cb.checked = true;
+        const card = document.querySelector(`.card[data-key="${cb.dataset.key}"]`);
+        if (card) card.style.display = "";
+      });
+    };
+    $("btnHideAll").onclick = () => {
+      bar.querySelectorAll('input[type="checkbox"][data-key]').forEach(cb => {
+        cb.checked = false;
+        const card = document.querySelector(`.card[data-key="${cb.dataset.key}"]`);
+        if (card) card.style.display = "none";
+      });
+    };
+  }
+
+  async function loadBlockData(block, range, density){
+    // Devuelve datasets listos para pintar y estadísticas por dataset
+    const datasets = [];
+    const statsList = [];
+
+    for (const s of block.sensors){
+      const txt = await fetchText("data/" + s.file);
+      const lines = txt.split("\n").map(l => l.trim()).filter(Boolean);
+      const rawPoints = [];
+      for (const line of lines){
+        const p = parseLine(line);
+        if (p) rawPoints.push(p);
+      }
+
+      const ranged = filterByRange(rawPoints, range);
+      const sampled = downsample(ranged, density);
+
+      if (!sampled.length) continue;
+
+      datasets.push({
+        label: datasetLabel(s),
+        data: sampled,
+        tension: 0.2,
+        pointRadius: 2,
+        borderWidth: 2
+      });
+
+      statsList.push(computeStats(ranged)); // stats con datos reales (sin downsample)
+    }
+
+    return { datasets, statsList };
+  }
+
+  function mergeStats(statsList){
+    // Para tarjetas con 1 serie: usa esa.
+    // Para S9+S10: mostramos stats del “más reciente” (el que tenga lastTs más nuevo)
+    const valid = statsList.filter(Boolean);
+    if (!valid.length) return null;
+    valid.sort((a,b) => b.lastTs.getTime() - a.lastTs.getTime());
+    return valid[0];
+  }
+
+  function ensureCard(block){
+    const root = $("charts");
+    let card = root.querySelector(`.card[data-key="${block.key}"]`);
+    if (!card){
+      card = createCard(block.key, block.title);
+      root.appendChild(card);
+    } else {
+      card.querySelector("h2").textContent = block.title;
+    }
+    return card;
+  }
+
+  async function buildOrUpdateAll(){
+    const range = $("range").value;
+    const density = $("density").value;
+
+    const manifest = await fetchJson("data/acs_manifest.json");
+    $("lastUpdate").textContent = "Última actualización (UTC): " + (manifest.timestamp_utc || "-");
+
+    const blocks = buildBlocksFromManifest(manifest);
+
+    // filtros (solo la primera vez o si cambia el número de bloques)
+    if (!window.__filtersReady || window.__filtersCount !== blocks.length){
+      renderFilters(blocks);
+      window.__filtersReady = true;
+      window.__filtersCount = blocks.length;
+    }
+
+    // actualizar/crear cards y charts
+    for (const block of blocks){
+      const card = ensureCard(block);
+      setError(card, "");
+      setStatus(card, "Cargando…");
+
+      try{
+        const { datasets, statsList } = await loadBlockData(block, range, density);
+
+        if (!datasets.length){
+          setStatus(card, "Sin datos numéricos");
+          setMeta(card, null);
+          const ch = chartsMap.get(block.key);
+          if (ch){
+            ch.data.datasets = [];
+            ch.update();
+          }
+          blocksCache.set(block.key, { sensors: block.sensors, datasetsRaw: null, stats: null });
+          continue;
+        }
+
+        const canvas = card.querySelector("canvas");
+        const existing = chartsMap.get(block.key);
+        if (!existing){
+          const ch = makeChart(canvas, datasets);
+          chartsMap.set(block.key, ch);
+        } else {
+          existing.data.datasets = datasets;
+          existing.update();
+        }
+
+        // stats
+        const merged = mergeStats(statsList);
+        setMeta(card, merged);
+        setStatus(card, "OK");
+
+        // cache para CSV (guardamos el rango filtrado SIN downsample para exportar mejor)
+        // Re-leemos en export con el rango actual (más simple y fiable), pero guardamos sensors.
+        blocksCache.set(block.key, { sensors: block.sensors });
+
+      } catch(e){
+        setStatus(card, "Error");
+        setError(card, String(e));
+      }
+    }
+
+    // borrar cards que sobran si el manifest cambia
+    const root = $("charts");
+    const needed = new Set(blocks.map(b => b.key));
+    [...root.querySelectorAll(".card")].forEach(el => {
+      const key = el.dataset.key;
+      if (!needed.has(key)){
+        const ch = chartsMap.get(key);
         if (ch) ch.destroy();
-        chartsMap.delete(el.dataset.key);
+        chartsMap.delete(key);
         el.remove();
       }
-    }
-
-    // crear o actualizar cada bloque
-    for (const block of blocks) {
-      let cardEl = root.querySelector(`.card[data-key="${block.key}"]`);
-      if (!cardEl) {
-        cardEl = createCard(block.key, block.title);
-        root.appendChild(cardEl);
-      } else {
-        // actualizar título por si cambió
-        cardEl.querySelector("h2").textContent = block.title;
-      }
-
-      showCardError(cardEl, "");
-      setStatus(cardEl, "Cargando…");
-
-      // Cargar datos de cada sensor del bloque
-      const datasets = [];
-      for (const s of block.sensors) {
-        try {
-          const txt = await fetchText("data/" + s.file);
-          const points = parseTxtToPoints(txt);
-          if (!points.length) continue;
-
-          datasets.push({
-            label: datasetLabel(s),
-            data: points,
-            tension: 0.2,
-            pointRadius: 2,
-            borderWidth: 2
-          });
-        } catch (e) {
-          // si un fichero falla, lo mostramos en error pero seguimos
-          showCardError(cardEl, String(e));
-        }
-      }
-
-      if (!datasets.length) {
-        setStatus(cardEl, "Sin datos numéricos todavía");
-        // si no hay chart, no crear; si existe, vaciar
-        const ch = chartsMap.get(block.key);
-        if (ch) {
-          ch.data.datasets = [];
-          ch.update();
-        }
-        continue;
-      }
-
-      setStatus(cardEl, "OK");
-
-      const canvas = cardEl.querySelector("canvas");
-      const existing = chartsMap.get(block.key);
-
-      if (!existing) {
-        const ch = makeChart(canvas, datasets);
-        chartsMap.set(block.key, ch);
-      } else {
-        existing.data.datasets = datasets;
-        existing.update();
-      }
-    }
+    });
   }
 
-  async function tick() {
-    try {
-      await buildOrUpdateCharts();
-    } catch (e) {
-      console.log(e);
+  async function downloadCSVForBlock(blockKey){
+    // Exporta el rango actual SIN downsample, con columnas por sensor en el bloque
+    const cache = blocksCache.get(blockKey);
+    if (!cache || !cache.sensors || !cache.sensors.length) return;
+
+    const range = $("range").value;
+
+    // leer todos los sensores del bloque y montar un CSV por timestamp
+    const series = [];
+    for (const s of cache.sensors){
+      const txt = await fetchText("data/" + s.file);
+      const lines = txt.split("\n").map(l => l.trim()).filter(Boolean);
+      const pts = [];
+      for (const line of lines){
+        const p = parseLine(line);
+        if (p) pts.push(p);
+      }
+      const ranged = filterByRange(pts, range);
+      series.push({ sensor: s, points: ranged });
     }
+
+    // Construir índice de timestamps (ISO) => valores
+    const map = new Map(); // tsISO -> { colName: value }
+    const cols = series.map(s => `${toUpperItem(s.sensor)}_${(s.sensor.label||"").replaceAll(";", ",")}`);
+
+    for (let i=0;i<series.length;i++){
+      const col = cols[i];
+      for (const p of series[i].points){
+        const iso = p.x.toISOString();
+        if (!map.has(iso)) map.set(iso, {});
+        map.get(iso)[col] = p.y;
+      }
+    }
+
+    // Ordenar timestamps
+    const timestamps = [...map.keys()].sort();
+
+    // CSV
+    let csv = "timestamp_utc;" + cols.join(";") + "\n";
+    for (const ts of timestamps){
+      const row = map.get(ts);
+      const vals = cols.map(c => (row[c] === undefined ? "" : String(row[c]).replace(".", ",")));
+      csv += ts + ";" + vals.join(";") + "\n";
+    }
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `ACS_${blockKey}_${range}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }
 
-  tick();
-  setInterval(tick, REFRESH_MS);
+  // Eventos UI
+  $("range").addEventListener("change", () => buildOrUpdateAll());
+  $("density").addEventListener("change", () => buildOrUpdateAll());
+
+  // Inicio + refresco
+  buildOrUpdateAll();
+  setInterval(buildOrUpdateAll, REFRESH_MS);
 </script>
 </body>
 </html>
