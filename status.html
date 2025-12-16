@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Estado ACS</title>
+  <style>
+    body { font-family: Arial, Helvetica, sans-serif; margin:20px; background:#fafafa; }
+    #container { max-width: 1200px; }
+    h1 { margin:0 0 6px; }
+    .info { color:#555; font-size:14px; margin-bottom: 12px; }
+    table { width:100%; border-collapse: collapse; background:#fff; border:1px solid #e6e6e6; border-radius:10px; overflow:hidden; }
+    th, td { padding:10px; border-bottom:1px solid #eee; text-align:left; font-size:13px; }
+    th { background:#f5f5f5; }
+    .pill { display:inline-block; padding:3px 8px; border-radius:999px; border:1px solid #e6e6e6; background:#fafafa; }
+    .ok { background:#e8f5e9; border-color:#c8e6c9; }
+    .warn { background:#fff8e1; border-color:#ffe0b2; }
+    .bad { background:#ffebee; border-color:#ffcdd2; }
+    .topbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom: 12px; }
+    button, a { padding:6px 10px; cursor:pointer; border:1px solid #e6e6e6; border-radius:8px; background:#fff; text-decoration:none; color:#333; }
+    .small { font-size:12px; color:#666; }
+  </style>
+</head>
+<body>
+<div id="container">
+  <h1>Estado ACS</h1>
+  <div class="info">Tabla resumen con el último valor por sensor (y hace cuánto se actualizó).</div>
+
+  <div class="topbar">
+    <a href="./index.html">Volver a gráficas</a>
+    <button id="btnReload">Recargar</button>
+    <span class="small" id="lastUpdate">Última actualización (UTC): -</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th>Label</th>
+        <th>Units</th>
+        <th>Último valor</th>
+        <th>Timestamp</th>
+        <th>Estado</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+
+  <p class="small" style="margin-top:10px;">
+    Nota: “Estado” aquí es por frescura de datos: OK (&lt;=30 min), Aviso (31–60 min), Crítico (&gt;60 min).
+  </p>
+</div>
+
+<script>
+  const REFRESH_MS = 30000;
+
+  async function fetchJson(url){
+    const res = await fetch(url + "?t=" + Date.now());
+    if (!res.ok) throw new Error(`No se puede leer ${url} (HTTP ${res.status})`);
+    return await res.json();
+  }
+  async function fetchText(url){
+    const res = await fetch(url + "?t=" + Date.now());
+    if (!res.ok) throw new Error(`No se puede leer ${url} (HTTP ${res.status})`);
+    return await res.text();
+  }
+
+  function parseLastValid(text){
+    const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
+    for (let i=lines.length-1; i>=0; i--){
+      const parts = lines[i].split(";");
+      if (parts.length < 2) continue;
+      const ts = parts[0].trim();
+      const val = parts[1].trim();
+      if (!ts || !val || val === "NOT_FOUND") continue;
+      const d = new Date(ts);
+      if (isNaN(d.getTime())) continue;
+      return { ts: d, val };
+    }
+    return null;
+  }
+
+  function ageMin(d){
+    return Math.round((Date.now() - d.getTime())/60000);
+  }
+
+  function statusPill(mins){
+    if (mins <= 30) return { cls:"pill ok", txt:`OK (${mins} min)` };
+    if (mins <= 60) return { cls:"pill warn", txt:`Aviso (${mins} min)` };
+    return { cls:"pill bad", txt:`Crítico (${mins} min)` };
+  }
+
+  async function load(){
+    const tbody = document.getElementById("tbody");
+    tbody.innerHTML = "";
+
+    const manifest = await fetchJson("data/acs_manifest.json");
+    document.getElementById("lastUpdate").textContent =
+      "Última actualización (UTC): " + (manifest.timestamp_utc || "-");
+
+    const sensors = (manifest.acs || []).map(s => ({...s, item:(s.item||"").toUpperCase()}));
+
+    for (const s of sensors){
+      const txt = await fetchText("data/" + s.file);
+      const last = parseLastValid(txt);
+
+      const tr = document.createElement("tr");
+      const tsStr = last ? last.ts.toISOString() : "-";
+      const valStr = last ? last.val : "NOT_FOUND";
+      const mins = last ? ageMin(last.ts) : 9999;
+      const st = statusPill(mins);
+
+      tr.innerHTML = `
+        <td>${s.item}</td>
+        <td>${s.label || ""}</td>
+        <td>${s.units || ""}</td>
+        <td>${valStr}</td>
+        <td>${tsStr}</td>
+        <td><span class="${st.cls}">${st.txt}</span></td>
+      `;
+      tbody.appendChild(tr);
+    }
+  }
+
+  document.getElementById("btnReload").addEventListener("click", load);
+
+  load();
+  setInterval(load, REFRESH_MS);
+</script>
+</body>
+</html>
