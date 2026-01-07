@@ -8,7 +8,7 @@ OUT_SVG = "esquema_render.svg"
 LATEST_JSON = Path("data") / "latest.json"
 
 # Ajusta esto si tu label exacto es distinto
-S9_LABEL_CONTAINS = "deposito acs"  # busca "Depósito ACS" aunque venga sin acento
+S9_LABEL_CONTAINS = "TÂª DepÃ³sito ACS"  # busca "Depósito ACS" aunque venga sin acento
 
 
 def normalize(s: str) -> str:
