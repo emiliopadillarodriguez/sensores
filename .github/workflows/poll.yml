@@ -38,11 +38,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+          - name: Render esquema
+        run: |
+          python render_esquema.py
+
+
           # Añade los archivos generados
           git add data/latest.json
           git add data/deposito_acs.txt 2>/dev/null || true
           git add data/acs_manifest.json 2>/dev/null || true
           git add data/acs_*.txt 2>/dev/null || true
+          git add esquema_render.svg 2>/dev/null || true
+
 
           # Si no hay cambios, salimos
           if git diff --cached --quiet; then
