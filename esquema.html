@@ -3,52 +3,139 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Esquema sala de calderas (sensores)</title>
-
-  <!-- Auto-recarga la página cada 60s -->
-  <meta http-equiv="refresh" content="60">
+  <title>Esquema sala de calderas</title>
 
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 16px; }
-    .top { display:flex; gap:12px; align-items:center; flex-wrap: wrap; }
-    .btn { padding:8px 12px; border:1px solid #ccc; border-radius:8px; background:#fff; cursor:pointer; }
-    .hint { color:#555; font-size:14px; }
-    .frame { margin-top: 12px; border:1px solid #e5e5e5; border-radius:12px; overflow:hidden; }
-    iframe { width: 100%; height: calc(100vh - 150px); border:0; background:#fff; }
+    body { font-family: system-ui, Arial, sans-serif; margin: 0; }
+    header {
+      position: sticky; top: 0; z-index: 10;
+      background: white;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 10px 12px;
+      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+    }
+    h1 { font-size: 16px; margin: 0; }
+    .btn {
+      padding: 8px 12px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      text-decoration: none;
+      color: #111;
+      font-weight: 600;
+    }
+    .btn-red {
+      background: #d90000;
+      border-color: #b30000;
+      color: #fff;
+    }
+    .hint { font-size: 13px; color: #555; }
+    #viewer {
+      width: 100vw;
+      height: calc(100vh - 58px);
+      overflow: hidden;
+      background: #fafafa;
+    }
+    #svgHost {
+      width: 100%;
+      height: 100%;
+    }
+    /* El SVG embebido ocupa todo y permite zoom */
+    #svgHost svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
   </style>
 </head>
+
 <body>
-  <h1>Esquema (valores en tiempo real)</h1>
-
-  <div class="top">
-    <button class="btn" onclick="reloadSvg()">Recargar ahora</button>
-    <a class="btn" href="index.html">Volver a gráficas</a>
+  <header>
+    <h1>Esquema (zoom y pan)</h1>
+    <a class="btn" href="index.html">⬅ Volver a gráficas</a>
+    <button class="btn btn-red" onclick="reloadSvg()">Recargar</button>
+    <button class="btn" onclick="zoomIn()">Zoom +</button>
+    <button class="btn" onclick="zoomOut()">Zoom -</button>
+    <button class="btn" onclick="resetView()">Reset</button>
     <span class="hint" id="status">Cargando…</span>
+  </header>
+
+  <div id="viewer">
+    <div id="svgHost"></div>
   </div>
 
-  <div class="frame">
-    <!-- iframe para que el SVG se vea grande -->
-    <iframe id="svgFrame" title="Esquema" src=""></iframe>
-  </div>
+  <!-- Librería para zoom/pan en SVG -->
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 
   <script>
-    function loadSvg() {
-      // Cache-busting: añade ?v=timestamp para forzar descarga del SVG actualizado
+    let panZoom = null;
+
+    async function loadSvgText() {
+      // cache-buster para forzar la versión nueva
       const url = "esquema_render.svg?v=" + Date.now();
-      document.getElementById("svgFrame").src = url;
-      document.getElementById("status").textContent =
-        "Última recarga: " + new Date().toLocaleString();
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error("No puedo cargar esquema_render.svg (" + res.status + ")");
+      return await res.text();
     }
 
-    function reloadSvg() {
-      loadSvg();
+    async function reloadSvg() {
+      const status = document.getElementById("status");
+      status.textContent = "Cargando esquema…";
+
+      // Cargar SVG
+      const svgText = await loadSvgText();
+      const host = document.getElementById("svgHost");
+      host.innerHTML = svgText;
+
+      const svgEl = host.querySelector("svg");
+      if (!svgEl) throw new Error("El archivo no parece un SVG válido.");
+
+      // Asegura que sea responsive: si no tiene viewBox, se lo intentamos poner
+      // (muchos SVG de draw.io lo traen ya)
+      if (!svgEl.getAttribute("viewBox")) {
+        const w = svgEl.getAttribute("width");
+        const h = svgEl.getAttribute("height");
+        if (w && h) svgEl.setAttribute("viewBox", `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
+      }
+      svgEl.removeAttribute("width");
+      svgEl.removeAttribute("height");
+
+      // Reiniciar panZoom si ya existía
+      if (panZoom) {
+        try { panZoom.destroy(); } catch(e) {}
+        panZoom = null;
+      }
+
+      // Activar zoom/pan
+      panZoom = svgPanZoom(svgEl, {
+        zoomEnabled: true,
+        controlIconsEnabled: false,
+        fit: true,
+        center: true,
+        minZoom: 0.2,
+        maxZoom: 20,
+        zoomScaleSensitivity: 0.25,
+        dblClickZoomEnabled: true
+      });
+
+      status.textContent = "OK · " + new Date().toLocaleString();
     }
+
+    function zoomIn()  { if (panZoom) panZoom.zoomIn(); }
+    function zoomOut() { if (panZoom) panZoom.zoomOut(); }
+    function resetView() { if (panZoom) { panZoom.resetZoom(); panZoom.center(); panZoom.fit(); } }
 
     // Carga inicial
-    loadSvg();
+    reloadSvg().catch(err => {
+      document.getElementById("status").textContent = "ERROR: " + err.message;
+      console.error(err);
+    });
 
-    // Recarga del SVG cada 30s (aunque la página ya se refresca cada 60s)
-    setInterval(loadSvg, 30000);
+    // Auto-recarga cada 60s (puedes subirlo/bajarlo)
+    setInterval(() => {
+      reloadSvg().catch(err => console.error(err));
+    }, 60000);
   </script>
 </body>
 </html>
