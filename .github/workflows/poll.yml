@@ -29,9 +29,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests beautifulsoup4
 
-      - name: Run fetch script
+      - name: Run fetch + render
         run: |
           python fetch_sensors.py
+          python render_esquema.py
 
       - name: Commit and push if changed
         run: |
