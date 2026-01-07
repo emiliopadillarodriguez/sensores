@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Esquema sala de calderas (sensores)</title>
+
+  <!-- Auto-recarga la página cada 60s -->
+  <meta http-equiv="refresh" content="60">
+
+  <style>
+    body { font-family: system-ui, Arial, sans-serif; margin: 16px; }
+    .top { display:flex; gap:12px; align-items:center; flex-wrap: wrap; }
+    .btn { padding:8px 12px; border:1px solid #ccc; border-radius:8px; background:#fff; cursor:pointer; }
+    .hint { color:#555; font-size:14px; }
+    .frame { margin-top: 12px; border:1px solid #e5e5e5; border-radius:12px; overflow:hidden; }
+    iframe { width: 100%; height: calc(100vh - 150px); border:0; background:#fff; }
+  </style>
+</head>
+<body>
+  <h1>Esquema (valores en tiempo real)</h1>
+
+  <div class="top">
+    <button class="btn" onclick="reloadSvg()">Recargar ahora</button>
+    <a class="btn" href="index.html">Volver a gráficas</a>
+    <span class="hint" id="status">Cargando…</span>
+  </div>
+
+  <div class="frame">
+    <!-- iframe para que el SVG se vea grande -->
+    <iframe id="svgFrame" title="Esquema" src=""></iframe>
+  </div>
+
+  <script>
+    function loadSvg() {
+      // Cache-busting: añade ?v=timestamp para forzar descarga del SVG actualizado
+      const url = "esquema_render.svg?v=" + Date.now();
+      document.getElementById("svgFrame").src = url;
+      document.getElementById("status").textContent =
+        "Última recarga: " + new Date().toLocaleString();
+    }
+
+    function reloadSvg() {
+      loadSvg();
+    }
+
+    // Carga inicial
+    loadSvg();
+
+    // Recarga del SVG cada 30s (aunque la página ya se refresca cada 60s)
+    setInterval(loadSvg, 30000);
+  </script>
+</body>
+</html>
