@@ -1,40 +1,69 @@
+import json
 import re
-import os
 from pathlib import Path
 
+# Archivos
 TEMPLATE_SVG = "esquema.drawio.svg"
 OUT_SVG = "esquema_render.svg"
+LATEST_JSON = Path("data") / "latest.json"
+
+# Ajusta esto si tu label exacto es distinto
+S9_LABEL_CONTAINS = "deposito acs"  # busca "Depósito ACS" aunque venga sin acento
+
+
+def normalize(s: str) -> str:
+    """Normaliza para comparar sin líos de mayúsculas/acentos/espacios."""
+    if s is None:
+        return ""
+    s = str(s).strip().lower()
+    # simplifica espacios
+    s = " ".join(s.split())
+    # quita símbolos raros comunes (por ejemplo TÂª)
+    s = s.replace("tª", "t").replace("tÂª", "t").replace("º", "")
+    return s
+
+
+def get_s9_value_from_latest() -> str:
+    if not LATEST_JSON.exists():
+        return "NO_LATEST_JSON"
+
+    data = json.loads(LATEST_JSON.read_text(encoding="utf-8"))
+    sensors = data.get("sensors", [])
+    target = normalize(S9_LABEL_CONTAINS)
+
+    # Busca por label
+    for s in sensors:
+        label = normalize(s.get("label", ""))
+        if target in label:
+            val = str(s.get("value", "NOT_FOUND")).strip()
+            units = str(s.get("units", "")).strip()
+            # Si quieres incluir unidades en el dibujo, descomenta esta línea:
+            # return f"{val} {units}".strip()
+            return val
+
+    return "NOT_FOUND"
+
 
 def main():
-    # Carpeta real desde la que se ejecuta
-    cwd = Path.cwd()
     here = Path(__file__).resolve().parent
-
-    print("=== DEBUG ===")
-    print("CWD (donde ejecutas):", cwd)
-    print("SCRIPT DIR (donde está el .py):", here)
-    print("Archivos en CWD:", [p.name for p in cwd.iterdir()])
-    print("Archivos en SCRIPT DIR:", [p.name for p in here.iterdir()])
-    print("==============")
-
-    # Vamos a leer SIEMPRE desde la carpeta del script (para evitar líos)
-    in_path = here / TEMPLATE_SVG
+    svg_path = here / TEMPLATE_SVG
     out_path = here / OUT_SVG
 
-    print("Plantilla esperada en:", in_path)
+    # Lee plantilla SVG
+    svg = svg_path.read_text(encoding="utf-8")
 
-    if not in_path.exists():
-        raise FileNotFoundError(f"No existe la plantilla: {in_path}")
+    # Lee valor real
+    s9_value = get_s9_value_from_latest()
 
-    svg = in_path.read_text(encoding="utf-8", errors="replace")
+    # Sustituye SOLO {{S9}}
+    svg = re.sub(r"\{\{S9\}\}", s9_value, svg)
 
-    pattern = r"\{\{\s*S9\s*\}\}"
-    new_svg, n = re.subn(pattern, "PRUEBA 123", svg)
-    print(f"Reemplazos realizados: {n}")
+    # Guarda render
+    out_path.write_text(svg, encoding="utf-8")
+    print(f"OK: generado {OUT_SVG} con S9={s9_value}")
 
-    out_path.write_text(new_svg, encoding="utf-8")
-    print("✅ Creado:", out_path)
 
 if __name__ == "__main__":
     main()
+
 
