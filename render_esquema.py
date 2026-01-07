@@ -7,41 +7,44 @@ TEMPLATE_SVG = "esquema.drawio.svg"
 OUT_SVG = "esquema_render.svg"
 LATEST_JSON = Path("data") / "latest.json"
 
-# Ajusta esto si tu label exacto es distinto
-S9_LABEL_CONTAINS = "TÂª DepÃ³sito ACS"  # busca "Depósito ACS" aunque venga sin acento
+# Hasta qué S quieres rellenar (ajusta si quieres 18, 26, 29, etc.)
+MAX_S = 29
+
+# Si quieres que en el esquema salga "58.27 DegC" pon True
+INCLUDE_UNITS = False
 
 
-def normalize(s: str) -> str:
-    """Normaliza para comparar sin líos de mayúsculas/acentos/espacios."""
-    if s is None:
-        return ""
-    s = str(s).strip().lower()
-    # simplifica espacios
-    s = " ".join(s.split())
-    # quita símbolos raros comunes (por ejemplo TÂª)
-    s = s.replace("tª", "t").replace("tÂª", "t").replace("º", "")
-    return s
+def safe_str(x) -> str:
+    return "" if x is None else str(x).strip()
 
 
-def get_s9_value_from_latest() -> str:
+def load_latest_sensors_map() -> dict:
+    """
+    Devuelve un dict tipo:
+      {"S1": {"value":"-0.96","units":"ºC"}, ...}
+    Ignora filas raras donde item no sea S<number>.
+    """
     if not LATEST_JSON.exists():
-        return "NO_LATEST_JSON"
+        return {}
 
     data = json.loads(LATEST_JSON.read_text(encoding="utf-8"))
     sensors = data.get("sensors", [])
-    target = normalize(S9_LABEL_CONTAINS)
+    out = {}
 
-    # Busca por label
     for s in sensors:
-        label = normalize(s.get("label", ""))
-        if target in label:
-            val = str(s.get("value", "NOT_FOUND")).strip()
-            units = str(s.get("units", "")).strip()
-            # Si quieres incluir unidades en el dibujo, descomenta esta línea:
-            # return f"{val} {units}".strip()
-            return val
+        item = safe_str(s.get("item", ""))
+        # Solo items tipo S1, S2, ... S29
+        m = re.fullmatch(r"S(\d+)", item)
+        if not m:
+            continue
 
-    return "NOT_FOUND"
+        value = safe_str(s.get("value", ""))
+        units = safe_str(s.get("units", ""))
+
+        # Guarda aunque value esté vacío; si no quieres, puedes filtrar aquí
+        out[item] = {"value": value, "units": units}
+
+    return out
 
 
 def main():
@@ -49,21 +52,31 @@ def main():
     svg_path = here / TEMPLATE_SVG
     out_path = here / OUT_SVG
 
-    # Lee plantilla SVG
     svg = svg_path.read_text(encoding="utf-8")
 
-    # Lee valor real
-    s9_value = get_s9_value_from_latest()
+    smap = load_latest_sensors_map()
 
-    # Sustituye SOLO {{S9}}
-    svg = re.sub(r"\{\{S9\}\}", s9_value, svg)
+    # Reemplaza {{S1}}..{{S29}} si existe en el JSON
+    for n in range(1, MAX_S + 1):
+        key = f"S{n}"
+        if key not in smap:
+            # No existe: no tocamos el token y seguimos
+            continue
 
-    # Guarda render
+        value = smap[key]["value"]
+        units = smap[key]["units"]
+
+        if INCLUDE_UNITS and units:
+            repl = f"{value} {units}".strip()
+        else:
+            repl = value
+
+        # Sustituye exactamente el token {{Sx}} (con llaves)
+        svg = re.sub(r"\{\{" + re.escape(key) + r"\}\}", repl, svg)
+
     out_path.write_text(svg, encoding="utf-8")
-    print(f"OK: generado {OUT_SVG} con S9={s9_value}")
+    print(f"OK: generado {OUT_SVG} rellenando S1..S{MAX_S} (si existen).")
 
 
 if __name__ == "__main__":
     main()
-
-
