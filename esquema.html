@@ -7,15 +7,15 @@
 
   <style>
     body { font-family: system-ui, Arial, sans-serif; margin: 0; }
-    header {
-      position: sticky; top: 0; z-index: 10;
-      background: white;
+    header{
+      position: sticky; top: 0; z-index: 50;
+      background: #fff;
       border-bottom: 1px solid #e5e5e5;
       padding: 10px 12px;
-      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
     }
     h1 { font-size: 16px; margin: 0; }
-    .btn {
+    .btn{
       padding: 8px 12px;
       border: 1px solid #ccc;
       border-radius: 10px;
@@ -24,118 +24,212 @@
       text-decoration: none;
       color: #111;
       font-weight: 600;
+      user-select: none;
     }
-    .btn-red {
-      background: #d90000;
-      border-color: #b30000;
-      color: #fff;
+    .btn-red{
+      background:#d90000; border-color:#b30000; color:#fff;
+    }
+    .btn-on{
+      outline: 3px solid rgba(217,0,0,.25);
+      border-color:#d90000;
     }
     .hint { font-size: 13px; color: #555; }
-    #viewer {
+    .spacer { flex: 1; }
+
+    /* Contenedor con scroll en ambas direcciones */
+    #viewport{
       width: 100vw;
       height: calc(100vh - 58px);
-      overflow: hidden;
+      overflow: auto;                /* <-- scroll H y V */
       background: #fafafa;
+      position: relative;
     }
-    #svgHost {
-      width: 100%;
-      height: 100%;
+
+    /* El SVG lo ponemos dentro de un "canvas" para que pueda ser más grande que la pantalla */
+    #svgHost{
+      position: relative;
+      display: inline-block;         /* para que el ancho sea el del contenido */
+      padding: 12px;
     }
-    /* El SVG embebido ocupa todo y permite zoom */
-    #svgHost svg {
-      width: 100%;
-      height: 100%;
+
+    /* El SVG NO lo forzamos a 100% aquí, para que el scroll tenga sentido */
+    #svgHost svg{
       display: block;
+      height: auto;
+      max-width: none;               /* <-- permite que sea más ancho que la pantalla */
     }
+
+    /* Lupa */
+    #loupe{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 260px;
+      height: 200px;
+      border: 2px solid #d90000;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+      display: none;                 /* se muestra al activar */
+      overflow: hidden;
+      z-index: 100;
+    }
+    #loupeHeader{
+      background: #d90000;
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 6px 10px;
+      display:flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #loupeBody{
+      width: 100%;
+      height: calc(100% - 30px);
+      position: relative;
+      background: #fff;
+    }
+    #loupeSvgWrap{
+      position: absolute;
+      left: 0; top: 0;
+      transform-origin: 0 0;
+    }
+
+    /* pequeño indicador de estado */
+    .badge{ padding:4px 10px; border-radius:999px; background:#f1f1f1; }
   </style>
 </head>
 
 <body>
   <header>
-    <h1>Esquema (zoom y pan)</h1>
+    <h1>Esquema</h1>
     <a class="btn" href="index.html">⬅ Volver a gráficas</a>
     <button class="btn btn-red" onclick="reloadSvg()">Recargar</button>
-    <button class="btn" onclick="zoomIn()">Zoom +</button>
-    <button class="btn" onclick="zoomOut()">Zoom -</button>
-    <button class="btn" onclick="resetView()">Reset</button>
-    <span class="hint" id="status">Cargando…</span>
+
+    <button id="btnLoupe" class="btn" onclick="toggleLoupe()">🔎 Lupa</button>
+
+    <span class="spacer"></span>
+    <span class="hint badge" id="status">Cargando…</span>
   </header>
 
-  <div id="viewer">
-    <div id="svgHost"></div>
+  <div id="viewport">
+    <div id="svgHost">Cargando esquema…</div>
   </div>
 
-  <!-- Librería para zoom/pan en SVG -->
-  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <!-- Lupa -->
+  <div id="loupe">
+    <div id="loupeHeader">
+      <span>🔎 Lupa</span>
+      <button class="btn" style="padding:4px 8px;border-radius:8px" onclick="toggleLoupe()">Cerrar</button>
+    </div>
+    <div id="loupeBody">
+      <div id="loupeSvgWrap"></div>
+    </div>
+  </div>
 
   <script>
-    let panZoom = null;
+    const SVG_URL = "esquema_render.svg";
 
-    async function loadSvgText() {
-      // cache-buster para forzar la versión nueva
-      const url = "esquema_render.svg?v=" + Date.now();
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("No puedo cargar esquema_render.svg (" + res.status + ")");
-      return await res.text();
+    let loupeOn = false;
+    let svgEl = null;          // SVG en la página principal
+    let loupeSvgEl = null;     // SVG duplicado dentro de la lupa
+    const LOUPE_SCALE = 2.8;   // zoom de la lupa (sube/baja a gusto)
+
+    function setStatus(text){ document.getElementById("status").textContent = text; }
+
+    async function reloadSvg(){
+      try{
+        setStatus("Cargando…");
+        const url = SVG_URL + "?v=" + Date.now();   // cache-buster
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) throw new Error("No puedo cargar SVG (" + res.status + ")");
+        const svgText = await res.text();
+
+        // Insertar SVG
+        const host = document.getElementById("svgHost");
+        host.innerHTML = svgText;
+        svgEl = host.querySelector("svg");
+        if (!svgEl) throw new Error("El fichero no parece un SVG válido.");
+
+        // Quitar width/height para que el tamaño sea "natural" (y el scroll funcione)
+        // Si el SVG trae viewBox, perfecto.
+        svgEl.removeAttribute("width");
+        svgEl.removeAttribute("height");
+        svgEl.style.maxWidth = "none";
+
+        // Preparar lupa (duplicado del SVG dentro de la lupa)
+        const loupeWrap = document.getElementById("loupeSvgWrap");
+        loupeWrap.innerHTML = svgText;
+        loupeSvgEl = loupeWrap.querySelector("svg");
+        if (loupeSvgEl){
+          loupeSvgEl.removeAttribute("width");
+          loupeSvgEl.removeAttribute("height");
+          loupeSvgEl.style.maxWidth = "none";
+        }
+
+        setStatus("OK · " + new Date().toLocaleString());
+      }catch(e){
+        console.error(e);
+        setStatus("ERROR: " + e.message);
+      }
     }
 
-    async function reloadSvg() {
-      const status = document.getElementById("status");
-      status.textContent = "Cargando esquema…";
+    function toggleLoupe(){
+      loupeOn = !loupeOn;
+      const loupe = document.getElementById("loupe");
+      const btn = document.getElementById("btnLoupe");
+      loupe.style.display = loupeOn ? "block" : "none";
+      btn.classList.toggle("btn-on", loupeOn);
 
-      // Cargar SVG
-      const svgText = await loadSvgText();
+      if (loupeOn) setStatus("Lupa activada (mueve el ratón sobre el esquema)");
+      else setStatus("Lupa desactivada");
+    }
+
+    function updateLoupe(clientX, clientY){
+      if (!loupeOn || !svgEl || !loupeSvgEl) return;
+
+      const viewport = document.getElementById("viewport");
       const host = document.getElementById("svgHost");
-      host.innerHTML = svgText;
+      const loupeWrap = document.getElementById("loupeSvgWrap");
+      const loupeBody = document.getElementById("loupeBody");
 
-      const svgEl = host.querySelector("svg");
-      if (!svgEl) throw new Error("El archivo no parece un SVG válido.");
+      // Coordenadas del ratón dentro del viewport (teniendo en cuenta scroll)
+      const vpRect = viewport.getBoundingClientRect();
+      const xInViewport = clientX - vpRect.left + viewport.scrollLeft;
+      const yInViewport = clientY - vpRect.top  + viewport.scrollTop;
 
-      // Asegura que sea responsive: si no tiene viewBox, se lo intentamos poner
-      // (muchos SVG de draw.io lo traen ya)
-      if (!svgEl.getAttribute("viewBox")) {
-        const w = svgEl.getAttribute("width");
-        const h = svgEl.getAttribute("height");
-        if (w && h) svgEl.setAttribute("viewBox", `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
-      }
-      svgEl.removeAttribute("width");
-      svgEl.removeAttribute("height");
+      // Coordenadas dentro del host (por si hay padding)
+      const hostRect = host.getBoundingClientRect();
+      const hostX = xInViewport - (hostRect.left - vpRect.left + viewport.scrollLeft);
+      const hostY = yInViewport - (hostRect.top  - vpRect.top  + viewport.scrollTop);
 
-      // Reiniciar panZoom si ya existía
-      if (panZoom) {
-        try { panZoom.destroy(); } catch(e) {}
-        panZoom = null;
-      }
+      // Centrar la zona en la lupa
+      const lw = loupeBody.clientWidth;
+      const lh = loupeBody.clientHeight;
 
-      // Activar zoom/pan
-      panZoom = svgPanZoom(svgEl, {
-        zoomEnabled: true,
-        controlIconsEnabled: false,
-        fit: true,
-        center: true,
-        minZoom: 0.2,
-        maxZoom: 20,
-        zoomScaleSensitivity: 0.25,
-        dblClickZoomEnabled: true
-      });
+      const tx = -(hostX * LOUPE_SCALE) + lw/2;
+      const ty = -(hostY * LOUPE_SCALE) + lh/2;
 
-      status.textContent = "OK · " + new Date().toLocaleString();
+      loupeWrap.style.transform = `translate(${tx}px, ${ty}px) scale(${LOUPE_SCALE})`;
     }
 
-    function zoomIn()  { if (panZoom) panZoom.zoomIn(); }
-    function zoomOut() { if (panZoom) panZoom.zoomOut(); }
-    function resetView() { if (panZoom) { panZoom.resetZoom(); panZoom.center(); panZoom.fit(); } }
-
-    // Carga inicial
-    reloadSvg().catch(err => {
-      document.getElementById("status").textContent = "ERROR: " + err.message;
-      console.error(err);
+    // Mouse move sobre el viewport -> mueve la lupa
+    document.getElementById("viewport").addEventListener("mousemove", (e) => {
+      updateLoupe(e.clientX, e.clientY);
     });
 
-    // Auto-recarga cada 60s (puedes subirlo/bajarlo)
-    setInterval(() => {
-      reloadSvg().catch(err => console.error(err));
-    }, 60000);
+    // En móvil: con el dedo (touch)
+    document.getElementById("viewport").addEventListener("touchmove", (e) => {
+      if (!e.touches || !e.touches[0]) return;
+      updateLoupe(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: true });
+
+    // Carga inicial
+    reloadSvg();
+
+    // Auto-recarga cada 60s
+    setInterval(reloadSvg, 60000);
   </script>
 </body>
 </html>
