@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-01-09T11:29:11+00:00",
+  "timestamp_utc": "2026-01-09T11:36:15+00:00",
   "sensors": [
     {
       "item": "Login",
@@ -8,7 +8,7 @@
       "units": "Modules"
     },
     {
-      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones Item Label Value Units Graph Alarm S1 TÂª Exterior 9.00 ÂºC Value - 15 Minutes (P1) No Alarm S2 TÂª Imp. Cald. 1 ACS 17.73 DegC Value - 15 Minutes (P2) No Alarm S3 TÂª Imp. Cald. 2 Calef. 68.83 DegC Value - 15 Minutes (P3) No Alarm S4 TÂª Ret. Cald. 1 ACS 65.92 DegC Value - 15 Minutes (P4) No Alarm S5 TÂª Ret. Cald. 2 Calef. 64.75 DegC Value - 15 Minutes (P5) No Alarm S7 TÂª Ida CalefacciÃ³n 65.11 DegC Value - 15 Minutes (P7) Value - 15 Minutes (P11) No Alarm S8 TÂª Ida Primario ACS 68.64 DegC Value - 15 Minutes (P8) No Alarm S9 TÂª DepÃ³sito ACS 59.00 DegC Value - 15 Minutes (P9) No Alarm S10 TÂª Consumo ACS 59.00 DegC Value - 10 Minutes (P10) No Alarm S12 EnergÃ­a C. Calefaccion 351400000.00 WH No Alarm",
+      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones Item Label Value Units Graph Alarm S1 TÂª Exterior 8.90 ÂºC Value - 15 Minutes (P1) No Alarm S2 TÂª Imp. Cald. 1 ACS 17.74 DegC Value - 15 Minutes (P2) No Alarm S3 TÂª Imp. Cald. 2 Calef. 69.23 DegC Value - 15 Minutes (P3) No Alarm S4 TÂª Ret. Cald. 1 ACS 66.47 DegC Value - 15 Minutes (P4) No Alarm S5 TÂª Ret. Cald. 2 Calef. 64.94 DegC Value - 15 Minutes (P5) No Alarm S7 TÂª Ida CalefacciÃ³n 65.71 DegC Value - 15 Minutes (P7) Value - 15 Minutes (P11) No Alarm S8 TÂª Ida Primario ACS 69.23 DegC Value - 15 Minutes (P8) No Alarm S9 TÂª DepÃ³sito ACS 58.56 DegC Value - 15 Minutes (P9) No Alarm S10 TÂª Consumo ACS 58.56 DegC Value - 10 Minutes (P10) No Alarm S12 EnergÃ­a C. Calefaccion 351400000.00 WH No Alarm",
       "label": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones",
       "value": "Digital Inputs",
       "units": "Drivers"
@@ -28,55 +28,55 @@
     {
       "item": "S1",
       "label": "TÂª Exterior",
-      "value": "9.00",
+      "value": "8.90",
       "units": "ÂºC"
     },
     {
       "item": "S2",
       "label": "TÂª Imp. Cald. 1 ACS",
-      "value": "17.73",
+      "value": "17.74",
       "units": "DegC"
     },
     {
       "item": "S3",
       "label": "TÂª Imp. Cald. 2 Calef.",
-      "value": "68.83",
+      "value": "69.23",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "TÂª Ret. Cald. 1 ACS",
-      "value": "65.92",
+      "value": "66.47",
       "units": "DegC"
     },
     {
       "item": "S5",
       "label": "TÂª Ret. Cald. 2 Calef.",
-      "value": "64.75",
+      "value": "64.94",
       "units": "DegC"
     },
     {
       "item": "S7",
       "label": "TÂª Ida CalefacciÃ³n",
-      "value": "65.11",
+      "value": "65.71",
       "units": "DegC"
     },
     {
       "item": "S8",
       "label": "TÂª Ida Primario ACS",
-      "value": "68.64",
+      "value": "69.23",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "TÂª DepÃ³sito ACS",
-      "value": "59.00",
+      "value": "58.56",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "TÂª Consumo ACS",
-      "value": "59.00",
+      "value": "58.56",
       "units": "DegC"
     },
     {
@@ -86,7 +86,7 @@
       "units": "WH"
     },
     {
-      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones Item Label Value Units Graph Alarm S13 TÂª Retorno ACS 54.49 DegC Value - 15 Minutes (P13) No Alarm S14 TÂª Retorno CalefacciÃ³n 65.13 DegC Value - 15 Minutes (P14) No Alarm S15 TÂª Retorno Primario ACS 66.30 DegC Value - 15 Minutes (P15) No Alarm S16 TÂª Paneles Solares 46.42 DegC Value - 15 Minutes (P16) No Alarm S17 TÂª Deposito 1 Solar 12.42 DegC Value - 15 Minutes (P17) No Alarm S18 TÂª Deposito 2 Solar 25.43 DegC Value - 15 Minutes (P18) No Alarm S19 EnergÃ­a C. Solar 6830000.00 WH No Alarm S20 EnergÃ­a C. ACS 198240000.00 WH No Alarm S21 Volumen C. Calefaccion 202070.00 m3 No Alarm S22 Volumen C. Solar 0.00 m3 No Alarm",
+      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones Item Label Value Units Graph Alarm S13 TÂª Retorno ACS 54.29 DegC Value - 15 Minutes (P13) No Alarm S14 TÂª Retorno CalefacciÃ³n 65.21 DegC Value - 15 Minutes (P14) No Alarm S15 TÂª Retorno Primario ACS 66.87 DegC Value - 15 Minutes (P15) No Alarm S16 TÂª Paneles Solares 46.30 DegC Value - 15 Minutes (P16) No Alarm S17 TÂª Deposito 1 Solar 12.51 DegC Value - 15 Minutes (P17) No Alarm S18 TÂª Deposito 2 Solar 25.01 DegC Value - 15 Minutes (P18) No Alarm S19 EnergÃ­a C. Solar 6830000.00 WH No Alarm S20 EnergÃ­a C. ACS 198240000.00 WH No Alarm S21 Volumen C. Calefaccion 202070.00 m3 No Alarm S22 Volumen C. Solar 0.00 m3 No Alarm",
       "label": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones",
       "value": "Digital Inputs",
       "units": "Drivers"
@@ -94,37 +94,37 @@
     {
       "item": "S13",
       "label": "TÂª Retorno ACS",
-      "value": "54.49",
+      "value": "54.29",
       "units": "DegC"
     },
     {
       "item": "S14",
       "label": "TÂª Retorno CalefacciÃ³n",
-      "value": "65.13",
+      "value": "65.21",
       "units": "DegC"
     },
     {
       "item": "S15",
       "label": "TÂª Retorno Primario ACS",
-      "value": "66.30",
+      "value": "66.87",
       "units": "DegC"
     },
     {
       "item": "S16",
       "label": "TÂª Paneles Solares",
-      "value": "46.42",
+      "value": "46.30",
       "units": "DegC"
     },
     {
       "item": "S17",
       "label": "TÂª Deposito 1 Solar",
-      "value": "12.42",
+      "value": "12.51",
       "units": "DegC"
     },
     {
       "item": "S18",
       "label": "TÂª Deposito 2 Solar",
-      "value": "25.43",
+      "value": "25.01",
       "units": "DegC"
     },
     {
