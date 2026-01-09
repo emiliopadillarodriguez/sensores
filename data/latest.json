@@ -1,10 +1,10 @@
 {
-  "timestamp_utc": "2026-01-09T17:55:09+00:00",
+  "timestamp_utc": "2026-01-09T19:04:53+00:00",
   "sensors": [
     {
       "item": "S1",
       "label": "TÂª Exterior",
-      "value": "5.46",
+      "value": "5.15",
       "units": "ÂºC"
     },
     {
@@ -16,43 +16,43 @@
     {
       "item": "S3",
       "label": "TÂª Imp. Cald. 2 Calef.",
-      "value": "66.47",
+      "value": "67.07",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "TÂª Ret. Cald. 1 ACS",
-      "value": "63.75",
+      "value": "64.15",
       "units": "DegC"
     },
     {
       "item": "S5",
       "label": "TÂª Ret. Cald. 2 Calef.",
-      "value": "57.71",
+      "value": "59.89",
       "units": "DegC"
     },
     {
       "item": "S7",
       "label": "TÂª Ida CalefacciÃ³n",
-      "value": "62.56",
+      "value": "63.18",
       "units": "DegC"
     },
     {
       "item": "S8",
       "label": "TÂª Ida Primario ACS",
-      "value": "66.11",
+      "value": "66.89",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "TÂª DepÃ³sito ACS",
-      "value": "58.36",
+      "value": "57.66",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "TÂª Consumo ACS",
-      "value": "58.40",
+      "value": "57.67",
       "units": "DegC"
     },
     {
