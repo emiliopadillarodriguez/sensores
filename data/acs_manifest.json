@@ -1,155 +1,65 @@
 {
-  "timestamp_utc": "2026-01-09T11:53:44+00:00",
-  "files": [
+  "timestamp_utc": "2026-01-09T12:28:39+00:00",
+  "series": [
     {
       "item": "S1",
-      "label": "Tª Exterior",
-      "units": "ºC",
-      "file": "data/acs_s1_ta_exterior.txt"
+      "label": "TÂª Exterior",
+      "units": "ÂºC",
+      "file": "data/acs_s1_t_ta_exterior.txt"
     },
     {
       "item": "S2",
-      "label": "Tª Imp. Cald. 1 ACS",
+      "label": "TÂª Imp. Cald. 1 ACS",
       "units": "DegC",
-      "file": "data/acs_s2_ta_imp_cald_1_acs.txt"
+      "file": "data/acs_s2_t_ta_imp_cald_1_acs.txt"
     },
     {
       "item": "S3",
-      "label": "Tª Imp. Cald. 2 Calef.",
+      "label": "TÂª Imp. Cald. 2 Calef.",
       "units": "DegC",
-      "file": "data/acs_s3_ta_imp_cald_2_calef.txt"
+      "file": "data/acs_s3_t_ta_imp_cald_2_calef.txt"
     },
     {
       "item": "S4",
-      "label": "Tª Ret. Cald. 1 ACS",
+      "label": "TÂª Ret. Cald. 1 ACS",
       "units": "DegC",
-      "file": "data/acs_s4_ta_ret_cald_1_acs.txt"
+      "file": "data/acs_s4_t_ta_ret_cald_1_acs.txt"
     },
     {
       "item": "S5",
-      "label": "Tª Ret. Cald. 2 Calef.",
+      "label": "TÂª Ret. Cald. 2 Calef.",
       "units": "DegC",
-      "file": "data/acs_s5_ta_ret_cald_2_calef.txt"
+      "file": "data/acs_s5_t_ta_ret_cald_2_calef.txt"
     },
     {
       "item": "S7",
-      "label": "Tª Ida Calefacción",
+      "label": "TÂª Ida CalefacciÃ³n",
       "units": "DegC",
-      "file": "data/acs_s7_ta_ida_calefaccion.txt"
+      "file": "data/acs_s7_t_ta_ida_calefaccia3n.txt"
     },
     {
       "item": "S8",
-      "label": "Tª Ida Primario ACS",
+      "label": "TÂª Ida Primario ACS",
       "units": "DegC",
-      "file": "data/acs_s8_ta_ida_primario_acs.txt"
+      "file": "data/acs_s8_t_ta_ida_primario_acs.txt"
     },
     {
       "item": "S9",
-      "label": "Tª Depósito ACS",
+      "label": "TÂª DepÃ³sito ACS",
       "units": "DegC",
-      "file": "data/acs_s9_ta_deposito_acs.txt"
+      "file": "data/acs_s9_t_ta_depa3sito_acs.txt"
     },
     {
       "item": "S10",
-      "label": "Tª Consumo ACS",
+      "label": "TÂª Consumo ACS",
       "units": "DegC",
-      "file": "data/acs_s10_ta_consumo_acs.txt"
+      "file": "data/acs_s10_t_ta_consumo_acs.txt"
     },
     {
       "item": "S12",
-      "label": "Energía C. Calefaccion",
+      "label": "EnergÃ­a C. Calefaccion",
       "units": "WH",
-      "file": "data/acs_s12_energia_c_calefaccion.txt"
-    },
-    {
-      "item": "S13",
-      "label": "Tª Retorno ACS",
-      "units": "DegC",
-      "file": "data/acs_s13_ta_retorno_acs.txt"
-    },
-    {
-      "item": "S14",
-      "label": "Tª Retorno Calefacción",
-      "units": "DegC",
-      "file": "data/acs_s14_ta_retorno_calefaccion.txt"
-    },
-    {
-      "item": "S15",
-      "label": "Tª Retorno Primario ACS",
-      "units": "DegC",
-      "file": "data/acs_s15_ta_retorno_primario_acs.txt"
-    },
-    {
-      "item": "S16",
-      "label": "Tª Paneles Solares",
-      "units": "DegC",
-      "file": "data/acs_s16_ta_paneles_solares.txt"
-    },
-    {
-      "item": "S17",
-      "label": "Tª Deposito 1 Solar",
-      "units": "DegC",
-      "file": "data/acs_s17_ta_deposito_1_solar.txt"
-    },
-    {
-      "item": "S18",
-      "label": "Tª Deposito 2 Solar",
-      "units": "DegC",
-      "file": "data/acs_s18_ta_deposito_2_solar.txt"
-    },
-    {
-      "item": "S19",
-      "label": "Energía C. Solar",
-      "units": "WH",
-      "file": "data/acs_s19_energia_c_solar.txt"
-    },
-    {
-      "item": "S20",
-      "label": "Energía C. ACS",
-      "units": "WH",
-      "file": "data/acs_s20_energia_c_acs.txt"
-    },
-    {
-      "item": "S21",
-      "label": "Volumen C. Calefaccion",
-      "units": "m3",
-      "file": "data/acs_s21_volumen_c_calefaccion.txt"
-    },
-    {
-      "item": "S24",
-      "label": "Tª Imp. C. Calefaccion",
-      "units": "DegC",
-      "file": "data/acs_s24_ta_imp_c_calefaccion.txt"
-    },
-    {
-      "item": "S25",
-      "label": "Tª Imp. C. Solar",
-      "units": "DegC",
-      "file": "data/acs_s25_ta_imp_c_solar.txt"
-    },
-    {
-      "item": "S26",
-      "label": "Tª Imp. C. ACS",
-      "units": "DegC",
-      "file": "data/acs_s26_ta_imp_c_acs.txt"
-    },
-    {
-      "item": "S27",
-      "label": "Tª Dif. C. Calefaccion",
-      "units": "DegC",
-      "file": "data/acs_s27_ta_dif_c_calefaccion.txt"
-    },
-    {
-      "item": "S28",
-      "label": "Tª Dif. C. Solar",
-      "units": "DegC",
-      "file": "data/acs_s28_ta_dif_c_solar.txt"
-    },
-    {
-      "item": "S29",
-      "label": "Tª Dif. C. ACS",
-      "units": "DegC",
-      "file": "data/acs_s29_ta_dif_c_acs.txt"
+      "file": "data/acs_s12_t_energaa_c_calefaccion.txt"
     }
   ]
 }

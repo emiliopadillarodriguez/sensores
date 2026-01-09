@@ -1,125 +1,65 @@
 {
-  "timestamp_utc": "2026-01-09T11:53:44+00:00",
+  "timestamp_utc": "2026-01-09T12:28:39+00:00",
   "drivers": [
     {
       "item": "D1",
-      "label": "M-P  B. 5.2 - Calefacción",
-      "value": "On"
+      "label": "M-P  B. 5.2 - CalefacciÃ³n",
+      "value": "On",
+      "units": "Normal"
     },
     {
       "item": "D2",
-      "label": "M-P B. 5.1 - Calefacción",
-      "value": "Off"
+      "label": "M-P B. 5.1 - CalefacciÃ³n",
+      "value": "Off",
+      "units": "Normal"
     },
     {
       "item": "D3",
       "label": "ON-OFF B. 1 Caldera ACS",
-      "value": "Off"
+      "value": "Off",
+      "units": "Normal"
     },
     {
       "item": "D4",
-      "label": "M-P B. 2 - Caldera de Calefacción",
-      "value": "On"
+      "label": "M-P B. 2 - Caldera de CalefacciÃ³n",
+      "value": "On",
+      "units": "Normal"
     },
     {
       "item": "D5",
       "label": "ON-OFF B. 3A.1 - Prim. ACS",
-      "value": "On"
+      "value": "On",
+      "units": "Normal"
     },
     {
       "item": "D6",
       "label": "ON-OFF  B. 3A.2 - Prim. ACS",
-      "value": "Off"
+      "value": "Off",
+      "units": "Normal"
     },
     {
       "item": "D7",
       "label": "M-P B. 3B.1 - Sec. ACS",
-      "value": "On"
+      "value": "On",
+      "units": "Normal"
     },
     {
       "item": "D8",
       "label": "M-P B. 3B.2 - Sec. ACS",
-      "value": "Off"
+      "value": "Off",
+      "units": "Normal"
     },
     {
       "item": "D9",
       "label": "M-P B. 7.1 - Paneles Solares",
-      "value": "On"
+      "value": "On",
+      "units": "Normal"
     },
     {
       "item": "D10",
       "label": "M-P B. 7.2 - Paneles Solares",
-      "value": "Off"
-    },
-    {
-      "item": "D12",
-      "label": "A-C V2V Caldera 2",
-      "value": "On"
-    },
-    {
-      "item": "D13",
-      "label": "M-P Quemador Caldera 2",
-      "value": "Off"
-    },
-    {
-      "item": "D15",
-      "label": "A-C V2V Caldera 1",
-      "value": "On"
-    },
-    {
-      "item": "D16",
-      "label": "M-P Quemador Caldera 1",
-      "value": "Off"
-    },
-    {
-      "item": "D17",
-      "label": "M-P B. 6 - Sec. Paneles Solares",
-      "value": "On"
-    },
-    {
-      "item": "D19",
-      "label": "V3V Aerotermo",
-      "value": "0.00"
-    },
-    {
-      "item": "D20",
-      "label": "V3V Consumo ACS",
-      "value": "0.00"
-    },
-    {
-      "item": "D21",
-      "label": "V3V Piscina",
-      "value": "0.00"
-    },
-    {
-      "item": "D22",
-      "label": "V3V Intercambiador Solar",
-      "value": "0.00"
-    },
-    {
-      "item": "D24",
-      "label": "M-P B. 4 Retorno ACS",
-      "value": "On"
-    },
-    {
-      "item": "D27",
-      "label": "Regulacion Quemador Caldera",
-      "value": "100.00"
-    },
-    {
-      "item": "D28",
-      "label": "On-Off B. 8.1 - Piscina",
-      "value": "Off"
-    },
-    {
-      "item": "D29",
-      "label": "On-Off B. 8.2 - Piscina",
-      "value": "Off"
-    },
-    {
-      "item": "D30",
-      "label": "On-Off Aerotermo",
-      "value": "Off"
+      "value": "Off",
+      "units": "Normal"
     }
   ]
 }
