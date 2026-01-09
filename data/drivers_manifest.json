@@ -1,125 +1,125 @@
 {
-  "timestamp_utc": "2026-01-09T11:36:15+00:00",
-  "drivers": [
-    {
-      "item": "Login",
-      "label": "Alarms"
-    },
-    {
-      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones Item Label Value Module Status Alarm D1 M-P  B. 5.2 - CalefacciÃ³n On Normal No Alarm D2 M-P B. 5.1 - CalefacciÃ³n Off Normal No Alarm D3 ON-OFF B. 1 Caldera ACS Off Normal No Alarm D4 M-P B. 2 - Caldera de CalefacciÃ³n On Normal No Alarm D5 ON-OFF B. 3A.1 - Prim. ACS On Normal No Alarm D6 ON-OFF  B. 3A.2 - Prim. ACS Off Normal No Alarm D7 M-P B. 3B.1 - Sec. ACS On Normal No Alarm D8 M-P B. 3B.2 - Sec. ACS Off Normal No Alarm D9 M-P B. 7.1 - Paneles Solares On Normal No Alarm D10 M-P B. 7.2 - Paneles Solares Off Normal No Alarm",
-      "label": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones"
-    },
-    {
-      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones",
-      "label": "Digital Inputs"
-    },
-    {
-      "item": "Item",
-      "label": "Label"
-    },
+  "timestamp_utc": "2026-01-09T11:53:44+00:00",
+  "files": [
     {
       "item": "D1",
-      "label": "M-P  B. 5.2 - CalefacciÃ³n"
+      "label": "M-P  B. 5.2 - Calefacción",
+      "file": "data/drv_D1.txt"
     },
     {
       "item": "D2",
-      "label": "M-P B. 5.1 - CalefacciÃ³n"
+      "label": "M-P B. 5.1 - Calefacción",
+      "file": "data/drv_D2.txt"
     },
     {
       "item": "D3",
-      "label": "ON-OFF B. 1 Caldera ACS"
+      "label": "ON-OFF B. 1 Caldera ACS",
+      "file": "data/drv_D3.txt"
     },
     {
       "item": "D4",
-      "label": "M-P B. 2 - Caldera de CalefacciÃ³n"
+      "label": "M-P B. 2 - Caldera de Calefacción",
+      "file": "data/drv_D4.txt"
     },
     {
       "item": "D5",
-      "label": "ON-OFF B. 3A.1 - Prim. ACS"
+      "label": "ON-OFF B. 3A.1 - Prim. ACS",
+      "file": "data/drv_D5.txt"
     },
     {
       "item": "D6",
-      "label": "ON-OFF  B. 3A.2 - Prim. ACS"
+      "label": "ON-OFF  B. 3A.2 - Prim. ACS",
+      "file": "data/drv_D6.txt"
     },
     {
       "item": "D7",
-      "label": "M-P B. 3B.1 - Sec. ACS"
+      "label": "M-P B. 3B.1 - Sec. ACS",
+      "file": "data/drv_D7.txt"
     },
     {
       "item": "D8",
-      "label": "M-P B. 3B.2 - Sec. ACS"
+      "label": "M-P B. 3B.2 - Sec. ACS",
+      "file": "data/drv_D8.txt"
     },
     {
       "item": "D9",
-      "label": "M-P B. 7.1 - Paneles Solares"
+      "label": "M-P B. 7.1 - Paneles Solares",
+      "file": "data/drv_D9.txt"
     },
     {
       "item": "D10",
-      "label": "M-P B. 7.2 - Paneles Solares"
-    },
-    {
-      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones Item Label Value Module Status Alarm D12 A-C V2V Caldera 2 On Normal No Alarm D13 M-P Quemador Caldera 2 Off Normal No Alarm D15 A-C V2V Caldera 1 On Normal No Alarm D16 M-P Quemador Caldera 1 Off Normal No Alarm D17 M-P B. 6 - Sec. Paneles Solares On Normal No Alarm D19 V3V Aerotermo 0.00 Normal No Alarm D20 V3V Consumo ACS 0.00 Normal No Alarm D21 V3V Piscina 0.00 Normal No Alarm D22 V3V Intercambiador Solar 0.00 Normal No Alarm D24 M-P B. 4 Retorno ACS On Normal No Alarm",
-      "label": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones"
+      "label": "M-P B. 7.2 - Paneles Solares",
+      "file": "data/drv_D10.txt"
     },
     {
       "item": "D12",
-      "label": "A-C V2V Caldera 2"
+      "label": "A-C V2V Caldera 2",
+      "file": "data/drv_D12.txt"
     },
     {
       "item": "D13",
-      "label": "M-P Quemador Caldera 2"
+      "label": "M-P Quemador Caldera 2",
+      "file": "data/drv_D13.txt"
     },
     {
       "item": "D15",
-      "label": "A-C V2V Caldera 1"
+      "label": "A-C V2V Caldera 1",
+      "file": "data/drv_D15.txt"
     },
     {
       "item": "D16",
-      "label": "M-P Quemador Caldera 1"
+      "label": "M-P Quemador Caldera 1",
+      "file": "data/drv_D16.txt"
     },
     {
       "item": "D17",
-      "label": "M-P B. 6 - Sec. Paneles Solares"
+      "label": "M-P B. 6 - Sec. Paneles Solares",
+      "file": "data/drv_D17.txt"
     },
     {
       "item": "D19",
-      "label": "V3V Aerotermo"
+      "label": "V3V Aerotermo",
+      "file": "data/drv_D19.txt"
     },
     {
       "item": "D20",
-      "label": "V3V Consumo ACS"
+      "label": "V3V Consumo ACS",
+      "file": "data/drv_D20.txt"
     },
     {
       "item": "D21",
-      "label": "V3V Piscina"
+      "label": "V3V Piscina",
+      "file": "data/drv_D21.txt"
     },
     {
       "item": "D22",
-      "label": "V3V Intercambiador Solar"
+      "label": "V3V Intercambiador Solar",
+      "file": "data/drv_D22.txt"
     },
     {
       "item": "D24",
-      "label": "M-P B. 4 Retorno ACS"
-    },
-    {
-      "item": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones Item Label Value Module Status Alarm D27 Regulacion Quemador Caldera 100.00 Normal No Alarm D28 On-Off B. 8.1 - Piscina Off Normal No Alarm D29 On-Off B. 8.2 - Piscina Off Normal No Alarm D30 On-Off Aerotermo Off Normal No Alarm",
-      "label": "Digital Inputs Drivers Knobs Plots Schedules Sensors Switches Time Time Zones"
+      "label": "M-P B. 4 Retorno ACS",
+      "file": "data/drv_D24.txt"
     },
     {
       "item": "D27",
-      "label": "Regulacion Quemador Caldera"
+      "label": "Regulacion Quemador Caldera",
+      "file": "data/drv_D27.txt"
     },
     {
       "item": "D28",
-      "label": "On-Off B. 8.1 - Piscina"
+      "label": "On-Off B. 8.1 - Piscina",
+      "file": "data/drv_D28.txt"
     },
     {
       "item": "D29",
-      "label": "On-Off B. 8.2 - Piscina"
+      "label": "On-Off B. 8.2 - Piscina",
+      "file": "data/drv_D29.txt"
     },
     {
       "item": "D30",
-      "label": "On-Off Aerotermo"
+      "label": "On-Off Aerotermo",
+      "file": "data/drv_D30.txt"
     }
   ]
 }
