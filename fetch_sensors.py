@@ -1,183 +1,351 @@
 import json
 import os
+import re
+import unicodedata
 from datetime import datetime, timezone
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
 
-# ====== URLs SENSORS (las tuyas) ======
-SENSOR_URLS = [
-    "http://81.60.206.190/S.htm?ovrideStart=1&",
-    "http://81.60.206.190/S.htm?ovrideStart=13&",
-    "http://81.60.206.190/S.htm?ovrideStart=23&",
-]
+BASE_URL = "http://81.60.206.190"
+DATA_DIR = Path("data")
 
-# ====== URLs DRIVERS (según tus capturas) ======
-DRIVER_URLS = [
-    "http://81.60.206.190/D.htm?ovrideStart=0",
-    "http://81.60.206.190/D.htm?ovrideStart=12",
-    "http://81.60.206.190/D.htm?ovrideStart=27",
-]
+SENSORS_LATEST_JSON = DATA_DIR / "latest.json"
+ACS_MANIFEST_JSON = DATA_DIR / "acs_manifest.json"
 
-OUT_DIR = "data"
-OUT_SENSORS_JSON = os.path.join(OUT_DIR, "latest.json")
+DRIVERS_LATEST_JSON = DATA_DIR / "drivers_latest.json"
+DRIVERS_MANIFEST_JSON = DATA_DIR / "drivers_manifest.json"
 
-OUT_DRIVERS_JSON = os.path.join(OUT_DIR, "drivers_latest.json")
-OUT_DRIVERS_MANIFEST = os.path.join(OUT_DIR, "drivers_manifest.json")
-
-# Driver a probar (TU PRUEBA): D1 = "M-P B. 5.2 - Calefacción"
-DRIVERS_TO_TRACK = ["D1"]
+SESSION_TIMEOUT = 20
 
 
-def _find_table_by_headers(soup: BeautifulSoup, required_headers_lower):
+def utc_now_iso():
+    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def slugify(text: str) -> str:
+    """Convierte a nombre de fichero: minus, sin acentos, espacios->'_' y limpia símbolos raros."""
+    if text is None:
+        return "sin_label"
+    text = text.strip().lower()
+    text = unicodedata.normalize("NFKD", text)
+    text = "".join([c for c in text if not unicodedata.combining(c)])
+    # limpia caracteres típicos del html mal decodificado
+    text = text.replace("Âª", "a").replace("º", "").replace("°", "")
+    # solo letras/números/guion/underscore/espacios
+    text = re.sub(r"[^a-z0-9 _-]+", "", text)
+    text = re.sub(r"\s+", "_", text).strip("_")
+    text = re.sub(r"_+", "_", text)
+    return text or "sin_label"
+
+
+def safe_mkdir(p: Path):
+    p.mkdir(parents=True, exist_ok=True)
+
+
+def append_line(path: Path, line: str):
+    safe_mkdir(path.parent)
+    if path.exists():
+        existing = path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        if existing and existing[-1].strip() == line.strip():
+            return  # evita duplicar la misma línea exacta
+    with open(path, "a", encoding="utf-8") as f:
+        f.write(line.rstrip() + "\n")
+
+
+def write_json(path: Path, obj):
+    safe_mkdir(path.parent)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, ensure_ascii=False, indent=2)
+
+
+def fetch_url(url: str) -> str:
+    r = requests.get(url, timeout=SESSION_TIMEOUT)
+    r.raise_for_status()
+    # fuerza utf-8 pero tolerante
+    r.encoding = r.apparent_encoding or "utf-8"
+    return r.text
+
+
+def parse_table_rows(html: str):
     """
-    Busca una tabla que contenga todos los encabezados indicados (en minúsculas).
+    Devuelve lista de filas dict: {"item","label","value","units"} si existe tabla.
+    Se adapta a las tablas de Trend (Item/Label/Value/Units).
     """
-    for t in soup.find_all("table"):
-        text = " ".join(t.get_text(" ", strip=True).lower().split())
-        ok = True
-        for h in required_headers_lower:
-            if h not in text:
-                ok = False
-                break
-        if ok:
-            return t
-    return None
-
-
-def parse_sensor_table(html: str):
     soup = BeautifulSoup(html, "html.parser")
-    t = _find_table_by_headers(soup, ["item", "label", "value", "units"])
-    if not t:
+    table = soup.find("table")
+    if not table:
         return []
 
-    rows = t.find_all("tr")
+    rows = table.find_all("tr")
     out = []
-    for r in rows[1:]:
-        cols = [c.get_text(" ", strip=True) for c in r.find_all(["td", "th"])]
-        if len(cols) < 4:
+
+    # Detecta cabecera (th)
+    header = [th.get_text(" ", strip=True).lower() for th in rows[0].find_all(["th", "td"])]
+    # en Trend a veces aparece: Item Label Value Units
+    colmap = {}
+    for idx, name in enumerate(header):
+        if "item" in name:
+            colmap["item"] = idx
+        elif "label" in name:
+            colmap["label"] = idx
+        elif "value" in name:
+            colmap["value"] = idx
+        elif "unit" in name:
+            colmap["units"] = idx
+
+    # si no detecta cabecera, asumimos orden típico
+    if not colmap:
+        colmap = {"item": 0, "label": 1, "value": 2, "units": 3}
+
+    for tr in rows[1:]:
+        tds = tr.find_all("td")
+        if not tds:
             continue
 
-        item = cols[0].strip()
-        label = cols[1].strip()
-        value = cols[2].strip()
-        units = cols[3].strip()
+        def get_col(key):
+            i = colmap.get(key, None)
+            if i is None or i >= len(tds):
+                return ""
+            return tds[i].get_text(" ", strip=True)
 
-        if item and label:
-            out.append({"item": item, "label": label, "value": value, "units": units})
+        out.append(
+            {
+                "item": get_col("item"),
+                "label": get_col("label"),
+                "value": get_col("value"),
+                "units": get_col("units"),
+            }
+        )
     return out
 
 
-def parse_driver_table(html: str):
+def extract_sensors_from_pages():
     """
-    Espera una tabla tipo:
-    Item | Label | Value | Module Status | Alarm
+    Tu sistema ya genera latest.json; aquí lo recreamos robusto:
+    - intenta leer varias páginas S.htm?ovrideStart=... hasta que deje de devolver sensores.
+    Si ya tienes un método mejor, puedes dejarlo, pero este suele funcionar.
     """
-    soup = BeautifulSoup(html, "html.parser")
-    t = _find_table_by_headers(soup, ["item", "label", "value", "module", "alarm"])
-    if not t:
-        return []
+    sensors = []
+    seen = set()
 
-    rows = t.find_all("tr")
-    out = []
-    for r in rows[1:]:
-        cols = [c.get_text(" ", strip=True) for c in r.find_all(["td", "th"])]
-        if len(cols) < 5:
+    # En Trend, Sensors suele ir paginado de 0, 12, 24...
+    start = 0
+    step = 12
+    max_pages = 20
+
+    for _ in range(max_pages):
+        url = f"{BASE_URL}/S.htm?ovrideStart={start}"
+        html = fetch_url(url)
+        rows = parse_table_rows(html)
+
+        # Filtra solo items tipo S\d+
+        page_s = []
+        for r in rows:
+            item = (r.get("item") or "").strip()
+            if re.fullmatch(r"S\d+", item):
+                key = item
+                if key not in seen:
+                    seen.add(key)
+                    page_s.append(r)
+
+        if not page_s:
+            # si en esta página no hay ningún sensor, paramos
+            break
+
+        sensors.extend(page_s)
+        start += step
+
+    # Orden por número
+    def s_key(x):
+        m = re.search(r"\d+", x.get("item", ""))
+        return int(m.group()) if m else 99999
+
+    sensors.sort(key=s_key)
+
+    latest = {"timestamp_utc": utc_now_iso(), "sensors": sensors}
+    write_json(SENSORS_LATEST_JSON, latest)
+    return latest
+
+
+def generate_sensor_txts_from_latest(latest_obj):
+    """
+    Crea los txt tipo acs_s9_t_deposito_acs.txt etc para TODOS los S que haya en latest.json
+    """
+    ts = latest_obj.get("timestamp_utc") or utc_now_iso()
+    sensors = latest_obj.get("sensors", [])
+
+    manifest = {
+        "timestamp_utc": ts,
+        "files": [],
+    }
+
+    for s in sensors:
+        item = (s.get("item") or "").strip()
+        if not re.fullmatch(r"S\d+", item):
             continue
 
-        item = cols[0].strip()
-        label = cols[1].strip()
-        value = cols[2].strip()
-        module_status = cols[3].strip()
-        alarm = cols[4].strip()
+        label = s.get("label") or ""
+        value = (s.get("value") or "").strip()
+        units = (s.get("units") or "").strip()
 
-        if item and label:
-            out.append(
-                {
-                    "item": item,
-                    "label": label,
-                    "value": value,
-                    "module_status": module_status,
-                    "alarm": alarm,
-                }
-            )
-    return out
+        # nombre fichero al estilo que ya tienes
+        fname = f"acs_{item.lower()}_{slugify(label)}.txt"
+        fpath = DATA_DIR / fname
+
+        # línea
+        line = f"{ts};{value}"
+        append_line(fpath, line)
+
+        manifest["files"].append(
+            {
+                "item": item,
+                "label": label,
+                "units": units,
+                "file": str(fpath).replace("\\", "/"),
+            }
+        )
+
+    write_json(ACS_MANIFEST_JSON, manifest)
+    return manifest
+
+
+def fetch_all_drivers():
+    """
+    Scrapea Drivers paginados con D.htm?ovrideStart=0,12,24...
+    Devuelve lista de drivers: item Dxx, label, value (On/Off), module status, alarm... (si existe)
+    """
+    drivers = []
+    seen = set()
+
+    start = 0
+    step = 12
+    max_pages = 50
+
+    for _ in range(max_pages):
+        url = f"{BASE_URL}/D.htm?ovrideStart={start}"
+        html = fetch_url(url)
+        soup = BeautifulSoup(html, "html.parser")
+
+        table = soup.find("table")
+        if not table:
+            break
+
+        rows = table.find_all("tr")
+        if len(rows) < 2:
+            break
+
+        # Detecta columnas por cabecera
+        header_cells = rows[0].find_all(["th", "td"])
+        headers = [c.get_text(" ", strip=True).lower() for c in header_cells]
+
+        # queremos al menos item/label/value
+        def col_idx(name_contains):
+            for i, h in enumerate(headers):
+                if name_contains in h:
+                    return i
+            return None
+
+        i_item = col_idx("item") if col_idx("item") is not None else 0
+        i_label = col_idx("label") if col_idx("label") is not None else 1
+        i_value = col_idx("value") if col_idx("value") is not None else 2
+
+        page_count = 0
+        for tr in rows[1:]:
+            tds = tr.find_all("td")
+            if not tds:
+                continue
+
+            item = tds[i_item].get_text(" ", strip=True) if i_item < len(tds) else ""
+            label = tds[i_label].get_text(" ", strip=True) if i_label < len(tds) else ""
+            value = tds[i_value].get_text(" ", strip=True) if i_value < len(tds) else ""
+
+            item = (item or "").strip()
+            if not re.fullmatch(r"D\d+", item):
+                continue
+
+            if item in seen:
+                continue
+
+            seen.add(item)
+            page_count += 1
+            drivers.append({"item": item, "label": label, "value": value})
+
+        # Si esta página no aporta nuevos D, paramos
+        if page_count == 0:
+            break
+
+        start += step
+
+    # Orden por número
+    def d_key(x):
+        m = re.search(r"\d+", x.get("item", ""))
+        return int(m.group()) if m else 99999
+
+    drivers.sort(key=d_key)
+    return drivers
+
+
+def generate_driver_txts(drivers, ts_iso):
+    """
+    Crea drv_Dxx.txt con líneas timestamp;On/Off
+    También genera drivers_latest.json y drivers_manifest.json
+    """
+    latest = {"timestamp_utc": ts_iso, "drivers": drivers}
+    write_json(DRIVERS_LATEST_JSON, latest)
+
+    manifest = {"timestamp_utc": ts_iso, "files": []}
+
+    for d in drivers:
+        item = (d.get("item") or "").strip()
+        if not re.fullmatch(r"D\d+", item):
+            continue
+
+        label = d.get("label") or ""
+        value = (d.get("value") or "").strip()
+
+        # Normaliza a On/Off
+        v = value.strip()
+        if v.lower() in ("on", "off"):
+            norm = "On" if v.lower() == "on" else "Off"
+        else:
+            # si viene vacío u otro, lo guardamos tal cual
+            norm = v
+
+        fpath = DATA_DIR / f"drv_{item}.txt"
+        append_line(fpath, f"{ts_iso};{norm}")
+
+        manifest["files"].append(
+            {
+                "item": item,
+                "label": label,
+                "file": str(fpath).replace("\\", "/"),
+            }
+        )
+
+    write_json(DRIVERS_MANIFEST_JSON, manifest)
+    return latest, manifest
 
 
 def main():
-    os.makedirs(OUT_DIR, exist_ok=True)
+    safe_mkdir(DATA_DIR)
 
-    session = requests.Session()
-    session.headers.update({"User-Agent": "Mozilla/5.0"})
+    # 1) Sensores: (re)generamos latest.json (si ya lo generas tú de otra forma, esto igualmente funciona)
+    sensors_latest = extract_sensors_from_pages()
 
-    now_utc = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    # 2) Genera txt de TODOS los sensores S que haya en latest.json
+    generate_sensor_txts_from_latest(sensors_latest)
 
-    # =========================
-    # 1) SENSORS (como ya tenías)
-    # =========================
-    combined_s = []
-    for url in SENSOR_URLS:
-        r = session.get(url, timeout=20)
-        r.raise_for_status()
-        combined_s.extend(parse_sensor_table(r.text))
+    # 3) Drivers: scrapea D.htm?ovrideStart=...
+    ts = utc_now_iso()
+    drivers = fetch_all_drivers()
+    generate_driver_txts(drivers, ts)
 
-    # dedupe por item (S1, S2, ...)
-    seen = set()
-    sensors = []
-    for s in combined_s:
-        if s["item"] in seen:
-            continue
-        seen.add(s["item"])
-        sensors.append(s)
-
-    with open(OUT_SENSORS_JSON, "w", encoding="utf-8") as f:
-        json.dump({"timestamp_utc": now_utc, "sensors": sensors}, f, ensure_ascii=False, indent=2)
-
-    # =========================
-    # 2) DRIVERS (nuevo)
-    # =========================
-    combined_d = []
-    for url in DRIVER_URLS:
-        r = session.get(url, timeout=20)
-        r.raise_for_status()
-        combined_d.extend(parse_driver_table(r.text))
-
-    # dedupe por item (D1, D2, ...)
-    seen = set()
-    drivers = []
-    for d in combined_d:
-        if d["item"] in seen:
-            continue
-        seen.add(d["item"])
-        drivers.append(d)
-
-    with open(OUT_DRIVERS_JSON, "w", encoding="utf-8") as f:
-        json.dump({"timestamp_utc": now_utc, "drivers": drivers}, f, ensure_ascii=False, indent=2)
-
-    # Manifest (lista rápida)
-    manifest = [{"item": d["item"], "label": d["label"]} for d in drivers]
-    with open(OUT_DRIVERS_MANIFEST, "w", encoding="utf-8") as f:
-        json.dump({"timestamp_utc": now_utc, "drivers": manifest}, f, ensure_ascii=False, indent=2)
-
-    # =========================
-    # 3) TXT histórico SOLO del driver en prueba (D1)
-    # =========================
-    # Busca D1 dentro de drivers y guarda timestamp;On/Off
-    drivers_by_item = {d["item"]: d for d in drivers}
-
-    for drv in DRIVERS_TO_TRACK:
-        d = drivers_by_item.get(drv)
-        if not d:
-            continue
-
-        # Normaliza valor (por si viene "On " o "OFF", etc.)
-        value = (d.get("value") or "").strip()
-        out_txt = os.path.join(OUT_DIR, f"drv_{drv}.txt")
-
-        with open(out_txt, "a", encoding="utf-8") as f:
-            f.write(f"{now_utc};{value}\n")
-
-    print(f"OK: sensores={len(sensors)} drivers={len(drivers)} (TXT D1 si existe)")
+    print(f"OK: Sensores S -> {ACS_MANIFEST_JSON}")
+    print(f"OK: Drivers D -> {DRIVERS_MANIFEST_JSON}")
+    print(f"OK: {len(sensors_latest.get('sensors', []))} sensores en latest.json")
+    print(f"OK: {len(drivers)} drivers detectados")
 
 
 if __name__ == "__main__":
