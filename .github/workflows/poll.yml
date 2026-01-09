@@ -52,6 +52,9 @@ jobs:
           git add data/acs_manifest.json 2>/dev/null || true
           git add data/acs_*.txt 2>/dev/null || true
           git add esquema_render.svg 2>/dev/null || true
+          git add data/drivers_latest.json 2>/dev/null || true
+          git add data/drivers_manifest.json 2>/dev/null || true
+          git add data/drv_*.txt 2>/dev/null || true
 
 
           # Si no hay cambios, salimos
