@@ -1,87 +1,369 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Gráficas Sensores y Bombas</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gráficas Sensores (S) + Drivers (D)</title>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.umd.min.js"></script>
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
+    body { font-family: Arial, Helvetica, sans-serif; margin: 16px; }
+    h1 { margin: 0 0 6px; }
+    .sub { margin: 0 0 12px; color: #444; }
+    .topbar{
+      border:1px solid #ddd; border-radius:12px; padding:12px;
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+      margin-bottom:12px;
     }
+    .btn{ padding:7px 10px; cursor:pointer; border:1px solid #ccc; border-radius:10px; background:#fff; font-weight:700; }
+    .pill{ padding:4px 10px; border-radius:999px; background:#eee; font-size:12px; }
+    .warn{ background:#fff2cc; }
+    .ok{ background:#d9ead3; }
 
-    h1 {
-      margin-bottom: 10px;
-    }
+    .cols { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 980px){ .cols { grid-template-columns: 1fr; } }
 
-    #controls {
-      display: flex;
-      gap: 40px;
-      flex-wrap: wrap;
-      margin-bottom: 20px;
+    .box{ border:1px solid #ddd; border-radius:12px; padding:12px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .list{
+      max-height: 280px;
+      overflow:auto;
+      border:1px solid #eee;
+      border-radius:10px;
+      padding:10px;
+      background:#fafafa;
+      margin-top:10px;
     }
+    .list label{ display:flex; gap:8px; align-items:center; margin:4px 0; }
 
-    .group {
-      border: 1px solid #ccc;
-      padding: 10px;
-      border-radius: 6px;
-    }
+    #wrapChart{ border:1px solid #ddd; border-radius:12px; padding:12px; margin-top:12px; }
+    canvas{ width:100% !important; height:520px !important; }
 
-    .group h3 {
-      margin-top: 0;
-    }
-
-    canvas {
-      max-width: 100%;
-      height: 500px;
-    }
+    select{ padding:6px 10px; border-radius:10px; border:1px solid #ccc; }
   </style>
 </head>
 
 <body>
+  <h1>Gráficas Sensores (S) + Drivers (D)</h1>
+  <p class="sub">Selecciona series y se dibujan juntas. S (izquierda) y D (derecha 0/1). Zoom con rueda, pan arrastrando.</p>
 
-<h1>Gráficas Sensores (S) y Bombas (D)</h1>
+  <div class="topbar">
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <label><b>Rango:</b></label>
+      <select id="range">
+        <option value="24">Últimas 24h</option>
+        <option value="48">Últimas 48h</option>
+        <option value="168">Últimos 7 días</option>
+        <option value="all">Todo</option>
+      </select>
 
-<div id="controls">
-  <div class="group">
-    <h3>Sensores (Temperaturas)</h3>
-    <div id="sensor-checkboxes"></div>
+      <button class="btn" id="btnReload">Recargar</button>
+      <button class="btn" id="btnReset">Reset zoom</button>
+      <span class="pill warn" id="info">Sin cargar</span>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+      <a class="btn" href="index.html" style="text-decoration:none; color:#111;">⬅ Volver</a>
+      <a class="btn" href="esquema.html" style="text-decoration:none; color:#111;">📌 Esquema</a>
+    </div>
   </div>
 
-  <div class="group">
-    <h3>Bombas / Equipos</h3>
-    <div id="driver-checkboxes"></div>
-  </div>
-</div>
+  <div class="cols">
+    <div class="box">
+      <div class="row">
+        <b>Sensores (S)</b>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" id="sAll">Todas</button>
+          <button class="btn" id="sNone">Ninguna</button>
+        </div>
+      </div>
+      <div class="list" id="sList">Cargando sensores…</div>
+    </div>
 
-<canvas id="chart"></canvas>
+    <div class="box">
+      <div class="row">
+        <b>Bombas / Equipos (D)</b>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn" id="dAll">Todas</button>
+          <button class="btn" id="dNone">Ninguna</button>
+        </div>
+      </div>
+      <div class="list" id="dList">Cargando drivers…</div>
+      <p style="margin:8px 0 0; color:#555; font-size:13px;">
+        Drivers: escalones 0=OFF, 1=ON. Si activas muchos, se separan un poco para que no se pisen.
+      </p>
+    </div>
+  </div>
+
+  <div id="wrapChart">
+    <canvas id="chart"></canvas>
+  </div>
 
 <script>
-  const ctx = document.getElementById("chart").getContext("2d");
+  const info = document.getElementById("info");
+  const sList = document.getElementById("sList");
+  const dList = document.getElementById("dList");
+  const rangeSel = document.getElementById("range");
 
-  const chart = new Chart(ctx, {
+  const btnReload = document.getElementById("btnReload");
+  const btnReset  = document.getElementById("btnReset");
+  const sAll = document.getElementById("sAll");
+  const sNone = document.getElementById("sNone");
+  const dAll = document.getElementById("dAll");
+  const dNone = document.getElementById("dNone");
+
+  function setInfo(text, ok=false){
+    info.textContent = text;
+    info.className = "pill " + (ok ? "ok" : "warn");
+  }
+
+  function parseTemp(v){
+    const s = String(v||"").trim();
+    if (!s || s === "NOT_FOUND") return null;
+    const n = Number(s.replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  }
+  function parseOnOff(v){
+    const s = String(v||"").trim().toLowerCase();
+    if (s === "on") return 1;
+    if (s === "off") return 0;
+    return null;
+  }
+
+  async function fetchJson(path){
+    const res = await fetch(path + "?ts=" + Date.now(), { cache: "no-store" });
+    if(!res.ok) throw new Error(`No se pudo leer ${path} (HTTP ${res.status})`);
+    return await res.json();
+  }
+
+  function addCheckbox(container, group, itemId, labelText){
+    const id = `${group}_${itemId}`;
+    const label = document.createElement("label");
+    label.innerHTML = `<input type="checkbox" id="${id}" data-group="${group}" data-id="${itemId}"> <span>${labelText}</span>`;
+    container.appendChild(label);
+  }
+
+  function selected(group){
+    return [...document.querySelectorAll(`input[data-group="${group}"]:checked`)]
+      .map(cb => cb.dataset.id);
+  }
+
+  function setAllGroup(group, checked){
+    document.querySelectorAll(`input[data-group="${group}"]`).forEach(cb => cb.checked = checked);
+  }
+
+  async function loadTxtPoints(file, kind){
+    const res = await fetch(file + "?ts=" + Date.now(), { cache: "no-store" });
+    if(!res.ok) throw new Error(`No se pudo leer ${file} (HTTP ${res.status})`);
+    const txt = await res.text();
+    const points = [];
+    const lines = txt.split(/\r?\n/).filter(Boolean);
+
+    for (const line of lines){
+      const [ts, val] = line.split(";");
+      if(!ts) continue;
+      let y = null;
+      if(kind === "S") y = parseTemp(val);
+      if(kind === "D") y = parseOnOff(val);
+      if(y === null) continue;
+      points.push({ x: new Date(ts), y });
+    }
+    return points;
+  }
+
+  function applyRange(points){
+    const r = rangeSel.value;
+    if(r === "all") return points;
+    const hours = Number(r);
+    const cutoff = Date.now() - hours * 3600 * 1000;
+    return points.filter(p => p.x.getTime() >= cutoff);
+  }
+
+  // Chart
+  const chart = new Chart(document.getElementById("chart"), {
     type: "line",
-    data: {
-      labels: [],
-      datasets: []
-    },
+    data: { datasets: [] },
     options: {
-      responsive: true,
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
+      parsing: false,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
       scales: {
-        y: {
-          title: { display: true, text: "Temperatura (°C) / Estado" }
+        x: { type: "time", title: { display: true, text: "Fecha y hora" } },
+        yTemp: { type: "linear", position: "left", title: { display: true, text: "Sensores (°C / valor)" } },
+        yState: {
+          type: "linear",
+          position: "right",
+          min: -0.1,
+          max: 1.6,               // algo más para los offsets
+          grid: { drawOnChartArea: false },
+          ticks: {
+            stepSize: 1,
+            callback: (v) => (v === 1 ? "ON" : (v === 0 ? "OFF" : v))
+          },
+          title: { display: true, text: "Drivers (0/1)" }
+        }
+      },
+      plugins: {
+        legend: { display: true },
+        zoom: {
+          pan: { enabled: true, mode: "x" },
+          zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" }
+        },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const ds = ctx.dataset;
+              if(ds.yAxisID === "yState"){
+                // quitar el offset para mostrar ON/OFF real
+                const rawY = ctx.raw.y;
+                const y = rawY >= 0.5 ? 1 : 0; // aproximación simple
+                return `${ds.label}: ${y === 1 ? "ON" : "OFF"}`;
+              }
+              return `${ds.label}: ${ctx.raw.y}`;
+            }
+          }
         }
       }
     }
   });
-</script>
 
+  function makeDataset(name, points, kind, offsetIndex=0){
+    if(kind === "S"){
+      return { label: name, data: points, yAxisID:"yTemp", borderWidth:2, pointRadius:0 };
+    }
+    // Drivers escalonados con offset para ver varias
+    const offset = offsetIndex * 0.08; // separación visual
+    const shifted = points.map(p => ({ x:p.x, y: p.y + offset }));
+    return {
+      label: name,
+      data: shifted,
+      yAxisID:"yState",
+      stepped:true,
+      borderWidth:2,
+      pointRadius:0
+    };
+  }
+
+  // Carga manifests y pinta checkboxes
+  let sensorSeries = []; // {item,label,units,file}
+  let driverSeries = []; // {item,label,file}
+
+  async function init(){
+    setInfo("Cargando manifests…");
+    const acs = await fetchJson("data/acs_manifest.json");
+    const drv = await fetchJson("data/drivers_manifest.json");
+
+    sensorSeries = (acs.series || []).filter(x => x.file);
+    driverSeries = (drv.series || []).filter(x => x.file);
+
+    // Render listas
+    sList.innerHTML = "";
+    dList.innerHTML = "";
+
+    // Sensores: orden por número
+    sensorSeries.sort((a,b) => {
+      const na = parseInt(String(a.item).replace(/\D/g,"")) || 9999;
+      const nb = parseInt(String(b.item).replace(/\D/g,"")) || 9999;
+      return na - nb;
+    });
+
+    for(const s of sensorSeries){
+      addCheckbox(sList, "S", s.item, `${s.item} · ${s.label}`);
+    }
+
+    // Drivers: orden por número
+    driverSeries.sort((a,b) => {
+      const na = parseInt(String(a.item).replace(/\D/g,"")) || 9999;
+      const nb = parseInt(String(b.item).replace(/\D/g,"")) || 9999;
+      return na - nb;
+    });
+
+    for(const d of driverSeries){
+      addCheckbox(dList, "D", d.item, `${d.item} · ${d.label}`);
+    }
+
+    // Marca por defecto algunas típicas si existen
+    const defaults = ["S9","S10","S13","D1"];
+    for(const id of defaults){
+      const elS = document.getElementById(`S_${id}`);
+      const elD = document.getElementById(`D_${id}`);
+      if(elS) elS.checked = true;
+      if(elD) elD.checked = true;
+    }
+
+    setInfo(`Listo: ${sensorSeries.length} sensores · ${driverSeries.length} drivers`, true);
+    await refresh();
+  }
+
+  async function refresh(){
+    const selS = selected("S");
+    const selD = selected("D");
+
+    if(selS.length === 0 && selD.length === 0){
+      chart.data.datasets = [];
+      chart.update();
+      setInfo("Selecciona al menos una serie", false);
+      return;
+    }
+
+    setInfo("Cargando series…");
+    const datasets = [];
+
+    // S
+    for(const item of selS){
+      const s = sensorSeries.find(x => x.item === item);
+      if(!s) continue;
+      try{
+        let pts = await loadTxtPoints(s.file, "S");
+        pts = applyRange(pts);
+        datasets.push(makeDataset(`${s.item} ${s.label}`, pts, "S"));
+      }catch(e){
+        console.warn(e);
+      }
+    }
+
+    // D (con offset)
+    let idx = 0;
+    for(const item of selD){
+      const d = driverSeries.find(x => x.item === item);
+      if(!d) continue;
+      try{
+        let pts = await loadTxtPoints(d.file, "D");
+        pts = applyRange(pts);
+        datasets.push(makeDataset(`${d.item} ${d.label}`, pts, "D", idx));
+        idx++;
+      }catch(e){
+        console.warn(e);
+      }
+    }
+
+    chart.data.datasets = datasets;
+    chart.update();
+    setInfo(`Mostrando: ${selS.length} S + ${selD.length} D`, true);
+  }
+
+  // botones
+  btnReload.onclick = () => refresh().catch(e => alert(e.message));
+  btnReset.onclick  = () => chart.resetZoom();
+  rangeSel.onchange = () => refresh().catch(e => alert(e.message));
+
+  sAll.onclick  = () => { setAllGroup("S", true); refresh(); };
+  sNone.onclick = () => { setAllGroup("S", false); refresh(); };
+  dAll.onclick  = () => { setAllGroup("D", true); refresh(); };
+  dNone.onclick = () => { setAllGroup("D", false); refresh(); };
+
+  // al marcar/desmarcar, refresca
+  document.addEventListener("change", (ev) => {
+    const t = ev.target;
+    if(t && t.matches('input[type="checkbox"][data-group]')){
+      refresh().catch(e => console.warn(e));
+    }
+  });
+
+  init().catch(e => alert(e.message));
+</script>
 </body>
 </html>
