@@ -26,7 +26,7 @@
 
     #wrap{
       height: calc(100vh - var(--h));
-      overflow: auto;
+      overflow: auto;              /* scroll horizontal + vertical */
       background: #fafafa;
     }
     #svgContainer{
@@ -46,12 +46,11 @@
       margin-left: 10px;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 45vw;
+      max-width: 50vw;
       white-space: nowrap;
     }
   </style>
 
-  <!-- Zoom/Pan -->
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 </head>
 
@@ -73,23 +72,10 @@
   </div>
 
 <script>
-function findSvgElement(doc) {
-  // 1) Si el documento ya es un SVG “normal”
-  if (doc.documentElement && doc.documentElement.localName === "svg") {
-    return doc.documentElement;
-  }
-
-  // 2) Buscar por namespace SVG (funciona aunque sea ns0:svg)
-  const byNS = doc.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg");
-  if (byNS && byNS.length) return byNS[0];
-
-  // 3) Último recurso: encontrar cualquier nodo cuyo localName sea 'svg'
-  const all = doc.querySelectorAll("*");
-  for (const el of all) {
-    if (el.localName === "svg") return el;
-  }
-
-  return null;
+function getSvgFromContainer(container) {
+  // Esto encuentra <svg> aunque sea ns0:svg
+  const list = container.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg");
+  return (list && list.length) ? list[0] : null;
 }
 
 async function loadSVG() {
@@ -97,8 +83,7 @@ async function loadSVG() {
   const debugEl  = document.getElementById("debug");
   const container = document.getElementById("svgContainer");
 
-  // ✅ Importante: tú estás en /sensores/esquema.html y el SVG está en /sensores/esquema_render.svg
-  const url = "esquema_render.svg?v=" + Date.now();  // relativa a /sensores/
+  const url = "esquema_render.svg?v=" + Date.now(); // mismo directorio que esquema.html
 
   try {
     statusEl.textContent = "Cargando…";
@@ -115,61 +100,50 @@ async function loadSVG() {
       return;
     }
 
-    // Parsear como SVG
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(txt, "image/svg+xml");
+    // 1) Insertar TAL CUAL para que el SVG se vea siempre (aunque falle zoom)
+    container.innerHTML = txt;
 
-    // Si hay error de parser
-    const perr = doc.querySelector("parsererror");
-    if (perr) {
-      statusEl.textContent = "ERROR: parsererror al leer el SVG";
-      container.innerHTML = `<pre style="color:#b00;white-space:pre-wrap">${perr.textContent.slice(0,800)}</pre>`;
+    // 2) Encontrar el SVG real dentro del contenedor (namespace-safe)
+    const svgEl = getSvgFromContainer(container);
+    if (!svgEl) {
+      statusEl.textContent = "ERROR: no encuentro el elemento SVG dentro del archivo.";
       return;
     }
 
-    const svg = findSvgElement(doc);
-    if (!svg) {
-      statusEl.textContent = "ERROR: no encontré el elemento SVG (ni siquiera ns0:svg).";
-      container.innerHTML = `<pre style="color:#b00;white-space:pre-wrap">${txt.slice(0,600)}</pre>`;
-      return;
-    }
+    // (Opcional) asegurar que el SVG tiene overflow visible
+    svgEl.style.maxWidth = "none";
+    svgEl.style.maxHeight = "none";
 
-    // Insertar SVG en el DOM
-    container.innerHTML = "";
-    container.appendChild(svg);
+    // 3) Activar zoom/pan con try/catch (si falla, no rompe la página)
+    try {
+      if (typeof svgPanZoom === "function") {
+        if (window.__panZoom && window.__panZoom.destroy) window.__panZoom.destroy();
 
-    // Quitar tamaños fijos para que el scroll sea real
-    svg.removeAttribute("width");
-    svg.removeAttribute("height");
-    svg.style.maxWidth = "none";
-    svg.style.maxHeight = "none";
+        window.__panZoom = svgPanZoom(svgEl, {
+          zoomEnabled: true,
+          panEnabled: true,
+          fit: true,
+          center: true,
+          minZoom: 0.1,
+          maxZoom: 20
+        });
 
-    // Inicializar zoom/pan si existe la librería
-    if (typeof svgPanZoom === "function") {
-      if (window.__panZoom && window.__panZoom.destroy) window.__panZoom.destroy();
+        document.getElementById("btnIn").onclick = () => window.__panZoom.zoomIn();
+        document.getElementById("btnOut").onclick = () => window.__panZoom.zoomOut();
+        document.getElementById("btnReset").onclick = () => window.__panZoom.resetZoom();
+        document.getElementById("btnFit").onclick = () => { window.__panZoom.fit(); window.__panZoom.center(); };
 
-      window.__panZoom = svgPanZoom(svg, {
-        zoomEnabled: true,
-        panEnabled: true,
-        fit: true,
-        center: true,
-        minZoom: 0.1,
-        maxZoom: 20
-      });
-
-      document.getElementById("btnIn").onclick = () => window.__panZoom.zoomIn();
-      document.getElementById("btnOut").onclick = () => window.__panZoom.zoomOut();
-      document.getElementById("btnReset").onclick = () => window.__panZoom.resetZoom();
-      document.getElementById("btnFit").onclick = () => { window.__panZoom.fit(); window.__panZoom.center(); };
-
-      statusEl.textContent = "OK: SVG cargado + zoom activo";
-    } else {
-      statusEl.textContent = "OK: SVG cargado (pero svg-pan-zoom no está disponible)";
+        statusEl.textContent = "OK: SVG cargado + zoom activo";
+      } else {
+        statusEl.textContent = "OK: SVG cargado (sin zoom: librería no disponible)";
+      }
+    } catch (pzErr) {
+      // Importante: aunque falle, el SVG ya está visible porque hicimos innerHTML antes
+      statusEl.textContent = "OK: SVG cargado (zoom falló: " + pzErr.message + ")";
     }
 
   } catch (e) {
     statusEl.textContent = "ERROR cargando SVG: " + e.message;
-    container.innerHTML = `<pre style="color:#b00;white-space:pre-wrap">${String(e)}</pre>`;
   }
 }
 
