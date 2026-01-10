@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-01-10T09:58:42+00:00",
+  "timestamp_utc": "2026-01-10T10:49:04+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -16,7 +16,7 @@
     {
       "item": "D3",
       "label": "ON-OFF B. 1 Caldera ACS",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
@@ -52,7 +52,7 @@
     {
       "item": "D9",
       "label": "M-P B. 7.1 - Paneles Solares",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
@@ -70,7 +70,7 @@
     {
       "item": "D13",
       "label": "M-P Quemador Caldera 2",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
@@ -82,13 +82,13 @@
     {
       "item": "D16",
       "label": "M-P Quemador Caldera 1",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
       "item": "D17",
       "label": "M-P B. 6 - Sec. Paneles Solares",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
@@ -112,7 +112,7 @@
     {
       "item": "D22",
       "label": "V3V Intercambiador Solar",
-      "value": "100.00",
+      "value": "0.00",
       "units": "Normal"
     },
     {
