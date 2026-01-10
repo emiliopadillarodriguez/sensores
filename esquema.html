@@ -2,142 +2,113 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Esquema sala de calderas</title>
-
   <style>
-    body { font-family: system-ui, Arial, sans-serif; margin: 0; }
-    header {
+    :root { --h: 58px; }
+    body { margin: 0; font-family: system-ui, Arial, sans-serif; }
+    header{
       position: sticky; top: 0; z-index: 10;
-      background: white;
-      border-bottom: 1px solid #e5e5e5;
+      height: var(--h);
+      display:flex; align-items:center; gap:10px;
       padding: 10px 12px;
-      display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-    }
-    h1 { font-size: 16px; margin: 0; }
-    .btn {
-      padding: 8px 12px;
-      border: 1px solid #ccc;
-      border-radius: 10px;
       background: #fff;
-      cursor: pointer;
-      text-decoration: none;
-      color: #111;
-      font-weight: 600;
+      border-bottom: 1px solid #e5e5e5;
     }
-    .btn-red {
-      background: #d90000;
-      border-color: #b30000;
-      color: #fff;
+    header .title{ font-weight: 700; }
+    button{
+      padding: 8px 10px; border: 1px solid #ccc; background: #f7f7f7;
+      border-radius: 8px; cursor: pointer;
     }
-    .hint { font-size: 13px; color: #555; }
-    #viewer {
-      width: 100vw;
-      height: calc(100vh - 58px);
-      overflow: hidden;
+    button:hover{ background:#eee; }
+
+    /* Contenedor con scroll horizontal y vertical */
+    #wrap{
+      height: calc(100vh - var(--h));
+      overflow: auto;              /* SCROLL x/y */
       background: #fafafa;
     }
-    #svgHost {
-      width: 100%;
-      height: 100%;
+
+    /* Aquí metemos el SVG inline para poder hacer zoom */
+    #svgContainer{
+      display: inline-block;       /* IMPORTANTE: permite scroll real según tamaño SVG */
+      padding: 10px;
     }
-    /* El SVG embebido ocupa todo y permite zoom */
-    #svgHost svg {
-      width: 100%;
-      height: 100%;
-      display: block;
+
+    .status{
+      margin-left: auto;
+      font-size: 12px;
+      color: #555;
     }
+    .status b{ color:#111; }
   </style>
+
+  <!-- Librería de zoom/pan para SVG (muy usada y estable) -->
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 </head>
 
 <body>
   <header>
-    <h1>Esquema (zoom y pan)</h1>
-    <a class="btn" href="index.html">⬅ Volver a gráficas</a>
-    <button class="btn btn-red" onclick="reloadSvg()">Recargar</button>
-    <button class="btn" onclick="zoomIn()">Zoom +</button>
-    <button class="btn" onclick="zoomOut()">Zoom -</button>
-    <button class="btn" onclick="resetView()">Reset</button>
-    <span class="hint" id="status">Cargando…</span>
+    <span class="title">Esquema (SVG)</span>
+
+    <button id="btnIn">Zoom +</button>
+    <button id="btnOut">Zoom −</button>
+    <button id="btnReset">Reset</button>
+    <button id="btnFit">Ajustar</button>
+
+    <span class="status" id="status">Cargando…</span>
   </header>
 
-  <div id="viewer">
-    <div id="svgHost"></div>
+  <div id="wrap">
+    <div id="svgContainer"></div>
   </div>
 
-  <!-- Librería para zoom/pan en SVG -->
-  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
-
   <script>
-    let panZoom = null;
+    const statusEl = document.getElementById("status");
+    const container = document.getElementById("svgContainer");
 
-    async function loadSvgText() {
-      // cache-buster para forzar la versión nueva
-      const url = "esquema_render.svg?v=" + Date.now();
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error("No puedo cargar esquema_render.svg (" + res.status + ")");
-      return await res.text();
-    }
+    // Carga el SVG renderizado y lo inserta INLINE en el HTML
+    fetch("esquema_render.svg", { cache: "no-store" })
+      .then(r => {
+        if (!r.ok) throw new Error("No se pudo cargar esquema_render.svg (" + r.status + ")");
+        return r.text();
+      })
+      .then(svgText => {
+        container.innerHTML = svgText;
 
-    async function reloadSvg() {
-      const status = document.getElementById("status");
-      status.textContent = "Cargando esquema…";
+        // Busca el <svg> insertado
+        const svgEl = container.querySelector("svg");
+        if (!svgEl) throw new Error("El archivo no contiene un <svg> válido.");
 
-      // Cargar SVG
-      const svgText = await loadSvgText();
-      const host = document.getElementById("svgHost");
-      host.innerHTML = svgText;
+        // Asegura tamaño natural (si tu SVG trae width/height enormes, el scroll funcionará igual)
+        svgEl.style.display = "block";
 
-      const svgEl = host.querySelector("svg");
-      if (!svgEl) throw new Error("El archivo no parece un SVG válido.");
+        // Inicializa zoom/pan
+        const panZoom = svgPanZoom(svgEl, {
+          zoomEnabled: true,
+          controlIconsEnabled: false,
+          fit: false,          // no “auto encajar” al cargar (lo controlamos con botón)
+          center: false,
+          minZoom: 0.1,
+          maxZoom: 30,
+        });
 
-      // Asegura que sea responsive: si no tiene viewBox, se lo intentamos poner
-      // (muchos SVG de draw.io lo traen ya)
-      if (!svgEl.getAttribute("viewBox")) {
-        const w = svgEl.getAttribute("width");
-        const h = svgEl.getAttribute("height");
-        if (w && h) svgEl.setAttribute("viewBox", `0 0 ${parseFloat(w)} ${parseFloat(h)}`);
-      }
-      svgEl.removeAttribute("width");
-      svgEl.removeAttribute("height");
+        // Botones
+        document.getElementById("btnIn").onclick = () => panZoom.zoomIn();
+        document.getElementById("btnOut").onclick = () => panZoom.zoomOut();
+        document.getElementById("btnReset").onclick = () => { panZoom.resetZoom(); panZoom.resetPan(); };
+        document.getElementById("btnFit").onclick = () => { panZoom.fit(); panZoom.center(); };
 
-      // Reiniciar panZoom si ya existía
-      if (panZoom) {
-        try { panZoom.destroy(); } catch(e) {}
-        panZoom = null;
-      }
+        // Rueda del ratón: zoom (svg-pan-zoom ya lo hace)
+        // Arrastrar: pan (también)
 
-      // Activar zoom/pan
-      panZoom = svgPanZoom(svgEl, {
-        zoomEnabled: true,
-        controlIconsEnabled: false,
-        fit: true,
-        center: true,
-        minZoom: 0.2,
-        maxZoom: 20,
-        zoomScaleSensitivity: 0.25,
-        dblClickZoomEnabled: true
+        statusEl.innerHTML = "OK · <b>arrastrar</b> para mover · <b>rueda</b> para zoom";
+      })
+      .catch(err => {
+        console.error(err);
+        statusEl.textContent = "ERROR: " + err.message;
+        container.innerHTML = "<p style='padding:12px;color:#b00020'>No se pudo cargar el esquema. Revisa que exista esquema_render.svg en la raíz.</p>";
       });
-
-      status.textContent = "OK · " + new Date().toLocaleString();
-    }
-
-    function zoomIn()  { if (panZoom) panZoom.zoomIn(); }
-    function zoomOut() { if (panZoom) panZoom.zoomOut(); }
-    function resetView() { if (panZoom) { panZoom.resetZoom(); panZoom.center(); panZoom.fit(); } }
-
-    // Carga inicial
-    reloadSvg().catch(err => {
-      document.getElementById("status").textContent = "ERROR: " + err.message;
-      console.error(err);
-    });
-
-    // Auto-recarga cada 60s (puedes subirlo/bajarlo)
-    setInterval(() => {
-      reloadSvg().catch(err => console.error(err));
-    }, 60000);
   </script>
 </body>
 </html>
-
-
