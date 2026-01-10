@@ -86,92 +86,82 @@
 
   <div id="debug">Cargando…</div>
 
-  <script>
-    function setDebug(html) {
-      document.getElementById("debug").innerHTML = html;
+ <script>
+async function loadSVG() {
+  const statusEl = document.getElementById("status");
+  const container = document.getElementById("svgContainer");
+
+  const url = "/sensores/esquema_render.svg?v=" + Date.now();
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    const txt = await res.text();
+
+    console.log("SVG fetch:", url, res.status, res.headers.get("content-type"));
+
+    if (!res.ok) {
+      statusEl.textContent = `ERROR HTTP ${res.status}`;
+      container.innerHTML = "<pre>" + txt.slice(0,400) + "</pre>";
+      return;
     }
 
-    async function loadSVG() {
-      const statusEl = document.getElementById("status");
-      const container = document.getElementById("svgContainer");
+    // 🔑 Parsear SVG correctamente (con namespaces)
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(txt, "image/svg+xml");
 
-      // IMPORTANTE:
-      // Construye la URL del SVG usando la carpeta actual (…/sensores/)
-      const baseDir = new URL("./", window.location.href);          // carpeta del esquema.html
-      const svgUrl = new URL("esquema_render.svg", baseDir);        // …/sensores/esquema_render.svg
-      svgUrl.searchParams.set("v", Date.now());                     // anti-caché
+    const svg = doc.querySelector("svg");
 
-      setDebug(`Intentando cargar: <code>${svgUrl}</code>`);
-
-      try {
-        const res = await fetch(svgUrl.toString(), { cache: "no-store" });
-        const txt = await res.text();
-
-        if (!res.ok) {
-          statusEl.textContent = `ERROR HTTP ${res.status}`;
-          container.innerHTML = "";
-          setDebug(`HTTP ${res.status}. Respuesta (inicio):<br><code>${escapeHtml(txt.slice(0, 400))}</code>`);
-          return;
-        }
-
-        if (!txt.includes("<svg")) {
-          statusEl.textContent = "ERROR: no es un SVG (probable 404 HTML)";
-          container.innerHTML = "";
-          setDebug(`No contiene &lt;svg&gt;. Respuesta (inicio):<br><code>${escapeHtml(txt.slice(0, 400))}</code>`);
-          return;
-        }
-
-        statusEl.textContent = "OK: esquema cargado";
-        container.innerHTML = txt;
-
-        const svgEl = container.querySelector("svg");
-        if (!svgEl) {
-          statusEl.textContent = "ERROR: no se encontró <svg> insertado";
-          setDebug("Insertado pero no se detecta <svg>.");
-          return;
-        }
-
-        // Evita que width/height fijos estropeen zoom/scroll
-        svgEl.removeAttribute("width");
-        svgEl.removeAttribute("height");
-        svgEl.style.maxWidth = "none";
-
-        // Si había una instancia previa, destrúyela
-        if (window.__panZoom && typeof window.__panZoom.destroy === "function") {
-          window.__panZoom.destroy();
-        }
-
-        window.__panZoom = svgPanZoom(svgEl, {
-          zoomEnabled: true,
-          controlIconsEnabled: false,
-          fit: true,
-          center: true,
-          minZoom: 0.2,
-          maxZoom: 20,
-        });
-
-        document.getElementById("btnIn").onclick = () => window.__panZoom.zoomIn();
-        document.getElementById("btnOut").onclick = () => window.__panZoom.zoomOut();
-        document.getElementById("btnReset").onclick = () => window.__panZoom.resetZoom();
-        document.getElementById("btnFit").onclick = () => { window.__panZoom.fit(); window.__panZoom.center(); };
-
-        setDebug(`OK. SVG cargado desde: <code>${svgUrl}</code>`);
-
-      } catch (e) {
-        statusEl.textContent = "ERROR cargando SVG";
-        setDebug(`Excepción: <code>${escapeHtml(e.message)}</code>`);
-      }
+    if (!svg) {
+      statusEl.textContent = "ERROR: No se encontró ningún <svg> en el archivo.";
+      container.innerHTML = "<pre>" + txt.slice(0,400) + "</pre>";
+      return;
     }
 
-    function escapeHtml(s) {
-      return s.replaceAll("&", "&amp;")
-              .replaceAll("<", "&lt;")
-              .replaceAll(">", "&gt;")
-              .replaceAll('"', "&quot;")
-              .replaceAll("'", "&#039;");
+    // Limpiar contenedor e insertar SVG real
+    container.innerHTML = "";
+    container.appendChild(svg);
+
+    // Quitar tamaños fijos para permitir zoom/scroll
+    svg.removeAttribute("width");
+    svg.removeAttribute("height");
+    svg.style.maxWidth = "none";
+    svg.style.maxHeight = "none";
+
+    // Destruir zoom previo si existe
+    if (window.__panZoom && window.__panZoom.destroy) {
+      window.__panZoom.destroy();
     }
 
-    window.addEventListener("load", loadSVG);
-  </script>
+    // Activar zoom y pan
+    window.__panZoom = svgPanZoom(svg, {
+      zoomEnabled: true,
+      panEnabled: true,
+      controlIconsEnabled: false,
+      fit: true,
+      center: true,
+      minZoom: 0.1,
+      maxZoom: 20
+    });
+
+    // Botones
+    document.getElementById("btnIn").onclick = () => window.__panZoom.zoomIn();
+    document.getElementById("btnOut").onclick = () => window.__panZoom.zoomOut();
+    document.getElementById("btnReset").onclick = () => window.__panZoom.resetZoom();
+    document.getElementById("btnFit").onclick = () => {
+      window.__panZoom.fit();
+      window.__panZoom.center();
+    };
+
+    statusEl.textContent = "OK: esquema cargado correctamente";
+
+  } catch (e) {
+    statusEl.textContent = "ERROR cargando SVG: " + e.message;
+    console.error(e);
+  }
+}
+
+window.addEventListener("load", loadSVG);
+</script>
+
 </body>
 </html>
