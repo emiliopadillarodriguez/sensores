@@ -38,30 +38,28 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # JSONs principales
+          git add data/latest.json
+          git add data/drivers_latest.json
+          git add data/latest_all.json
+
+          # Manifests nuevos
+          git add data/sensors_manifest.json
+          git add data/drivers_manifest.json
+
+          # Históricos nuevos (S y drivers)
+          git add data/S*.txt 2>/dev/null || true
+          git add data/drv_*.txt 2>/dev/null || true
+
+          # Esquema renderizado
           git add esquema_render.svg 2>/dev/null || true
           git add esquema.html 2>/dev/null || true
-          git add data/drivers_latest.json 2>/dev/null || true
-          git add data/drivers_manifest.json 2>/dev/null || true
-          git add data/drv_*.txt 2>/dev/null || true
 
-          
-      - name: Render esquema
-        run: |
-          python render_esquema.py
-
-
-          # Añade los archivos generados
-          git add data/latest.json
-         
+          # (Opcional) si aún usas estos ficheros antiguos en tu web, déjalos:
           git add data/acs_manifest.json 2>/dev/null || true
-          
-          git add esquema_render.svg 2>/dev/null || true
-          git add data/drivers_latest.json 2>/dev/null || true
-          git add data/drivers_manifest.json 2>/dev/null || true
-          git add data/drv_*.txt 2>/dev/null || true
 
-
-          # Si no hay cambios, salimos
+          # Si no hay cambios, salir
           if git diff --cached --quiet; then
             echo "No changes to commit"
             exit 0
@@ -69,8 +67,5 @@ jobs:
 
           git commit -m "Update sensor data"
 
-          # Trae cambios del remoto por si se ha actualizado mientras tanto
           git pull --rebase origin main
-
-          # Empuja cambios
           git push origin main
