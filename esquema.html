@@ -28,16 +28,14 @@
     }
     button:hover{ background:#eee; }
 
-    /* Contenedor con scroll horizontal y vertical */
     #wrap{
       height: calc(100vh - var(--h));
-      overflow: auto;              /* SCROLL x/y */
+      overflow: auto;
       background: #fafafa;
     }
 
-    /* Aquí metemos el SVG inline para poder hacer zoom */
     #svgContainer{
-      display: inline-block;       /* permite scroll real según tamaño SVG */
+      display: inline-block;
       padding: 10px;
     }
 
@@ -45,11 +43,28 @@
       margin-left: auto;
       font-size: 12px;
       color: #555;
+      max-width: 55vw;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .status b{ color:#111; }
+
+    #debug {
+      position: fixed;
+      right: 10px;
+      bottom: 10px;
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      max-width: 60vw;
+      z-index: 9999;
+    }
+    #debug code{ color:#9ef; }
   </style>
 
-  <!-- Librería de zoom/pan para SVG -->
   <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 </head>
 
@@ -69,48 +84,59 @@
     <div id="svgContainer"></div>
   </div>
 
+  <div id="debug">Cargando…</div>
+
   <script>
+    function setDebug(html) {
+      document.getElementById("debug").innerHTML = html;
+    }
+
     async function loadSVG() {
       const statusEl = document.getElementById("status");
       const container = document.getElementById("svgContainer");
 
-      // URL robusta (funciona aunque estés en /sensores/ o en otra subcarpeta)
-      const urlObj = new URL("esquema_render.svg", window.location.href);
-      urlObj.searchParams.set("v", Date.now()); // evita caché
-      const url = urlObj.toString();
+      // IMPORTANTE:
+      // Construye la URL del SVG usando la carpeta actual (…/sensores/)
+      const baseDir = new URL("./", window.location.href);          // carpeta del esquema.html
+      const svgUrl = new URL("esquema_render.svg", baseDir);        // …/sensores/esquema_render.svg
+      svgUrl.searchParams.set("v", Date.now());                     // anti-caché
+
+      setDebug(`Intentando cargar: <code>${svgUrl}</code>`);
 
       try {
-        const res = await fetch(url, { cache: "no-store" });
+        const res = await fetch(svgUrl.toString(), { cache: "no-store" });
         const txt = await res.text();
 
         if (!res.ok) {
-          statusEl.textContent = `ERROR HTTP ${res.status} al cargar ${url}`;
-          container.innerHTML = `<pre style="color:#b00; white-space:pre-wrap;">${txt.slice(0,400)}</pre>`;
+          statusEl.textContent = `ERROR HTTP ${res.status}`;
+          container.innerHTML = "";
+          setDebug(`HTTP ${res.status}. Respuesta (inicio):<br><code>${escapeHtml(txt.slice(0, 400))}</code>`);
           return;
         }
 
         if (!txt.includes("<svg")) {
-          statusEl.textContent = "ERROR: El archivo cargado no contiene <svg> válido (probable HTML/404).";
-          container.innerHTML = `<pre style="color:#b00; white-space:pre-wrap;">${txt.slice(0,400)}</pre>`;
+          statusEl.textContent = "ERROR: no es un SVG (probable 404 HTML)";
+          container.innerHTML = "";
+          setDebug(`No contiene &lt;svg&gt;. Respuesta (inicio):<br><code>${escapeHtml(txt.slice(0, 400))}</code>`);
           return;
         }
 
-        statusEl.textContent = `OK: cargado esquema_render.svg`;
+        statusEl.textContent = "OK: esquema cargado";
         container.innerHTML = txt;
 
-        // --- Inicializa zoom/pan ---
         const svgEl = container.querySelector("svg");
         if (!svgEl) {
-          statusEl.textContent = "ERROR: no se encontró <svg> dentro del contenido cargado.";
+          statusEl.textContent = "ERROR: no se encontró <svg> insertado";
+          setDebug("Insertado pero no se detecta <svg>.");
           return;
         }
 
-        // Evita que width/height fijos rompan el zoom/scroll
+        // Evita que width/height fijos estropeen zoom/scroll
         svgEl.removeAttribute("width");
         svgEl.removeAttribute("height");
         svgEl.style.maxWidth = "none";
 
-        // Reinicia si ya existía (por recargas)
+        // Si había una instancia previa, destrúyela
         if (window.__panZoom && typeof window.__panZoom.destroy === "function") {
           window.__panZoom.destroy();
         }
@@ -124,15 +150,25 @@
           maxZoom: 20,
         });
 
-        // Conecta botones
         document.getElementById("btnIn").onclick = () => window.__panZoom.zoomIn();
         document.getElementById("btnOut").onclick = () => window.__panZoom.zoomOut();
         document.getElementById("btnReset").onclick = () => window.__panZoom.resetZoom();
         document.getElementById("btnFit").onclick = () => { window.__panZoom.fit(); window.__panZoom.center(); };
 
+        setDebug(`OK. SVG cargado desde: <code>${svgUrl}</code>`);
+
       } catch (e) {
-        statusEl.textContent = "ERROR cargando SVG: " + e.message;
+        statusEl.textContent = "ERROR cargando SVG";
+        setDebug(`Excepción: <code>${escapeHtml(e.message)}</code>`);
       }
+    }
+
+    function escapeHtml(s) {
+      return s.replaceAll("&", "&amp;")
+              .replaceAll("<", "&lt;")
+              .replaceAll(">", "&gt;")
+              .replaceAll('"', "&quot;")
+              .replaceAll("'", "&#039;");
     }
 
     window.addEventListener("load", loadSVG);
