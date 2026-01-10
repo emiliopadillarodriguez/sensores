@@ -7,244 +7,145 @@
 
   <style>
     :root { --h: 58px; }
-    body { margin: 0; font-family: system-ui, Arial, sans-serif; }
 
-    header{
-      position: sticky; top: 0; z-index: 10;
+    body {
+      margin: 0;
+      font-family: system-ui, Arial, sans-serif;
+      background: #f5f5f5;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
       height: var(--h);
-      display:flex; align-items:center; gap:10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
       padding: 10px 12px;
-      background: #fff;
-      border-bottom: 1px solid #e5e5e5;
+      background: #ffffff;
+      border-bottom: 1px solid #ddd;
     }
-    header .title{ font-weight: 700; }
-    button{
-      padding: 8px 10px; border: 1px solid #ccc; background: #f7f7f7;
-      border-radius: 8px; cursor: pointer;
-    }
-    button:hover{ background:#eee; }
 
-    /* Scroll horizontal + vertical */
-    #wrap{
+    header .title {
+      font-weight: 700;
+      margin-right: 10px;
+    }
+
+    button {
+      padding: 6px 10px;
+      border: 1px solid #bbb;
+      background: #f0f0f0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #e6e6e6;
+    }
+
+    .status {
+      margin-left: auto;
+      font-size: 12px;
+      color: #444;
+    }
+
+    /* Contenedor con scroll horizontal y vertical */
+    #wrap {
       height: calc(100vh - var(--h));
       overflow: auto;
       background: #fafafa;
-      position: relative;
     }
 
-    /* “Lienzo” que transformamos (zoom) */
-    #canvas{
+    /* Contenedor del SVG */
+    #svgContainer {
       display: inline-block;
-      transform-origin: 0 0; /* importante */
       padding: 10px;
-      cursor: grab;
-      user-select: none;
-    }
-    #canvas.dragging{ cursor: grabbing; }
-
-    /* El SVG dentro no debe intentar “ajustarse” */
-    #canvas svg{
-      max-width: none !important;
-      max-height: none !important;
-      display: block;
-    }
-
-    .status{
-      margin-left: auto;
-      font-size: 12px;
-      color: #333;
-      white-space: nowrap;
-    }
-    .debug{
-      font-size: 12px;
-      color: #666;
-      margin-left: 10px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 50vw;
-      white-space: nowrap;
     }
   </style>
+
+  <!-- Librería para zoom y pan sobre SVG -->
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 </head>
 
 <body>
-  <header>
-    <span class="title">Esquema</span>
 
-    <button id="btnIn">Zoom +</button>
-    <button id="btnOut">Zoom −</button>
-    <button id="btnReset">Reset</button>
-    <button id="btnFit">Ajustar</button>
+<header>
+  <span class="title">Esquema sala de calderas</span>
 
-    <span class="status" id="status">Cargando…</span>
-    <span class="debug" id="debug"></span>
-  </header>
+  <button id="btnIn">Zoom +</button>
+  <button id="btnOut">Zoom −</button>
+  <button id="btnReset">Reset</button>
+  <button id="btnFit">Ajustar</button>
 
-  <div id="wrap">
-    <div id="canvas"></div>
-  </div>
+  <span class="status" id="status">Cargando…</span>
+</header>
+
+<div id="wrap">
+  <div id="svgContainer"></div>
+</div>
 
 <script>
-  const wrap = document.getElementById("wrap");
-  const canvas = document.getElementById("canvas");
+let panZoomInstance = null;
+
+async function loadSVG() {
   const statusEl = document.getElementById("status");
-  const debugEl  = document.getElementById("debug");
+  const container = document.getElementById("svgContainer");
 
-  let scale = 1;
+  // RUTA CORRECTA PARA GITHUB PAGES
+  const url = "./esquema_render.svg?v=" + Date.now();
 
-  function applyTransform() {
-    canvas.style.transform = `scale(${scale})`;
-  }
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    const txt = await res.text();
 
-  function clamp(x, a, b) { return Math.max(a, Math.min(b, x)); }
-
-  async function loadSVG() {
-    const url = "./esquema_render.svg?v=" + Date.now(); // evita caché
-    try {
-      statusEl.textContent = "Cargando…";
-      debugEl.textContent = url;
-
-      const res = await fetch(url, { cache: "no-store" });
-      const txt = await res.text();
-
-      debugEl.textContent = `${url} | HTTP ${res.status} | type=${res.headers.get("content-type") || "?"}`;
-
-      if (!res.ok) {
-        statusEl.textContent = `ERROR HTTP ${res.status}`;
-        canvas.innerHTML = `<pre style="color:#b00;white-space:pre-wrap">${txt.slice(0,800)}</pre>`;
-        return;
-      }
-
-      // Insertamos el SVG (se verá sí o sí)
-      canvas.innerHTML = txt;
-
-      // Verificamos que hay un SVG real (namespace-safe)
-      const svgEl = canvas.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg")[0];
-      if (!svgEl) {
-        statusEl.textContent = "ERROR: el archivo no contiene un <svg> válido.";
-        return;
-      }
-
-      // Zoom inicial
-      scale = 1;
-      applyTransform();
-
-      statusEl.textContent = "OK: SVG cargado";
-    } catch (e) {
-      statusEl.textContent = "ERROR cargando SVG: " + e.message;
-    }
-  }
-
-  // Zoom con botones (sobre el centro visible)
-  function zoomBy(factor) {
-    const prev = scale;
-    scale = clamp(scale * factor, 0.1, 20);
-
-    // Mantener el centro de la vista más o menos en su sitio
-    const cx = wrap.scrollLeft + wrap.clientWidth / 2;
-    const cy = wrap.scrollTop  + wrap.clientHeight / 2;
-    const k = scale / prev;
-
-    wrap.scrollLeft = cx * k - wrap.clientWidth / 2;
-    wrap.scrollTop  = cy * k - wrap.clientHeight / 2;
-
-    applyTransform();
-  }
-
-  // Ajustar: intenta que quepa el esquema en pantalla
-  function fitToScreen() {
-    const svgEl = canvas.getElementsByTagNameNS("http://www.w3.org/2000/svg", "svg")[0];
-    if (!svgEl) return;
-
-    // Medimos “tamaño real” del SVG sin zoom
-    const prev = scale;
-    scale = 1;
-    applyTransform();
-
-    // Tras un tick, medimos
-    requestAnimationFrame(() => {
-      const rect = svgEl.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-
-      const availW = wrap.clientWidth - 20;
-      const availH = wrap.clientHeight - 20;
-
-      if (w > 0 && h > 0) {
-        scale = clamp(Math.min(availW / w, availH / h), 0.1, 20);
-      } else {
-        scale = 1;
-      }
-
-      applyTransform();
-
-      // Al centro
-      wrap.scrollLeft = 0;
-      wrap.scrollTop = 0;
-
-      statusEl.textContent = "OK: Ajustado";
-    });
-  }
-
-  // Zoom con rueda (manteniendo el punto del cursor)
-  wrap.addEventListener("wheel", (e) => {
-    if (!e.ctrlKey && !e.shiftKey) {
-      // Si quieres que SIEMPRE haga zoom con rueda, quita este if y el return.
-      // Ahora: zoom con CTRL+rueda o SHIFT+rueda (para evitar zoom accidental)
+    if (!res.ok) {
+      statusEl.textContent = "ERROR HTTP " + res.status;
+      container.innerHTML = "<pre>" + txt.slice(0,300) + "</pre>";
       return;
     }
-    e.preventDefault();
 
-    const prev = scale;
-    const factor = (e.deltaY < 0) ? 1.1 : 1/1.1;
-    scale = clamp(scale * factor, 0.1, 20);
+    if (!txt.includes("<svg")) {
+      statusEl.textContent = "ERROR: el archivo no contiene un <svg> válido";
+      container.innerHTML = "<pre>" + txt.slice(0,300) + "</pre>";
+      return;
+    }
 
-    const mouseX = e.clientX - wrap.getBoundingClientRect().left;
-    const mouseY = e.clientY - wrap.getBoundingClientRect().top;
+    // Insertamos el SVG inline
+    container.innerHTML = txt;
 
-    const wx = wrap.scrollLeft + mouseX;
-    const wy = wrap.scrollTop + mouseY;
+    const svgEl = container.querySelector("svg");
+    if (!svgEl) {
+      statusEl.textContent = "ERROR: SVG no encontrado tras insertar";
+      return;
+    }
 
-    const k = scale / prev;
-    wrap.scrollLeft = wx * k - mouseX;
-    wrap.scrollTop  = wy * k - mouseY;
+    // Inicializamos zoom y pan
+    panZoomInstance = svgPanZoom(svgEl, {
+      zoomEnabled: true,
+      panEnabled: true,
+      controlIconsEnabled: false,
+      fit: true,
+      center: true,
+      minZoom: 0.1,
+      maxZoom: 20
+    });
 
-    applyTransform();
-  }, { passive: false });
+    statusEl.textContent = "SVG cargado correctamente";
 
-  // Arrastrar para mover (pan)
-  let dragging = false;
-  let startX = 0, startY = 0, startScrollL = 0, startScrollT = 0;
+  } catch (err) {
+    statusEl.textContent = "ERROR cargando SVG: " + err.message;
+  }
+}
 
-  canvas.addEventListener("mousedown", (e) => {
-    dragging = true;
-    canvas.classList.add("dragging");
-    startX = e.clientX;
-    startY = e.clientY;
-    startScrollL = wrap.scrollLeft;
-    startScrollT = wrap.scrollTop;
-  });
+// Botones
+document.getElementById("btnIn").onclick = () => panZoomInstance?.zoomIn();
+document.getElementById("btnOut").onclick = () => panZoomInstance?.zoomOut();
+document.getElementById("btnReset").onclick = () => panZoomInstance?.resetZoom();
+document.getElementById("btnFit").onclick = () => panZoomInstance?.fit();
 
-  window.addEventListener("mouseup", () => {
-    dragging = false;
-    canvas.classList.remove("dragging");
-  });
-
-  window.addEventListener("mousemove", (e) => {
-    if (!dragging) return;
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    wrap.scrollLeft = startScrollL - dx;
-    wrap.scrollTop  = startScrollT - dy;
-  });
-
-  // Botones
-  document.getElementById("btnIn").onclick = () => zoomBy(1.2);
-  document.getElementById("btnOut").onclick = () => zoomBy(1/1.2);
-  document.getElementById("btnReset").onclick = () => { scale = 1; applyTransform(); wrap.scrollLeft = 0; wrap.scrollTop = 0; };
-  document.getElementById("btnFit").onclick = () => fitToScreen();
-
-  window.addEventListener("load", loadSVG);
+window.addEventListener("load", loadSVG);
 </script>
+
 </body>
 </html>
