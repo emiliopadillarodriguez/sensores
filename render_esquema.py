@@ -8,7 +8,6 @@ import xml.etree.ElementTree as ET
 # =========================
 TEMPLATE_SVG = "esquema.drawio.svg"
 OUT_SVG = "esquema_render.svg"
-LATEST_ALL_JSON = Path("data") / "latest_all.json"
 
 MAX_S = 29
 INCLUDE_UNITS = False
@@ -35,10 +34,11 @@ def normalize_on_off(val: str) -> str:
         return "off"
     return v  # por si viene otro formato
 
-def load_latest_all():
-    if not LATEST_ALL_JSON.exists():
+def load_latest_all(latest_path: Path):
+    if not latest_path.exists():
+        print(f"DEBUG: No existe latest_all.json en: {latest_path}")
         return {}
-    return json.loads(LATEST_ALL_JSON.read_text(encoding="utf-8"))
+    return json.loads(latest_path.read_text(encoding="utf-8"))
 
 def build_sensors_map(latest_all: dict) -> dict:
     out = {}
@@ -72,19 +72,22 @@ def build_drivers_map(latest_all: dict) -> dict:
 def update_style_color(style: str, color: str) -> str:
     """
     Cambia fill/stroke en un string style="...".
+    NO pisa fill:none ni stroke:none.
     """
     if not style:
         return style
 
-    # Reemplaza fill:...
-    if re.search(r"fill\s*:", style):
-        style = re.sub(r"fill\s*:\s*[^;]+", f"fill:{color}", style)
-    else:
-        style = style.rstrip(";") + f";fill:{color}"
+    # fill:none -> no tocar
+    if not re.search(r"fill\s*:\s*none", style):
+        if re.search(r"fill\s*:", style):
+            style = re.sub(r"fill\s*:\s*[^;]+", f"fill:{color}", style)
+        else:
+            style = style.rstrip(";") + f";fill:{color}"
 
-    # Reemplaza stroke:... si existe
-    if re.search(r"stroke\s*:", style):
-        style = re.sub(r"stroke\s*:\s*[^;]+", f"stroke:{color}", style)
+    # stroke:none -> no tocar
+    if not re.search(r"stroke\s*:\s*none", style):
+        if re.search(r"stroke\s*:", style):
+            style = re.sub(r"stroke\s*:\s*[^;]+", f"stroke:{color}", style)
 
     return style
 
@@ -93,20 +96,15 @@ def paint_group_green(svg_root, cell_id: str, color: str) -> bool:
     Busca el <g ... data-cell-id="..."> y pinta sus hijos.
     Devuelve True si lo encontró y modificó.
     """
-    found = False
-
-    # Recorremos todos los nodos buscando attribute data-cell-id
     for elem in svg_root.iter():
         if elem.get("data-cell-id") == cell_id:
-            # Hemos encontrado el contenedor (normalmente un <g>)
-            found = True
             # Pintamos todos los descendientes "dibujables"
             for child in elem.iter():
-                # fill directo
+                # fill directo (sin pisar none)
                 if "fill" in child.attrib and child.attrib["fill"] != "none":
                     child.attrib["fill"] = color
 
-                # stroke directo
+                # stroke directo (sin pisar none)
                 if "stroke" in child.attrib and child.attrib["stroke"] != "none":
                     child.attrib["stroke"] = color
 
@@ -114,9 +112,20 @@ def paint_group_green(svg_root, cell_id: str, color: str) -> bool:
                 if "style" in child.attrib:
                     child.attrib["style"] = update_style_color(child.attrib["style"], color)
 
-            break
+            return True
+    return False
 
-    return found
+def list_cell_ids(svg_root, limit=20):
+    """Debug: lista algunos data-cell-id que existan en el SVG."""
+    ids = []
+    for e in svg_root.iter():
+        cid = e.get("data-cell-id")
+        if cid:
+            ids.append(cid)
+    ids = sorted(set(ids))
+    print(f"DEBUG: encontrados {len(ids)} data-cell-id en el SVG.")
+    if ids:
+        print("DEBUG: primeros IDs:", ids[:limit])
 
 # =========================
 # MAIN
@@ -125,15 +134,22 @@ def main():
     here = Path(__file__).resolve().parent
     svg_path = here / TEMPLATE_SVG
     out_path = here / OUT_SVG
+    latest_path = here / "data" / "latest_all.json"
 
     if not svg_path.exists():
         raise FileNotFoundError(f"No existe {TEMPLATE_SVG} en {here}")
 
-    latest_all = load_latest_all()
+    latest_all = load_latest_all(latest_path)
     smap = build_sensors_map(latest_all)
     dmap = build_drivers_map(latest_all)
 
-    # 1) Reemplazo tokens {{Sx}} en el SVG como texto (rápido por regex)
+    print(f"DEBUG: sensors leídos = {len(smap)} | drivers leídos = {len(dmap)}")
+    if "D4" in dmap:
+        print(f"DEBUG: D4 raw='{dmap['D4']['value']}' norm='{normalize_on_off(dmap['D4']['value'])}'")
+    else:
+        print("DEBUG: D4 NO está en drivers.")
+
+    # 1) Reemplazo tokens {{Sx}} en el SVG como texto
     svg_text = svg_path.read_text(encoding="utf-8")
 
     for n in range(1, MAX_S + 1):
@@ -147,8 +163,7 @@ def main():
 
         svg_text = re.sub(r"\{\{" + re.escape(key) + r"\}\}", repl, svg_text)
 
-    # 2) Parseamos el SVG ya con los S rellenados para pintar bombas por ID
-    #    (ElementTree necesita bytes/str bien formados)
+    # 2) Parseamos el SVG
     try:
         root = ET.fromstring(svg_text)
     except ET.ParseError as e:
@@ -162,13 +177,17 @@ def main():
             cell_id = PUMP_CELL_IDS.get(driver_key)
             if cell_id:
                 ok = paint_group_green(root, cell_id, PUMP_ON_COLOR)
-                print(f"DEBUG: {driver_key} = ON -> pintar verde. Encontrado ID en SVG: {ok}")
+                print(f"DEBUG: {driver_key}=ON -> pintar verde. data-cell-id encontrado: {ok}")
+                if not ok:
+                    # Te ayuda a ver qué IDs reales hay en el SVG
+                    list_cell_ids(root, limit=30)
+                    print(f"DEBUG: revisa PUMP_CELL_IDS['{driver_key}'] porque NO coincide con el SVG.")
             else:
                 print(f"DEBUG: No hay cell_id configurado para {driver_key}")
         else:
             print(f"DEBUG: {driver_key} no está ON (value='{dmap[driver_key]['value']}'), no se pinta.")
     else:
-        print("DEBUG: D4 no existe en latest_all.json, no se pinta.")
+        print(f"DEBUG: {driver_key} no existe en latest_all.json, no se pinta.")
 
     # 4) Guardar SVG final
     svg_final = ET.tostring(root, encoding="unicode")
