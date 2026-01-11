@@ -17,25 +17,23 @@ INCLUDE_UNITS = False
 PUMP_ON_COLOR = "#00c853"  # verde intenso
 
 # Mapa: Driver -> ID de draw.io (data-cell-id en el SVG exportado)
-# Rellena aquí TODOS tus drivers que quieras pintar (D1..Dxx)
 PUMP_CELL_IDS = {
-    # Ejemplo:
-    "D3": "HbhBeWkGyhC53GPZ-frY-33",  #  ON-OFF B. 1 Caldera ACS
-    "D4": "HbhBeWkGyhC53GPZ-frY-29",  #  M-P B. 2 - Caldera de Calefacción
-    "D2": "HbhBeWkGyhC53GPZ-frY-36",  #  M-P B. 5.1 - Calefacción
-    "D1": "HbhBeWkGyhC53GPZ-frY-39",  #  M-P B. 5.2 - Calefacción
-    "D24": "HbhBeWkGyhC53GPZ-frY-49",  #  M-P B. 4 Retorno ACS
-    "D5": "HbhBeWkGyhC53GPZ-frY-52",  #  ON-OFF B. 3A.1 - Prim. ACS
-    "D6": "HbhBeWkGyhC53GPZ-frY-55",  #  ON-OFF B. 3A.2 - Prim. ACS
-    "D7": "HbhBeWkGyhC53GPZ-frY-42",  #  M-P B. 3B.1 - Sec. ACS
-    "D8": "HbhBeWkGyhC53GPZ-frY-45",  #  M-P B. 3B.2 - Sec. ACS
-    "D17": "KY_yovXKN2bWtjt0556d-11",  #  M-P B. 6 - Sec. Paneles Solares
-    "D9": "KY_yovXKN2bWtjt0556d-5",  #  M-P B. 7.1 - Paneles Solares
-    "D10": "KY_yovXKN2bWtjt0556d-8",  #  M-P B. 7.2 - Paneles Solares
-    "D15": "WpCggooiQa-CKCG4ur4o-82",  #  A-C V2V Caldera 1
-    "D12": "WpCggooiQa-CKCG4ur4o-80",  #  A-C V2V Caldera 2
-    "D13": "HbhBeWkGyhC53GPZ-frY-7",  #  M-P Quemador Caldera 2
-    "D16": "HbhBeWkGyhC53GPZ-frY-8",  #  M-P Quemador Caldera 1
+    "D3": "HbhBeWkGyhC53GPZ-frY-33",   # ON-OFF B. 1 Caldera ACS
+    "D4": "HbhBeWkGyhC53GPZ-frY-29",   # M-P B. 2 - Caldera de Calefacción
+    "D2": "HbhBeWkGyhC53GPZ-frY-36",   # M-P B. 5.1 - Calefacción
+    "D1": "HbhBeWkGyhC53GPZ-frY-39",   # M-P B. 5.2 - Calefacción
+    "D24": "HbhBeWkGyhC53GPZ-frY-49",  # M-P B. 4 Retorno ACS
+    "D5": "HbhBeWkGyhC53GPZ-frY-52",   # ON-OFF B. 3A.1 - Prim. ACS
+    "D6": "HbhBeWkGyhC53GPZ-frY-55",   # ON-OFF B. 3A.2 - Prim. ACS
+    "D7": "HbhBeWkGyhC53GPZ-frY-42",   # M-P B. 3B.1 - Sec. ACS
+    "D8": "HbhBeWkGyhC53GPZ-frY-45",   # M-P B. 3B.2 - Sec. ACS
+    "D17": "KY_yovXKN2bWtjt0556d-11",  # M-P B. 6 - Sec. Paneles Solares
+    "D9": "KY_yovXKN2bWtjt0556d-5",    # M-P B. 7.1 - Paneles Solares
+    "D10": "KY_yovXKN2bWtjt0556d-8",   # M-P B. 7.2 - Paneles Solares
+    "D15": "WpCggooiQa-CKCG4ur4o-82",  # A-C V2V Caldera 1
+    "D12": "WpCggooiQa-CKCG4ur4o-80",  # A-C V2V Caldera 2
+    "D13": "HbhBeWkGyhC53GPZ-frY-7",   # M-P Quemador Caldera 2
+    "D16": "HbhBeWkGyhC53GPZ-frY-8",   # M-P Quemador Caldera 1
 }
 
 # =========================
@@ -85,45 +83,29 @@ def build_drivers_map(latest_all: dict) -> dict:
     return out
 
 def update_style_color(style: str, color: str) -> str:
-    """
-    Cambia fill/stroke en un string style="...".
-    """
     if not style:
         return style
 
-    # fill
     if re.search(r"fill\s*:", style):
         style = re.sub(r"fill\s*:\s*[^;]+", f"fill:{color}", style)
     else:
         style = style.rstrip(";") + f";fill:{color}"
 
-    # stroke (solo si existe)
     if re.search(r"stroke\s*:", style):
         style = re.sub(r"stroke\s*:\s*[^;]+", f"stroke:{color}", style)
 
     return style
 
 def paint_group(svg_root, cell_id: str, color: str) -> bool:
-    """
-    Busca el <g ... data-cell-id="..."> y pinta sus hijos.
-    Devuelve True si lo encontró y modificó.
-    """
     for elem in svg_root.iter():
         if elem.get("data-cell-id") == cell_id:
-            # Pintamos todos los descendientes "dibujables"
             for child in elem.iter():
-                # fill directo
                 if "fill" in child.attrib and child.attrib["fill"] != "none":
                     child.attrib["fill"] = color
-
-                # stroke directo
                 if "stroke" in child.attrib and child.attrib["stroke"] != "none":
                     child.attrib["stroke"] = color
-
-                # style inline
                 if "style" in child.attrib:
                     child.attrib["style"] = update_style_color(child.attrib["style"], color)
-
             return True
     return False
 
@@ -131,6 +113,10 @@ def paint_group(svg_root, cell_id: str, color: str) -> bool:
 # MAIN
 # =========================
 def main():
+    # ✅ Clave: registrar namespaces para no romper xlink:href / href al serializar
+    ET.register_namespace("", "http://www.w3.org/2000/svg")
+    ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+
     here = Path(__file__).resolve().parent
     svg_path = here / TEMPLATE_SVG
     out_path = here / OUT_SVG
@@ -194,9 +180,10 @@ def main():
     if not_found:
         print(f"DEBUG: No se encontró data-cell-id en SVG para: {not_found}")
 
-    # 4) Guardar SVG final
-    svg_final = ET.tostring(root, encoding="unicode")
-    out_path.write_text(svg_final, encoding="utf-8")
+    # 4) Guardar SVG final (✅ bytes + xml_declaration para que GitHub/HTML lo trague bien)
+    svg_bytes = ET.tostring(root, encoding="utf-8", xml_declaration=True, method="xml")
+    out_path.write_bytes(svg_bytes)
+
     print(f"OK: generado {OUT_SVG} (S rellenadas + bombas ON en verde).")
 
 if __name__ == "__main__":
