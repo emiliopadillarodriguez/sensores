@@ -18,17 +18,20 @@ PUMP_ON_COLOR = "#00c853"  # verde intenso
 
 # Mapa: Driver -> ID de draw.io (data-cell-id en el SVG exportado)
 PUMP_CELL_IDS = {
-    "D4": "HbhBeWkGyhC53GPZ-frY-33",  # Bomba / Caldera 2 (según tu esquema)
-    # Puedes añadir más:
-    # "D3": "....",
-    # "D5": "....",
+    "D4": "HbhBeWkGyhC53GPZ-frY-33",  # Primario Caldera 2
 }
+
+# ✅ MUY IMPORTANTE: registrar namespaces para que ElementTree no “rompa” xlink/href
+ET.register_namespace("", "http://www.w3.org/2000/svg")
+ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+
 
 # =========================
 # HELPERS
 # =========================
 def safe_str(x) -> str:
     return "" if x is None else str(x).strip()
+
 
 def normalize_on_off(val: str) -> str:
     v = safe_str(val).lower()
@@ -38,10 +41,12 @@ def normalize_on_off(val: str) -> str:
         return "off"
     return v  # por si viene otro formato
 
-def load_latest_all():
+
+def load_latest_all() -> dict:
     if not LATEST_ALL_JSON.exists():
         return {}
     return json.loads(LATEST_ALL_JSON.read_text(encoding="utf-8"))
+
 
 def build_sensors_map(latest_all: dict) -> dict:
     out = {}
@@ -55,6 +60,7 @@ def build_sensors_map(latest_all: dict) -> dict:
             "units": safe_str(s.get("units", "")),
         }
     return out
+
 
 def build_drivers_map(latest_all: dict) -> dict:
     out = {}
@@ -70,9 +76,11 @@ def build_drivers_map(latest_all: dict) -> dict:
         }
     return out
 
+
 def update_style_color(style: str, color: str) -> str:
     """
     Cambia fill/stroke en un string style="...".
+    Mantiene el resto de propiedades.
     """
     if not style:
         return style
@@ -89,24 +97,10 @@ def update_style_color(style: str, color: str) -> str:
 
     return style
 
-def add_rotation_animation(elem: ET.Element, dur: str = "1.2s"):
-    """
-    Añade una animación de giro continuo al elemento SVG (normalmente un <g>).
-    Nota: usa rotate alrededor de (0,0). Si quieres un giro perfecto alrededor del centro,
-    habría que calcular cx/cy con el bbox (más complejo en SVG estático).
-    """
-    animate = ET.Element("animateTransform")
-    animate.set("attributeName", "transform")
-    animate.set("type", "rotate")
-    animate.set("from", "0 0 0")
-    animate.set("to", "360 0 0")
-    animate.set("dur", dur)
-    animate.set("repeatCount", "indefinite")
-    elem.append(animate)
 
-def paint_group_on(svg_root, cell_id: str, color: str, do_rotate: bool = True) -> bool:
+def paint_group_green(svg_root, cell_id: str, color: str) -> bool:
     """
-    Busca el <g ... data-cell-id="...">, pinta sus hijos y opcionalmente añade giro.
+    Busca el <g ... data-cell-id="..."> y pinta sus hijos.
     Devuelve True si lo encontró y modificó.
     """
     for elem in svg_root.iter():
@@ -125,13 +119,9 @@ def paint_group_on(svg_root, cell_id: str, color: str, do_rotate: bool = True) -
                 if "style" in child.attrib:
                     child.attrib["style"] = update_style_color(child.attrib["style"], color)
 
-            # Animación de giro (solo si ON)
-            if do_rotate:
-                add_rotation_animation(elem, dur="1.2s")
-
             return True
-
     return False
+
 
 # =========================
 # MAIN
@@ -162,29 +152,36 @@ def main():
 
         svg_text = re.sub(r"\{\{" + re.escape(key) + r"\}\}", repl, svg_text)
 
-    # 2) Parseamos el SVG ya con los S rellenados para pintar bombas por ID
+    # 2) Parseamos el SVG ya con los S rellenados
     try:
         root = ET.fromstring(svg_text)
     except ET.ParseError as e:
         raise RuntimeError(f"El SVG no se puede parsear (mal formado). Error: {e}")
 
-    # 3) Pintar y animar bombas ON según drivers
-    for driver_key, cell_id in PUMP_CELL_IDS.items():
-        if driver_key not in dmap:
-            print(f"DEBUG: {driver_key} no existe en latest_all.json, no se pinta/ani­ma.")
-            continue
-
+    # 3) Pinta D4 si está ON
+    driver_key = "D4"
+    if driver_key in dmap:
         state = normalize_on_off(dmap[driver_key]["value"])
         if state == "on":
-            ok = paint_group_on(root, cell_id, PUMP_ON_COLOR, do_rotate=True)
-            print(f"DEBUG: {driver_key} = ON -> verde + giro. Encontrado ID en SVG: {ok}")
+            cell_id = PUMP_CELL_IDS.get(driver_key)
+            if cell_id:
+                ok = paint_group_green(root, cell_id, PUMP_ON_COLOR)
+                print(f"DEBUG: {driver_key} = ON -> pintar verde. Encontrado ID en SVG: {ok}")
+            else:
+                print(f"DEBUG: No hay cell_id configurado para {driver_key}")
         else:
-            print(f"DEBUG: {driver_key} no está ON (value='{dmap[driver_key]['value']}'), no se pinta/ani­ma.")
+            print(f"DEBUG: {driver_key} no está ON (value='{dmap[driver_key]['value']}'), no se pinta.")
+    else:
+        print("DEBUG: D4 no existe en latest_all.json, no se pinta.")
 
-    # 4) Guardar SVG final
+    # 4) Guardar SVG final (añadimos declaración XML para visores “tiquismiquis”)
     svg_final = ET.tostring(root, encoding="unicode")
+    if not svg_final.lstrip().startswith("<?xml"):
+        svg_final = '<?xml version="1.0" encoding="UTF-8"?>\n' + svg_final
+
     out_path.write_text(svg_final, encoding="utf-8")
-    print(f"OK: generado {OUT_SVG} (S rellenadas + bombas ON en verde y con giro).")
+    print(f"OK: generado {OUT_SVG} (S rellenadas + bomba {driver_key} si ON).")
+
 
 if __name__ == "__main__":
     main()
