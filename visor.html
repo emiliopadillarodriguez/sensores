@@ -5,11 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Visor S (Temperaturas) + D (Bombas / Equipos)</title>
 
-  <!-- Plotly (muy robusto para series múltiples y 2 ejes) -->
-  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
-
   <style>
-    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --chip:#f3f4f6; }
+    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --chip:#f3f4f6; --warn:#b00020; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; color: var(--fg); background: var(--bg); }
     h1 { margin: 0 0 6px 0; font-size: 22px; }
     .sub { color: var(--muted); margin-bottom: 14px; font-size: 13px; }
@@ -57,17 +54,38 @@
     .row:last-child { border-bottom: none; }
     .row code { background:#f7f7f7; padding:2px 6px; border-radius:6px; font-size: 12px; }
     .actions { display:flex; gap:8px; justify-content:flex-end; margin: 8px 0 0 0; }
-    #plot {
+
+    .plots {
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
       margin-top: 12px;
+    }
+    .plotbox {
       border: 1px solid var(--line);
       border-radius: 12px;
       padding: 8px;
-      height: 520px;
     }
+    #plotS { height: 460px; }
+    #plotD { height: 320px; }
+
     .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .err {
+      display:none;
+      margin-top: 12px;
+      border: 1px solid #f2b8b5;
+      background: #fff5f5;
+      border-radius: 10px;
+      padding: 10px;
+      color: var(--warn);
+      white-space: pre-wrap;
+      font-size: 12px;
+    }
+
     @media (max-width: 900px) {
       .grid { grid-template-columns: 1fr; }
-      #plot { height: 460px; }
+      #plotS { height: 420px; }
+      #plotD { height: 300px; }
     }
   </style>
 </head>
@@ -75,7 +93,9 @@
 <body>
   <h1>Visor S (Temperaturas) + D (Bombas / Equipos)</h1>
   <div class="sub">
-    Elige qué series quieres ver. S va en °C (eje izquierdo) y D en 0/1 (eje derecho). Zoom con rueda y pan arrastrando.
+    Ahora hay 2 gráficas: una para S (°C) y otra para D (0/1). Zoom con rueda y pan arrastrando.
+    <br>
+    <b>Importante:</b> si abres este archivo desde <code>github.com/.../blob/...</code>, GitHub no ejecuta scripts. Ábrelo desde GitHub Pages.
   </div>
 
   <div class="bar">
@@ -87,7 +107,8 @@
       <option value="all">Todo</option>
     </select>
     <button id="btnReload">Recargar</button>
-    <button id="btnResetZoom">Reset zoom</button>
+    <button id="btnResetZoomS">Reset zoom S</button>
+    <button id="btnResetZoomD">Reset zoom D</button>
     <span id="status" class="chip">Cargando…</span>
   </div>
 
@@ -112,36 +133,78 @@
     </div>
   </div>
 
-  <div id="plot"></div>
+  <div class="plots">
+    <div class="plotbox">
+      <div class="note"><b>Gráfica S</b> (Temperaturas superpuestas)</div>
+      <div id="plotS"></div>
+    </div>
+    <div class="plotbox">
+      <div class="note"><b>Gráfica D</b> (Drivers 0/1)</div>
+      <div id="plotD"></div>
+    </div>
+  </div>
+
+  <div id="err" class="err"></div>
 
 <script>
 /**
- * Estructura esperada de ficheros:
+ * Estructura esperada:
  *  - data/latest_all.json
  *  - data/S1.txt, data/S2.txt, ...
  *  - data/d_D1.txt, data/d_D2.txt, ...
- *
- * Formato de .txt: el parser es tolerante.
- * Soporta líneas tipo:
- *   2026-01-11T10:00:00Z,62.3
- *   2026-01-11T10:00:00Z;62.3
- *   2026-01-11T10:00:00Z 62.3
- * y también On/Off/True/False/1/0 en drivers.
  */
 
 const DATA_DIR = "data";
-
 const $ = (id) => document.getElementById(id);
+
+function showError(msg) {
+  const box = $("err");
+  box.style.display = "block";
+  box.textContent = msg;
+}
+
+function clearError() {
+  const box = $("err");
+  box.style.display = "none";
+  box.textContent = "";
+}
+
+// ---- Plotly loader con fallback (para Chrome/filters/CDN)
+async function loadPlotly() {
+  if (window.Plotly) return true;
+
+  const cdns = [
+    "https://cdn.plot.ly/plotly-2.30.0.min.js",
+    "https://unpkg.com/plotly.js-dist-min@2.30.0/plotly.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.30.0/plotly.min.js"
+  ];
+
+  for (const src of cdns) {
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.async = true;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+      });
+      if (window.Plotly) return true;
+    } catch (e) {
+      // prueba siguiente CDN
+    }
+  }
+  return false;
+}
 
 const state = {
   meta: null,
-  sensors: [],   // [{item:"S1", label:"...", units:"..."}]
-  drivers: [],   // [{item:"D1", label:"...", units:"..."}]
+  sensors: [],
+  drivers: [],
   selectedS: new Set(),
   selectedD: new Set(),
-  cache: new Map(), // key -> parsed series [{t:Date, v:number}]
-  lastRange: "24h",
-  lastUpdated: null,
+  cache: new Map(), // item -> [{t:Date, v:number}]
+  lastUpdated: null
 };
 
 function setStatus(txt) {
@@ -152,7 +215,6 @@ function normalizeOnOffTo01(x) {
   const v = String(x ?? "").trim().toLowerCase();
   if (v === "on" || v === "true" || v === "yes" || v === "1") return 1;
   if (v === "off" || v === "false" || v === "no" || v === "0") return 0;
-  // si viene "100.00" en válvulas, etc:
   const n = Number(v);
   if (!Number.isNaN(n)) return n;
   return null;
@@ -163,11 +225,9 @@ function parseHistoryText(text, isDriver=false) {
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
   for (const line of lines) {
-    // separar por , ; o espacios múltiples
     let parts = line.split(",");
     if (parts.length < 2) parts = line.split(";");
     if (parts.length < 2) parts = line.split(/\s+/);
-
     if (parts.length < 2) continue;
 
     const ts = parts[0].trim();
@@ -187,7 +247,6 @@ function parseHistoryText(text, isDriver=false) {
     out.push({ t, v });
   }
 
-  // ordenar por tiempo
   out.sort((a,b) => a.t - b.t);
   return out;
 }
@@ -214,11 +273,8 @@ function rangeToMs(r) {
 function filterByRange(series, rangeKey) {
   const ms = rangeToMs(rangeKey);
   if (!ms) return series;
-
-  // usamos el último timestamp de la serie como "now" de referencia
   const last = series.length ? series[series.length - 1].t.getTime() : Date.now();
   const minT = last - ms;
-
   return series.filter(p => p.t.getTime() >= minT);
 }
 
@@ -240,7 +296,6 @@ function buildCheckboxRow(container, item, label, checked, onChange) {
   row.appendChild(cb);
   row.appendChild(code);
   row.appendChild(span);
-
   container.appendChild(row);
 }
 
@@ -259,7 +314,7 @@ function renderLists() {
       (ok) => {
         if (ok) state.selectedS.add(s.item);
         else state.selectedS.delete(s.item);
-        redraw();
+        redrawAll();
       }
     );
   }
@@ -273,30 +328,26 @@ function renderLists() {
       (ok) => {
         if (ok) state.selectedD.add(d.item);
         else state.selectedD.delete(d.item);
-        redraw();
+        redrawAll();
       }
     );
   }
 }
 
 function fileForItem(item) {
-  // Sensores: data/S1.txt
   if (/^S\d+$/.test(item)) return `${DATA_DIR}/${item}.txt`;
-  // Drivers: data/d_D1.txt
   if (/^D\d+$/.test(item)) return `${DATA_DIR}/d_${item}.txt`;
   return null;
 }
 
 async function loadSeries(item) {
   if (state.cache.has(item)) return state.cache.get(item);
-
   const url = fileForItem(item);
   if (!url) return [];
 
   const isDriver = /^D\d+$/.test(item);
   const txt = await fetchText(url);
   const series = parseHistoryText(txt, isDriver);
-
   state.cache.set(item, series);
   return series;
 }
@@ -309,25 +360,22 @@ function labelFor(item) {
   return item;
 }
 
-async function redraw() {
-  const rangeKey = $("rangeSel").value;
-  state.lastRange = rangeKey;
+function emptyLayoutCommon(title) {
+  return {
+    margin: { l: 60, r: 30, t: 30, b: 50 },
+    title: { text: title, font: { size: 14 } },
+    xaxis: { title: "Fecha y hora", showgrid: true, zeroline: false },
+    hovermode: "x unified"
+  };
+}
 
-  const selS = Array.from(state.selectedS);
-  const selD = Array.from(state.selectedD);
+async function redrawS(rangeKey) {
+  const sel = Array.from(state.selectedS);
+  const seriesArr = await Promise.all(sel.map(it => loadSeries(it).catch(() => [])));
 
-  setStatus(`Cargando series… (${selS.length} S + ${selD.length} D)`);
-
-  // cargar en paralelo
-  const allItems = [...selS, ...selD];
-  const seriesArr = await Promise.all(allItems.map(it => loadSeries(it).catch(() => [])));
-
-  // construir traces
   const traces = [];
-
-  // Temperaturas superpuestas (MISMO eje y)
-  for (let i = 0; i < selS.length; i++) {
-    const item = selS[i];
+  for (let i = 0; i < sel.length; i++) {
+    const item = sel[i];
     const raw = seriesArr[i] || [];
     const serie = filterByRange(raw, rangeKey);
 
@@ -337,16 +385,40 @@ async function redraw() {
       name: labelFor(item),
       x: serie.map(p => p.t),
       y: serie.map(p => p.v),
-      yaxis: "y",
       hovertemplate: "%{x}<br>%{y:.2f}°C<extra></extra>",
     });
   }
 
-  // Drivers (0/1) en y2, como step
-  const dStartIndex = selS.length;
-  for (let j = 0; j < selD.length; j++) {
-    const item = selD[j];
-    const raw = seriesArr[dStartIndex + j] || [];
+  const layout = {
+    ...emptyLayoutCommon("Temperaturas (S)"),
+    yaxis: { title: "Temperatura (°C)", showgrid: true, zeroline: false, automargin: true }
+  };
+
+  const config = { responsive: true, scrollZoom: true, displaylogo: false };
+
+  if (!traces.length) {
+    await Plotly.newPlot("plotS", [{type:"scatter", mode:"lines", x:[], y:[]}], layout, config);
+    return { lastTs: null };
+  }
+
+  await Plotly.newPlot("plotS", traces, layout, config);
+
+  let lastTs = null;
+  for (const it of sel) {
+    const s = state.cache.get(it);
+    if (s && s.length) lastTs = Math.max(lastTs || 0, s[s.length - 1].t.getTime());
+  }
+  return { lastTs };
+}
+
+async function redrawD(rangeKey) {
+  const sel = Array.from(state.selectedD);
+  const seriesArr = await Promise.all(sel.map(it => loadSeries(it).catch(() => [])));
+
+  const traces = [];
+  for (let i = 0; i < sel.length; i++) {
+    const item = sel[i];
+    const raw = seriesArr[i] || [];
     const serie = filterByRange(raw, rangeKey);
 
     traces.push({
@@ -355,84 +427,95 @@ async function redraw() {
       name: labelFor(item) + " (0/1)",
       x: serie.map(p => p.t),
       y: serie.map(p => p.v),
-      yaxis: "y2",
       line: { shape: "hv" },
       hovertemplate: "%{x}<br>%{y}<extra></extra>",
     });
   }
 
-  // status timestamp (si hay series)
-  let lastTs = null;
-  for (const it of allItems) {
-    const s = state.cache.get(it);
-    if (s && s.length) {
-      const t = s[s.length - 1].t.getTime();
-      if (!lastTs || t > lastTs) lastTs = t;
-    }
-  }
-  state.lastUpdated = lastTs ? new Date(lastTs) : null;
-
   const layout = {
-    margin: { l: 60, r: 60, t: 30, b: 50 },
-    legend: { orientation: "h" },
-    xaxis: {
-      title: "Fecha y hora",
-      showgrid: true,
-      zeroline: false,
-    },
-    yaxis: {
-      title: "Temperatura (°C)",
-      showgrid: true,
-      zeroline: false,
-      automargin: true,
-    },
-    yaxis2: {
-      title: "Estado (0/1)",
-      overlaying: "y",
-      side: "right",
-      range: [-0.1, 1.1],
-      showgrid: false,
-      zeroline: false,
-      automargin: true,
-    },
-    hovermode: "x unified",
+    ...emptyLayoutCommon("Drivers (D)"),
+    yaxis: { title: "Estado (0/1)", range: [-0.1, 1.1], showgrid: true, zeroline: false, automargin: true }
   };
 
-  const config = {
-    responsive: true,
-    scrollZoom: true,
-    displaylogo: false,
-  };
+  const config = { responsive: true, scrollZoom: true, displaylogo: false };
 
   if (!traces.length) {
-    setStatus("Selecciona alguna serie (S o D)");
-    Plotly.newPlot("plot", [{
-      type:"scatter", mode:"lines", x:[], y:[]
-    }], layout, config);
+    await Plotly.newPlot("plotD", [{type:"scatter", mode:"lines", x:[], y:[]}], layout, config);
+    return { lastTs: null };
+  }
+
+  await Plotly.newPlot("plotD", traces, layout, config);
+
+  let lastTs = null;
+  for (const it of sel) {
+    const s = state.cache.get(it);
+    if (s && s.length) lastTs = Math.max(lastTs || 0, s[s.length - 1].t.getTime());
+  }
+  return { lastTs };
+}
+
+async function redrawAll() {
+  clearError();
+  const okPlotly = await loadPlotly();
+  if (!okPlotly) {
+    setStatus("Error: Plotly no carga.");
+    showError(
+      "No se pudo cargar Plotly (CDN bloqueado o sin conexión).\n" +
+      "Prueba sin bloqueadores / en otra red.\n"
+    );
     return;
   }
 
-  Plotly.newPlot("plot", traces, layout, config);
+  const rangeKey = $("rangeSel").value;
+  const selS = state.selectedS.size;
+  const selD = state.selectedD.size;
 
-  const stamp = state.lastUpdated ? state.lastUpdated.toISOString() : "—";
-  setStatus(`Mostrando: ${selS.length} S + ${selD.length} D · ${stamp}`);
+  setStatus(`Cargando… (${selS} S + ${selD} D)`);
+
+  try {
+    const a = await redrawS(rangeKey);
+    const b = await redrawD(rangeKey);
+
+    const last = Math.max(a.lastTs || 0, b.lastTs || 0);
+    state.lastUpdated = last ? new Date(last) : null;
+
+    const stamp = state.lastUpdated ? state.lastUpdated.toISOString() : "—";
+    setStatus(`Mostrando: ${selS} S + ${selD} D · ${stamp}`);
+  } catch (e) {
+    console.error(e);
+    setStatus("Error al dibujar (mira detalle).");
+    showError(String(e?.stack || e?.message || e));
+  }
 }
 
-function resetZoom() {
-  Plotly.relayout("plot", {
-    "xaxis.autorange": true,
-    "yaxis.autorange": true,
-    "yaxis2.autorange": false,
-  });
+function resetZoomS() {
+  if (!window.Plotly) return;
+  Plotly.relayout("plotS", { "xaxis.autorange": true, "yaxis.autorange": true });
+}
+function resetZoomD() {
+  if (!window.Plotly) return;
+  Plotly.relayout("plotD", { "xaxis.autorange": true, "yaxis.autorange": false });
 }
 
 async function init() {
+  clearError();
+
+  const okPlotly = await loadPlotly();
+  if (!okPlotly) {
+    setStatus("Error: Plotly no carga.");
+    showError(
+      "No se pudo cargar Plotly.\n" +
+      "Si estás abriendo desde github.com/blob, no va a funcionar.\n" +
+      "Ábrelo desde GitHub Pages (https://TUUSUARIO.github.io/TUREPO/visor.html).\n"
+    );
+    return;
+  }
+
   try {
     setStatus("Cargando latest_all.json…");
     const meta = await fetchJSON(`${DATA_DIR}/latest_all.json`);
     state.meta = meta;
 
-    // sensores y drivers desde latest_all.json
     state.sensors = (meta.sensors || [])
       .filter(x => /^S\d+$/.test(String(x.item||"").trim()))
       .map(x => ({ item: String(x.item).trim(), label: x.label || "", units: x.units || "" }))
@@ -443,52 +526,52 @@ async function init() {
       .map(x => ({ item: String(x.item).trim(), label: x.label || "", units: x.units || "" }))
       .sort((a,b) => Number(a.item.slice(1)) - Number(b.item.slice(1)));
 
-    // selección inicial: ninguna (o pon aquí defaults si quieres)
+    // selección inicial vacía (si quieres defaults, añade aquí)
     state.selectedS = new Set();
     state.selectedD = new Set();
 
     renderLists();
 
-    // pintar vacío al inicio
-    await redraw();
+    // dibuja vacío
+    await redrawAll();
 
   } catch (e) {
     console.error(e);
-    setStatus("Error cargando datos (mira consola).");
+    setStatus("Error cargando datos (mira detalle).");
+    showError(String(e?.stack || e?.message || e));
   }
 }
 
 // botones
 $("btnReload").addEventListener("click", async () => {
-  // limpiamos cache para forzar refresco
   state.cache.clear();
   await init();
 });
 
-$("btnResetZoom").addEventListener("click", resetZoom);
+$("btnResetZoomS").addEventListener("click", resetZoomS);
+$("btnResetZoomD").addEventListener("click", resetZoomD);
 
-$("rangeSel").addEventListener("change", () => redraw());
+$("rangeSel").addEventListener("change", () => redrawAll());
 
 $("sAll").addEventListener("click", () => {
   state.sensors.forEach(s => state.selectedS.add(s.item));
   renderLists();
-  redraw();
+  redrawAll();
 });
 $("sNone").addEventListener("click", () => {
   state.selectedS.clear();
   renderLists();
-  redraw();
+  redrawAll();
 });
-
 $("dAll").addEventListener("click", () => {
   state.drivers.forEach(d => state.selectedD.add(d.item));
   renderLists();
-  redraw();
+  redrawAll();
 });
 $("dNone").addEventListener("click", () => {
   state.selectedD.clear();
   renderLists();
-  redraw();
+  redrawAll();
 });
 
 init();
