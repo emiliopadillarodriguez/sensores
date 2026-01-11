@@ -3,366 +3,495 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Visor Sensores (S) + Drivers (D)</title>
+  <title>Visor S (Temperaturas) + D (Bombas / Equipos)</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.umd.min.js"></script>
+  <!-- Plotly (muy robusto para series múltiples y 2 ejes) -->
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
 
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; margin: 16px; }
-    h1 { margin: 0 0 6px; }
-    .sub { color:#444; margin: 0 0 14px; }
-
-    .topbar{
-      border:1px solid #ddd; border-radius:12px; padding:12px;
-      display:flex; gap:12px; flex-wrap:wrap; align-items:center;
-      margin-bottom:12px;
+    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --chip:#f3f4f6; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; color: var(--fg); background: var(--bg); }
+    h1 { margin: 0 0 6px 0; font-size: 22px; }
+    .sub { color: var(--muted); margin-bottom: 14px; font-size: 13px; }
+    .bar {
+      display:flex; gap:10px; align-items:center; flex-wrap: wrap;
+      border:1px solid var(--line); padding:10px; border-radius:10px;
+    }
+    .bar label { font-size: 13px; color: var(--fg); }
+    select, button {
+      font-size: 13px; padding:6px 10px; border:1px solid var(--line); border-radius: 8px; background: #fff;
+      cursor: pointer;
+    }
+    button:hover { background: #fafafa; }
+    .chip {
+      display:inline-block; padding:4px 8px; border-radius: 999px; background: var(--chip);
+      font-size: 12px; color: var(--muted);
     }
 
-    .box{
-      border:1px solid #ddd; border-radius:12px; padding:12px;
-      margin-bottom:12px;
+    .grid {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
     }
-
-    .cols { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    @media (max-width: 980px){ .cols { grid-template-columns: 1fr; } }
-
-    .list{
-      max-height: 260px;
-      overflow:auto;
-      border:1px solid #eee;
-      border-radius:10px;
-      padding:10px;
-      background:#fafafa;
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 120px;
     }
-
-    .list label{ display:flex; gap:8px; align-items:center; margin:4px 0; }
-    .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    button { padding:7px 10px; cursor:pointer; }
-    select { padding:6px 10px; }
-    .pill{ padding:3px 8px; border-radius:999px; background:#eee; font-size:12px; }
-    .warn{ background:#fff2cc; }
-    .ok{ background:#d9ead3; }
-
-    #wrapChart{
-      border:1px solid #ddd; border-radius:12px; padding:12px;
+    .panel h2 { font-size: 14px; margin: 0 0 8px 0; }
+    .list {
+      max-height: 240px;
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
     }
-    canvas{ width:100% !important; height:520px !important; }
+    .row {
+      display:flex; gap:8px; align-items:center;
+      padding: 4px 2px;
+      border-bottom: 1px dashed #eee;
+      font-size: 13px;
+    }
+    .row:last-child { border-bottom: none; }
+    .row code { background:#f7f7f7; padding:2px 6px; border-radius:6px; font-size: 12px; }
+    .actions { display:flex; gap:8px; justify-content:flex-end; margin: 8px 0 0 0; }
+    #plot {
+      margin-top: 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 8px;
+      height: 520px;
+    }
+    .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; }
+      #plot { height: 460px; }
+    }
   </style>
 </head>
 
 <body>
   <h1>Visor S (Temperaturas) + D (Bombas / Equipos)</h1>
-  <p class="sub">Elige qué series quieres ver. S va en °C (eje izquierdo) y D en 0/1 (eje derecho). Zoom con rueda y pan arrastrando.</p>
-
-  <div class="topbar">
-    <div class="row">
-      <label><b>Rango:</b></label>
-      <select id="range">
-        <option value="24">Últimas 24h</option>
-        <option value="48">Últimas 48h</option>
-        <option value="168">Últimos 7 días</option>
-        <option value="all">Todo</option>
-      </select>
-      <button id="btnReload">Recargar</button>
-      <button id="btnReset">Reset zoom</button>
-      <span id="info" class="pill warn">Sin cargar</span>
-    </div>
+  <div class="sub">
+    Elige qué series quieres ver. S va en °C (eje izquierdo) y D en 0/1 (eje derecho). Zoom con rueda y pan arrastrando.
   </div>
 
-  <div class="cols">
-    <div class="box">
-      <div class="row" style="justify-content:space-between;">
-        <b>Temperaturas (S)</b>
-        <div class="row">
-          <button id="sAll">Mostrar todas</button>
-          <button id="sNone">Ocultar todas</button>
-        </div>
+  <div class="bar">
+    <label>Rango:</label>
+    <select id="rangeSel">
+      <option value="24h">Últimas 24h</option>
+      <option value="7d">Últimos 7 días</option>
+      <option value="30d">Últimos 30 días</option>
+      <option value="all">Todo</option>
+    </select>
+    <button id="btnReload">Recargar</button>
+    <button id="btnResetZoom">Reset zoom</button>
+    <span id="status" class="chip">Cargando…</span>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <h2>Temperaturas (S)</h2>
+      <div class="actions">
+        <button id="sAll">Mostrar todas</button>
+        <button id="sNone">Ocultar todas</button>
       </div>
       <div id="sList" class="list"></div>
     </div>
 
-    <div class="box">
-      <div class="row" style="justify-content:space-between;">
-        <b>Bombas / Equipos (D)</b>
-        <div class="row">
-          <button id="dAll">Mostrar todas</button>
-          <button id="dNone">Ocultar todas</button>
-        </div>
+    <div class="panel">
+      <h2>Bombas / Equipos (D)</h2>
+      <div class="actions">
+        <button id="dAll">Mostrar todas</button>
+        <button id="dNone">Ocultar todas</button>
       </div>
       <div id="dList" class="list"></div>
-      <p style="margin:8px 0 0; color:#555; font-size:13px;">
-        Nota: los drivers se muestran como 0/1 (OFF/ON). Si activas muchos a la vez, se separan con un “offset” pequeño para que no se pisen.
-      </p>
+      <div class="note">Nota: los drivers se muestran como 0/1 (OFF/ON).</div>
     </div>
   </div>
 
-  <div id="wrapChart">
-    <canvas id="chart"></canvas>
-  </div>
+  <div id="plot"></div>
 
 <script>
-/** ========= CONFIG: ajusta a tus ficheros reales ========= **/
+/**
+ * Estructura esperada de ficheros:
+ *  - data/latest_all.json
+ *  - data/S1.txt, data/S2.txt, ...
+ *  - data/d_D1.txt, data/d_D2.txt, ...
+ *
+ * Formato de .txt: el parser es tolerante.
+ * Soporta líneas tipo:
+ *   2026-01-11T10:00:00Z,62.3
+ *   2026-01-11T10:00:00Z;62.3
+ *   2026-01-11T10:00:00Z 62.3
+ * y también On/Off/True/False/1/0 en drivers.
+ */
 
-// Sensores S: usa los que tengas como txt. Ej: data/acs_S9.txt o data/sensor_S9.txt.
-// En tu caso ya estás guardando ACS como "acs_S9.txt" (según lo que venías haciendo).
-const SENSORS = [
-  // id, nombre visible, fichero txt (relativo a /sensores/)
-  { id:"S1",  name:"S1 · Tª Exterior",              file:"data/acs_S1.txt"  },
-  { id:"S2",  name:"S2 · Tª Imp. Cald. 1 ACS",      file:"data/acs_S2.txt"  },
-  { id:"S3",  name:"S3 · Tª Imp. Cald. 2 Calef.",   file:"data/acs_S3.txt"  },
-  { id:"S4",  name:"S4 · Tª Ret. Cald. 1 ACS",      file:"data/acs_S4.txt"  },
-  { id:"S5",  name:"S5 · Tª Ret. Cald. 2 Calef.",   file:"data/acs_S5.txt"  },
-  { id:"S7",  name:"S7 · Tª Ida Calefacción",       file:"data/acs_S7.txt"  },
-  { id:"S8",  name:"S8 · Tª Ida Primario ACS",      file:"data/acs_S8.txt"  },
-  { id:"S9",  name:"S9 · Tª Depósito ACS",          file:"data/acs_S9.txt"  },
-  { id:"S10", name:"S10 · Tª Consumo ACS",          file:"data/acs_S10.txt" },
-  { id:"S13", name:"S13 · Tª Retorno ACS",          file:"data/acs_S13.txt" },
-  { id:"S15", name:"S15 · Tª Retorno Primario ACS", file:"data/acs_S15.txt" }
-];
+const DATA_DIR = "data";
 
-// Drivers D: ejemplo D1..D30, ajusta nombres y ficheros si quieres.
-const DRIVERS = [
-  { id:"D1",  name:"D1 · M-P B. 5.2 (Primario caldera 2)", file:"data/drv_D1.txt" },
-  { id:"D2",  name:"D2 · M-P B. 5.1",                      file:"data/drv_D2.txt" },
-  { id:"D3",  name:"D3 · ON-OFF B.1 Caldera ACS",          file:"data/drv_D3.txt" },
-  { id:"D4",  name:"D4 · M-P B.2 Caldera Calefacción",     file:"data/drv_D4.txt" },
-  { id:"D5",  name:"D5 · ON-OFF B.3A.1 Prim. ACS",         file:"data/drv_D5.txt" },
-  { id:"D6",  name:"D6 · ON-OFF B.3A.2 Prim. ACS",         file:"data/drv_D6.txt" },
-  { id:"D7",  name:"D7 · M-P B.3B.1 Sec. ACS",             file:"data/drv_D7.txt" },
-  { id:"D8",  name:"D8 · M-P B.3B.2 Sec. ACS",             file:"data/drv_D8.txt" },
-  { id:"D9",  name:"D9 · M-P B.7.1 Paneles",               file:"data/drv_D9.txt" },
-  { id:"D10", name:"D10 · M-P B.7.2 Paneles",              file:"data/drv_D10.txt" },
-  { id:"D12", name:"D12 · A-C V2V Caldera 2",              file:"data/drv_D12.txt" },
-  { id:"D13", name:"D13 · M-P Quemador Caldera 2",         file:"data/drv_D13.txt" },
-  { id:"D15", name:"D15 · A-C V2V Caldera 1",              file:"data/drv_D15.txt" },
-  { id:"D16", name:"D16 · M-P Quemador Caldera 1",         file:"data/drv_D16.txt" },
-  { id:"D17", name:"D17 · M-P B.6 Sec. Paneles",           file:"data/drv_D17.txt" },
-  { id:"D19", name:"D19 · V3V Aerotermo",                  file:"data/drv_D19.txt" },
-  { id:"D20", name:"D20 · V3V Consumo ACS",                file:"data/drv_D20.txt" },
-  { id:"D21", name:"D21 · V3V Piscina",                    file:"data/drv_D21.txt" },
-  { id:"D22", name:"D22 · V3V Intercambiador Solar",       file:"data/drv_D22.txt" },
-  { id:"D24", name:"D24 · M-P B.4 Retorno ACS",            file:"data/drv_D24.txt" },
-  { id:"D27", name:"D27 · Regulación Quemador",            file:"data/drv_D27.txt" },
-  { id:"D28", name:"D28 · On-Off B.8.1 Piscina",           file:"data/drv_D28.txt" },
-  { id:"D29", name:"D29 · On-Off B.8.2 Piscina",           file:"data/drv_D29.txt" },
-  { id:"D30", name:"D30 · On-Off Aerotermo",               file:"data/drv_D30.txt" }
-];
+const $ = (id) => document.getElementById(id);
 
-/** ========= FIN CONFIG ========= **/
+const state = {
+  meta: null,
+  sensors: [],   // [{item:"S1", label:"...", units:"..."}]
+  drivers: [],   // [{item:"D1", label:"...", units:"..."}]
+  selectedS: new Set(),
+  selectedD: new Set(),
+  cache: new Map(), // key -> parsed series [{t:Date, v:number}]
+  lastRange: "24h",
+  lastUpdated: null,
+};
 
-const sList = document.getElementById("sList");
-const dList = document.getElementById("dList");
-const info = document.getElementById("info");
-const btnReload = document.getElementById("btnReload");
-const btnReset = document.getElementById("btnReset");
-const rangeSel = document.getElementById("range");
-
-function addCheckbox(container, item, group) {
-  const id = `${group}_${item.id}`;
-  const label = document.createElement("label");
-  label.innerHTML = `<input type="checkbox" id="${id}" data-id="${item.id}"> <span>${item.name}</span>`;
-  container.appendChild(label);
+function setStatus(txt) {
+  $("status").textContent = txt;
 }
 
-SENSORS.forEach(s => addCheckbox(sList, s, "S"));
-DRIVERS.forEach(d => addCheckbox(dList, d, "D"));
-
-// Por defecto marca algunos típicos
-document.getElementById("S_S9")?.click?.();
-document.getElementById("S_S10")?.click?.();
-document.getElementById("D_D1")?.click?.();
-
-function parseTemp(v) {
-  const s = String(v||"").trim();
-  if (!s || s === "NOT_FOUND") return null;
-  const n = Number(s.replace(",", "."));
-  return Number.isFinite(n) ? n : null;
-}
-
-function parseOnOff(v) {
-  const s = String(v||"").trim().toLowerCase();
-  if (s === "on") return 1;
-  if (s === "off") return 0;
+function normalizeOnOffTo01(x) {
+  const v = String(x ?? "").trim().toLowerCase();
+  if (v === "on" || v === "true" || v === "yes" || v === "1") return 1;
+  if (v === "off" || v === "false" || v === "no" || v === "0") return 0;
+  // si viene "100.00" en válvulas, etc:
+  const n = Number(v);
+  if (!Number.isNaN(n)) return n;
   return null;
 }
 
-async function loadTxtPoints(file, kind) {
-  const res = await fetch(`${file}?ts=${Date.now()}`);
-  if (!res.ok) throw new Error(`No se pudo leer ${file} (${res.status})`);
-  const txt = await res.text();
-  const points = [];
-  const lines = txt.split(/\r?\n/).filter(Boolean);
+function parseHistoryText(text, isDriver=false) {
+  const out = [];
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
   for (const line of lines) {
-    const [ts, val] = line.split(";");
-    if (!ts) continue;
+    // separar por , ; o espacios múltiples
+    let parts = line.split(",");
+    if (parts.length < 2) parts = line.split(";");
+    if (parts.length < 2) parts = line.split(/\s+/);
 
-    let y = null;
-    if (kind === "S") y = parseTemp(val);
-    if (kind === "D") y = parseOnOff(val);
+    if (parts.length < 2) continue;
 
-    if (y === null) continue;
-    points.push({ x: new Date(ts), y });
+    const ts = parts[0].trim();
+    const raw = parts.slice(1).join(" ").trim();
+
+    const t = new Date(ts);
+    if (Number.isNaN(t.getTime())) continue;
+
+    let v;
+    if (isDriver) {
+      v = normalizeOnOffTo01(raw);
+      if (v === null) continue;
+    } else {
+      v = Number(String(raw).replace(",", "."));
+      if (Number.isNaN(v)) continue;
+    }
+    out.push({ t, v });
   }
-  return points;
+
+  // ordenar por tiempo
+  out.sort((a,b) => a.t - b.t);
+  return out;
 }
 
-function applyRange(points, rangeVal) {
-  if (rangeVal === "all") return points;
-  const hours = Number(rangeVal);
-  const cutoff = Date.now() - hours * 3600 * 1000;
-  return points.filter(p => p.x.getTime() >= cutoff);
+async function fetchText(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status} al cargar ${url}`);
+  return await res.text();
 }
 
-function selectedIds(prefix) {
-  return [...document.querySelectorAll(`input[id^="${prefix}_"]:checked`)].map(cb => cb.dataset.id);
+async function fetchJSON(url) {
+  const res = await fetch(url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`HTTP ${res.status} al cargar ${url}`);
+  return await res.json();
 }
 
-function setAll(prefix, checked) {
-  document.querySelectorAll(`input[id^="${prefix}_"]`).forEach(cb => cb.checked = checked);
+function rangeToMs(r) {
+  if (r === "24h") return 24 * 60 * 60 * 1000;
+  if (r === "7d")  return 7  * 24 * 60 * 60 * 1000;
+  if (r === "30d") return 30 * 24 * 60 * 60 * 1000;
+  return null; // all
 }
 
-document.getElementById("sAll").onclick = () => setAll("S", true);
-document.getElementById("sNone").onclick = () => setAll("S", false);
-document.getElementById("dAll").onclick = () => setAll("D", true);
-document.getElementById("dNone").onclick = () => setAll("D", false);
+function filterByRange(series, rangeKey) {
+  const ms = rangeToMs(rangeKey);
+  if (!ms) return series;
 
-const chart = new Chart(document.getElementById("chart"), {
-  type: "line",
-  data: { datasets: [] },
-  options: {
-    parsing: false,
-    maintainAspectRatio: false,
-    scales: {
-      x: { type: "time", title: { display: true, text: "Fecha y hora" } },
-      yTemp: {
-        type: "linear",
-        position: "left",
-        title: { display: true, text: "Temperatura (°C)" }
-      },
-      yState: {
-        type: "linear",
-        position: "right",
-        min: -0.1,
-        max: 1.1,
-        grid: { drawOnChartArea: false },
-        ticks: {
-          stepSize: 1,
-          callback: (v) => (v === 1 ? "ON" : (v === 0 ? "OFF" : v))
-        },
-        title: { display: true, text: "Estado (0/1)" }
+  // usamos el último timestamp de la serie como "now" de referencia
+  const last = series.length ? series[series.length - 1].t.getTime() : Date.now();
+  const minT = last - ms;
+
+  return series.filter(p => p.t.getTime() >= minT);
+}
+
+function buildCheckboxRow(container, item, label, checked, onChange) {
+  const row = document.createElement("div");
+  row.className = "row";
+
+  const cb = document.createElement("input");
+  cb.type = "checkbox";
+  cb.checked = checked;
+  cb.addEventListener("change", () => onChange(cb.checked));
+
+  const code = document.createElement("code");
+  code.textContent = item;
+
+  const span = document.createElement("span");
+  span.textContent = label || "";
+
+  row.appendChild(cb);
+  row.appendChild(code);
+  row.appendChild(span);
+
+  container.appendChild(row);
+}
+
+function renderLists() {
+  const sList = $("sList");
+  const dList = $("dList");
+  sList.innerHTML = "";
+  dList.innerHTML = "";
+
+  for (const s of state.sensors) {
+    buildCheckboxRow(
+      sList,
+      s.item,
+      `${s.label || ""}${s.units ? " ("+s.units+")" : ""}`,
+      state.selectedS.has(s.item),
+      (ok) => {
+        if (ok) state.selectedS.add(s.item);
+        else state.selectedS.delete(s.item);
+        redraw();
       }
-    },
-    plugins: {
-      legend: { display: true },
-      zoom: {
-        pan: { enabled: true, mode: "x" },
-        zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: "x" }
-      },
-      tooltip: {
-        callbacks: {
-          label: (ctx) => {
-            const ds = ctx.dataset;
-            if (ds.yAxisID === "yState") return `${ds.label}: ${ctx.raw.y === 1 ? "ON" : "OFF"}`;
-            return `${ds.label}: ${ctx.raw.y}`;
-          }
-        }
+    );
+  }
+
+  for (const d of state.drivers) {
+    buildCheckboxRow(
+      dList,
+      d.item,
+      d.label || "",
+      state.selectedD.has(d.item),
+      (ok) => {
+        if (ok) state.selectedD.add(d.item);
+        else state.selectedD.delete(d.item);
+        redraw();
       }
+    );
+  }
+}
+
+function fileForItem(item) {
+  // Sensores: data/S1.txt
+  if (/^S\d+$/.test(item)) return `${DATA_DIR}/${item}.txt`;
+  // Drivers: data/d_D1.txt
+  if (/^D\d+$/.test(item)) return `${DATA_DIR}/d_${item}.txt`;
+  return null;
+}
+
+async function loadSeries(item) {
+  if (state.cache.has(item)) return state.cache.get(item);
+
+  const url = fileForItem(item);
+  if (!url) return [];
+
+  const isDriver = /^D\d+$/.test(item);
+  const txt = await fetchText(url);
+  const series = parseHistoryText(txt, isDriver);
+
+  state.cache.set(item, series);
+  return series;
+}
+
+function labelFor(item) {
+  const s = state.sensors.find(x => x.item === item);
+  if (s) return `${s.item} · ${s.label || ""}`.trim();
+  const d = state.drivers.find(x => x.item === item);
+  if (d) return `${d.item} · ${d.label || ""}`.trim();
+  return item;
+}
+
+async function redraw() {
+  const rangeKey = $("rangeSel").value;
+  state.lastRange = rangeKey;
+
+  const selS = Array.from(state.selectedS);
+  const selD = Array.from(state.selectedD);
+
+  setStatus(`Cargando series… (${selS.length} S + ${selD.length} D)`);
+
+  // cargar en paralelo
+  const allItems = [...selS, ...selD];
+  const seriesArr = await Promise.all(allItems.map(it => loadSeries(it).catch(() => [])));
+
+  // construir traces
+  const traces = [];
+
+  // Temperaturas superpuestas (MISMO eje y)
+  for (let i = 0; i < selS.length; i++) {
+    const item = selS[i];
+    const raw = seriesArr[i] || [];
+    const serie = filterByRange(raw, rangeKey);
+
+    traces.push({
+      type: "scatter",
+      mode: "lines",
+      name: labelFor(item),
+      x: serie.map(p => p.t),
+      y: serie.map(p => p.v),
+      yaxis: "y",
+      hovertemplate: "%{x}<br>%{y:.2f}°C<extra></extra>",
+    });
+  }
+
+  // Drivers (0/1) en y2, como step
+  const dStartIndex = selS.length;
+  for (let j = 0; j < selD.length; j++) {
+    const item = selD[j];
+    const raw = seriesArr[dStartIndex + j] || [];
+    const serie = filterByRange(raw, rangeKey);
+
+    traces.push({
+      type: "scatter",
+      mode: "lines",
+      name: labelFor(item) + " (0/1)",
+      x: serie.map(p => p.t),
+      y: serie.map(p => p.v),
+      yaxis: "y2",
+      line: { shape: "hv" },
+      hovertemplate: "%{x}<br>%{y}<extra></extra>",
+    });
+  }
+
+  // status timestamp (si hay series)
+  let lastTs = null;
+  for (const it of allItems) {
+    const s = state.cache.get(it);
+    if (s && s.length) {
+      const t = s[s.length - 1].t.getTime();
+      if (!lastTs || t > lastTs) lastTs = t;
     }
   }
-});
+  state.lastUpdated = lastTs ? new Date(lastTs) : null;
 
-function makeDataset(label, points, kind, offsetIndex = 0) {
-  if (kind === "S") {
-    return {
-      label,
-      data: points,
-      yAxisID: "yTemp",
-      borderWidth: 2,
-      pointRadius: 0
-    };
-  }
-  // Drivers: stepped, con offset para separarlas un poco
-  const offset = offsetIndex * 0.06; // 0.06, 0.12... (visual)
-  const shifted = points.map(p => ({ x: p.x, y: p.y + offset }));
-  return {
-    label: `${label} (0/1)`,
-    data: shifted,
-    yAxisID: "yState",
-    stepped: true,
-    borderWidth: 2,
-    pointRadius: 0
+  const layout = {
+    margin: { l: 60, r: 60, t: 30, b: 50 },
+    legend: { orientation: "h" },
+    xaxis: {
+      title: "Fecha y hora",
+      showgrid: true,
+      zeroline: false,
+    },
+    yaxis: {
+      title: "Temperatura (°C)",
+      showgrid: true,
+      zeroline: false,
+      automargin: true,
+    },
+    yaxis2: {
+      title: "Estado (0/1)",
+      overlaying: "y",
+      side: "right",
+      range: [-0.1, 1.1],
+      showgrid: false,
+      zeroline: false,
+      automargin: true,
+    },
+    hovermode: "x unified",
   };
-}
 
-async function refresh() {
-  const rangeVal = rangeSel.value;
-  const sIds = selectedIds("S");
-  const dIds = selectedIds("D");
+  const config = {
+    responsive: true,
+    scrollZoom: true,
+    displaylogo: false,
+  };
 
-  if (sIds.length === 0 && dIds.length === 0) {
-    chart.data.datasets = [];
-    chart.update();
-    info.textContent = "Selecciona al menos 1 serie";
-    info.className = "pill warn";
+  if (!traces.length) {
+    setStatus("Selecciona alguna serie (S o D)");
+    Plotly.newPlot("plot", [{
+      type:"scatter", mode:"lines", x:[], y:[]
+    }], layout, config);
     return;
   }
 
-  info.textContent = "Cargando…";
-  info.className = "pill warn";
+  Plotly.newPlot("plot", traces, layout, config);
 
-  const datasets = [];
-
-  // Carga S
-  for (const sid of sIds) {
-    const s = SENSORS.find(x => x.id === sid);
-    if (!s) continue;
-    try {
-      let pts = await loadTxtPoints(s.file, "S");
-      pts = applyRange(pts, rangeVal);
-      datasets.push(makeDataset(s.name, pts, "S"));
-    } catch (e) {
-      // si falta el txt, lo ignoramos (no rompe)
-      console.warn(e);
-    }
-  }
-
-  // Carga D con offset
-  let idx = 0;
-  for (const did of dIds) {
-    const d = DRIVERS.find(x => x.id === did);
-    if (!d) continue;
-    try {
-      let pts = await loadTxtPoints(d.file, "D");
-      pts = applyRange(pts, rangeVal);
-      datasets.push(makeDataset(d.name, pts, "D", idx));
-      idx++;
-    } catch (e) {
-      console.warn(e);
-    }
-  }
-
-  chart.data.datasets = datasets;
-  chart.update();
-
-  info.textContent = `Mostrando: ${sIds.length} S + ${dIds.length} D · ${new Date().toISOString()}`;
-  info.className = "pill ok";
+  const stamp = state.lastUpdated ? state.lastUpdated.toISOString() : "—";
+  setStatus(`Mostrando: ${selS.length} S + ${selD.length} D · ${stamp}`);
 }
 
-btnReload.onclick = () => refresh().catch(e => alert(e.message));
-btnReset.onclick = () => chart.resetZoom();
-rangeSel.onchange = () => refresh().catch(e => alert(e.message));
+function resetZoom() {
+  Plotly.relayout("plot", {
+    "xaxis.autorange": true,
+    "yaxis.autorange": true,
+    "yaxis2.autorange": false,
+  });
+}
 
-// Auto-refresco si marcas/desmarcas
-document.addEventListener("change", (ev) => {
-  if (ev.target && ev.target.matches('input[type="checkbox"]')) {
-    refresh().catch(e => console.warn(e));
+async function init() {
+  try {
+    setStatus("Cargando latest_all.json…");
+    const meta = await fetchJSON(`${DATA_DIR}/latest_all.json`);
+    state.meta = meta;
+
+    // sensores y drivers desde latest_all.json
+    state.sensors = (meta.sensors || [])
+      .filter(x => /^S\d+$/.test(String(x.item||"").trim()))
+      .map(x => ({ item: String(x.item).trim(), label: x.label || "", units: x.units || "" }))
+      .sort((a,b) => Number(a.item.slice(1)) - Number(b.item.slice(1)));
+
+    state.drivers = (meta.drivers || [])
+      .filter(x => /^D\d+$/.test(String(x.item||"").trim()))
+      .map(x => ({ item: String(x.item).trim(), label: x.label || "", units: x.units || "" }))
+      .sort((a,b) => Number(a.item.slice(1)) - Number(b.item.slice(1)));
+
+    // selección inicial: ninguna (o pon aquí defaults si quieres)
+    state.selectedS = new Set();
+    state.selectedD = new Set();
+
+    renderLists();
+
+    // pintar vacío al inicio
+    await redraw();
+
+  } catch (e) {
+    console.error(e);
+    setStatus("Error cargando datos (mira consola).");
   }
+}
+
+// botones
+$("btnReload").addEventListener("click", async () => {
+  // limpiamos cache para forzar refresco
+  state.cache.clear();
+  await init();
 });
 
-refresh().catch(e => alert(e.message));
+$("btnResetZoom").addEventListener("click", resetZoom);
+
+$("rangeSel").addEventListener("change", () => redraw());
+
+$("sAll").addEventListener("click", () => {
+  state.sensors.forEach(s => state.selectedS.add(s.item));
+  renderLists();
+  redraw();
+});
+$("sNone").addEventListener("click", () => {
+  state.selectedS.clear();
+  renderLists();
+  redraw();
+});
+
+$("dAll").addEventListener("click", () => {
+  state.drivers.forEach(d => state.selectedD.add(d.item));
+  renderLists();
+  redraw();
+});
+$("dNone").addEventListener("click", () => {
+  state.selectedD.clear();
+  renderLists();
+  redraw();
+});
+
+init();
 </script>
 </body>
 </html>
