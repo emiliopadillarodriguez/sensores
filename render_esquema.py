@@ -17,14 +17,26 @@ INCLUDE_UNITS = False
 PUMP_ON_COLOR = "#00c853"  # verde intenso
 
 # Mapa: Driver -> ID de draw.io (data-cell-id en el SVG exportado)
+# Rellena aquí TODOS tus drivers que quieras pintar (D1..Dxx)
 PUMP_CELL_IDS = {
-    "D4": "HbhBeWkGyhC53GPZ-frY-33",  # Primario Caldera 2
+    # Ejemplo:
+    "D3": "HbhBeWkGyhC53GPZ-frY-33",  #  ON-OFF B. 1 Caldera ACS
+    "D4": "HbhBeWkGyhC53GPZ-frY-29",  #  M-P B. 2 - Caldera de Calefacción
+    "D2": "HbhBeWkGyhC53GPZ-frY-36",  #  M-P B. 5.1 - Calefacción
+    "D1": "HbhBeWkGyhC53GPZ-frY-39",  #  M-P B. 5.2 - Calefacción
+    "D24": "HbhBeWkGyhC53GPZ-frY-49",  #  M-P B. 4 Retorno ACS
+    "D5": "HbhBeWkGyhC53GPZ-frY-52",  #  ON-OFF B. 3A.1 - Prim. ACS
+    "D6": "HbhBeWkGyhC53GPZ-frY-55",  #  ON-OFF B. 3A.2 - Prim. ACS
+    "D7": "HbhBeWkGyhC53GPZ-frY-42",  #  M-P B. 3B.1 - Sec. ACS
+    "D8": "HbhBeWkGyhC53GPZ-frY-45",  #  M-P B. 3B.2 - Sec. ACS
+    "D17": "KY_yovXKN2bWtjt0556d-11",  #  M-P B. 6 - Sec. Paneles Solares
+    "D9": "KY_yovXKN2bWtjt0556d-5",  #  M-P B. 7.1 - Paneles Solares
+    "D10": "KY_yovXKN2bWtjt0556d-8",  #  M-P B. 7.2 - Paneles Solares
+    "D15": "WpCggooiQa-CKCG4ur4o-82",  #  A-C V2V Caldera 1
+    "D12": "WpCggooiQa-CKCG4ur4o-80",  #  A-C V2V Caldera 2
+    "D13": "HbhBeWkGyhC53GPZ-frY-7",  #  M-P Quemador Caldera 2
+    "D16": "HbhBeWkGyhC53GPZ-frY-8",  #  M-P Quemador Caldera 1
 }
-
-# ✅ MUY IMPORTANTE: registrar namespaces para que ElementTree no “rompa” xlink/href
-ET.register_namespace("", "http://www.w3.org/2000/svg")
-ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
-
 
 # =========================
 # HELPERS
@@ -32,21 +44,18 @@ ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
 def safe_str(x) -> str:
     return "" if x is None else str(x).strip()
 
-
 def normalize_on_off(val: str) -> str:
     v = safe_str(val).lower()
     if v in ("on", "1", "true", "yes", "encendida", "encendido"):
         return "on"
     if v in ("off", "0", "false", "no", "apagada", "apagado"):
         return "off"
-    return v  # por si viene otro formato
+    return v  # otros formatos (p.ej. "100.00")
 
-
-def load_latest_all() -> dict:
+def load_latest_all():
     if not LATEST_ALL_JSON.exists():
         return {}
     return json.loads(LATEST_ALL_JSON.read_text(encoding="utf-8"))
-
 
 def build_sensors_map(latest_all: dict) -> dict:
     out = {}
@@ -60,7 +69,6 @@ def build_sensors_map(latest_all: dict) -> dict:
             "units": safe_str(s.get("units", "")),
         }
     return out
-
 
 def build_drivers_map(latest_all: dict) -> dict:
     out = {}
@@ -76,29 +84,26 @@ def build_drivers_map(latest_all: dict) -> dict:
         }
     return out
 
-
 def update_style_color(style: str, color: str) -> str:
     """
     Cambia fill/stroke en un string style="...".
-    Mantiene el resto de propiedades.
     """
     if not style:
         return style
 
-    # Reemplaza fill:...
+    # fill
     if re.search(r"fill\s*:", style):
         style = re.sub(r"fill\s*:\s*[^;]+", f"fill:{color}", style)
     else:
         style = style.rstrip(";") + f";fill:{color}"
 
-    # Reemplaza stroke:... si existe
+    # stroke (solo si existe)
     if re.search(r"stroke\s*:", style):
         style = re.sub(r"stroke\s*:\s*[^;]+", f"stroke:{color}", style)
 
     return style
 
-
-def paint_group_green(svg_root, cell_id: str, color: str) -> bool:
+def paint_group(svg_root, cell_id: str, color: str) -> bool:
     """
     Busca el <g ... data-cell-id="..."> y pinta sus hijos.
     Devuelve True si lo encontró y modificó.
@@ -122,7 +127,6 @@ def paint_group_green(svg_root, cell_id: str, color: str) -> bool:
             return True
     return False
 
-
 # =========================
 # MAIN
 # =========================
@@ -138,7 +142,7 @@ def main():
     smap = build_sensors_map(latest_all)
     dmap = build_drivers_map(latest_all)
 
-    # 1) Reemplazo tokens {{Sx}} en el SVG como texto (rápido por regex)
+    # 1) Reemplazo tokens {{Sx}} en el SVG como texto
     svg_text = svg_path.read_text(encoding="utf-8")
 
     for n in range(1, MAX_S + 1):
@@ -152,36 +156,48 @@ def main():
 
         svg_text = re.sub(r"\{\{" + re.escape(key) + r"\}\}", repl, svg_text)
 
-    # 2) Parseamos el SVG ya con los S rellenados
+    # 2) Parseamos el SVG ya con las S rellenadas
     try:
         root = ET.fromstring(svg_text)
     except ET.ParseError as e:
         raise RuntimeError(f"El SVG no se puede parsear (mal formado). Error: {e}")
 
-    # 3) Pinta D4 si está ON
-    driver_key = "D4"
-    if driver_key in dmap:
-        state = normalize_on_off(dmap[driver_key]["value"])
-        if state == "on":
-            cell_id = PUMP_CELL_IDS.get(driver_key)
-            if cell_id:
-                ok = paint_group_green(root, cell_id, PUMP_ON_COLOR)
-                print(f"DEBUG: {driver_key} = ON -> pintar verde. Encontrado ID en SVG: {ok}")
-            else:
-                print(f"DEBUG: No hay cell_id configurado para {driver_key}")
+    # 3) Pintar en verde TODAS las bombas configuradas que estén ON
+    painted = []
+    not_found = []
+    not_on = []
+    not_in_json = []
+
+    for driver_key, cell_id in PUMP_CELL_IDS.items():
+        if driver_key not in dmap:
+            not_in_json.append(driver_key)
+            continue
+
+        state_raw = dmap[driver_key]["value"]
+        state = normalize_on_off(state_raw)
+
+        if state != "on":
+            not_on.append((driver_key, state_raw))
+            continue
+
+        ok = paint_group(root, cell_id, PUMP_ON_COLOR)
+        if ok:
+            painted.append(driver_key)
         else:
-            print(f"DEBUG: {driver_key} no está ON (value='{dmap[driver_key]['value']}'), no se pinta.")
-    else:
-        print("DEBUG: D4 no existe en latest_all.json, no se pinta.")
+            not_found.append(driver_key)
 
-    # 4) Guardar SVG final (añadimos declaración XML para visores “tiquismiquis”)
+    print(f"DEBUG: Pintadas en verde (ON): {painted}")
+    if not_on:
+        print(f"DEBUG: No ON (no se pintan): {not_on}")
+    if not_in_json:
+        print(f"DEBUG: No existen en latest_all.json: {not_in_json}")
+    if not_found:
+        print(f"DEBUG: No se encontró data-cell-id en SVG para: {not_found}")
+
+    # 4) Guardar SVG final
     svg_final = ET.tostring(root, encoding="unicode")
-    if not svg_final.lstrip().startswith("<?xml"):
-        svg_final = '<?xml version="1.0" encoding="UTF-8"?>\n' + svg_final
-
     out_path.write_text(svg_final, encoding="utf-8")
-    print(f"OK: generado {OUT_SVG} (S rellenadas + bomba {driver_key} si ON).")
-
+    print(f"OK: generado {OUT_SVG} (S rellenadas + bombas ON en verde).")
 
 if __name__ == "__main__":
     main()
