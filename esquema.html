@@ -3,149 +3,52 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Esquema sala de calderas</title>
-
+  <title>Esquema - Sensores</title>
   <style>
-    :root { --h: 58px; }
-
-    body {
-      margin: 0;
-      font-family: system-ui, Arial, sans-serif;
-      background: #f5f5f5;
-    }
-
-    header {
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      height: var(--h);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      background: #ffffff;
-      border-bottom: 1px solid #ddd;
-    }
-
-    header .title {
-      font-weight: 700;
-      margin-right: 10px;
-    }
-
-    button {
-      padding: 6px 10px;
-      border: 1px solid #bbb;
-      background: #f0f0f0;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #e6e6e6;
-    }
-
-    .status {
-      margin-left: auto;
-      font-size: 12px;
-      color: #444;
-    }
-
-    /* Contenedor con scroll horizontal y vertical */
-    #wrap {
-      height: calc(100vh - var(--h));
-      overflow: auto;
-      background: #fafafa;
-    }
-
-    /* Contenedor del SVG */
-    #svgContainer {
-      display: inline-block;
-      padding: 10px;
-    }
+    body { margin: 0; font-family: system-ui, Arial, sans-serif; background: #f6f7f8; }
+    header { padding: 10px 14px; background: white; border-bottom: 1px solid #ddd; display:flex; gap:12px; align-items:center; }
+    #status { color:#444; font-size: 14px; }
+    #wrap { padding: 10px; }
+    img { width: 100%; height: auto; background: white; border: 1px solid #ddd; border-radius: 8px; }
+    button { padding: 8px 10px; border: 1px solid #ccc; background: #fff; border-radius: 8px; cursor:pointer; }
+    button:hover { background:#f0f0f0; }
   </style>
-
-  <!-- Librería para zoom y pan sobre SVG -->
-  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 </head>
-
 <body>
+  <header>
+    <button id="btnReload">Recargar</button>
+    <div id="status">Cargando…</div>
+  </header>
 
-<header>
-  <span class="title">Esquema sala de calderas</span>
+  <div id="wrap">
+    <!-- Importante: usar IMG para SVG suele ser lo más compatible -->
+    <img id="schema" alt="Esquema renderizado" />
+  </div>
 
-  <button id="btnIn">Zoom +</button>
-  <button id="btnOut">Zoom −</button>
-  <button id="btnReset">Reset</button>
-  <button id="btnFit">Ajustar</button>
+  <script>
+    const REFRESH_MS = 30000; // 30s
+    const img = document.getElementById('schema');
+    const status = document.getElementById('status');
+    const btn = document.getElementById('btnReload');
 
-  <span class="status" id="status">Cargando…</span>
-</header>
-
-<div id="wrap">
-  <div id="svgContainer"></div>
-</div>
-
-<script>
-let panZoomInstance = null;
-
-async function loadSVG() {
-  const statusEl = document.getElementById("status");
-  const container = document.getElementById("svgContainer");
-
-  // RUTA CORRECTA PARA GITHUB PAGES
-  const url = "./esquema_render.svg?v=" + Date.now();
-
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    const txt = await res.text();
-
-    if (!res.ok) {
-      statusEl.textContent = "ERROR HTTP " + res.status;
-      container.innerHTML = "<pre>" + txt.slice(0,300) + "</pre>";
-      return;
+    function load() {
+      const ts = Date.now();
+      img.src = `esquema_render.svg?v=${ts}`;
+      status.textContent = `Actualizando… (${new Date().toLocaleTimeString()})`;
     }
 
-    if (!txt.includes("<svg")) {
-      statusEl.textContent = "ERROR: el archivo no contiene un <svg> válido";
-      container.innerHTML = "<pre>" + txt.slice(0,300) + "</pre>";
-      return;
-    }
-
-    // Insertamos el SVG inline
-    container.innerHTML = txt;
-
-    const svgEl = container.querySelector("svg");
-    if (!svgEl) {
-      statusEl.textContent = "ERROR: SVG no encontrado tras insertar";
-      return;
-    }
-
-    // Inicializamos zoom y pan
-    panZoomInstance = svgPanZoom(svgEl, {
-      zoomEnabled: true,
-      panEnabled: true,
-      controlIconsEnabled: false,
-      fit: true,
-      center: true,
-      minZoom: 0.1,
-      maxZoom: 20
+    img.addEventListener('load', () => {
+      status.textContent = `OK • Última carga: ${new Date().toLocaleTimeString()}`;
     });
 
-    statusEl.textContent = "SVG cargado correctamente";
+    img.addEventListener('error', () => {
+      status.textContent = `Error cargando el SVG. Prueba con PNG o revisa ruta/permisos. (${new Date().toLocaleTimeString()})`;
+    });
 
-  } catch (err) {
-    statusEl.textContent = "ERROR cargando SVG: " + err.message;
-  }
-}
+    btn.addEventListener('click', load);
 
-// Botones
-document.getElementById("btnIn").onclick = () => panZoomInstance?.zoomIn();
-document.getElementById("btnOut").onclick = () => panZoomInstance?.zoomOut();
-document.getElementById("btnReset").onclick = () => panZoomInstance?.resetZoom();
-document.getElementById("btnFit").onclick = () => panZoomInstance?.fit();
-
-window.addEventListener("load", loadSVG);
-</script>
-
+    load();
+    setInterval(load, REFRESH_MS);
+  </script>
 </body>
 </html>
