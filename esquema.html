@@ -1,54 +1,136 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Esquema - Sensores</title>
-  <style>
-    body { margin: 0; font-family: system-ui, Arial, sans-serif; background: #f6f7f8; }
-    header { padding: 10px 14px; background: white; border-bottom: 1px solid #ddd; display:flex; gap:12px; align-items:center; }
-    #status { color:#444; font-size: 14px; }
-    #wrap { padding: 10px; }
-    img { width: 100%; height: auto; background: white; border: 1px solid #ddd; border-radius: 8px; }
-    button { padding: 8px 10px; border: 1px solid #ccc; background: #fff; border-radius: 8px; cursor:pointer; }
-    button:hover { background:#f0f0f0; }
-  </style>
+<meta charset="utf-8">
+<title>Esquema sala de calderas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+  :root { --h: 56px; }
+
+  body {
+    margin: 0;
+    font-family: system-ui, Arial, sans-serif;
+    background: #fafafa;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    height: var(--h);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+  }
+
+  header b { font-size: 14px; }
+
+  button {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: #f7f7f7;
+    cursor: pointer;
+  }
+
+  button:hover { background: #eee; }
+
+  .status {
+    margin-left: auto;
+    font-size: 12px;
+    color: #555;
+  }
+
+  #wrap {
+    height: calc(100vh - var(--h));
+    overflow: auto;           /* SCROLL horizontal + vertical */
+    background: #fafafa;
+  }
+
+  #svgContainer {
+    display: inline-block;
+    transform-origin: 0 0;
+    padding: 10px;
+  }
+</style>
+
+<!-- Librería zoom/pan -->
+<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
 </head>
+
 <body>
-  <header>
-    <button id="btnReload">Recargar</button>
-    <div id="status">Cargando…</div>
-  </header>
 
-  <div id="wrap">
-    <!-- Importante: usar IMG para SVG suele ser lo más compatible -->
-    <img id="schema" alt="Esquema renderizado" />
-  </div>
+<header>
+  <b>Esquema (SVG)</b>
 
-  <script>
-    const REFRESH_MS = 30000; // 30s
-    const img = document.getElementById('schema');
-    const status = document.getElementById('status');
-    const btn = document.getElementById('btnReload');
+  <button id="zoomIn">Zoom +</button>
+  <button id="zoomOut">Zoom −</button>
+  <button id="reset">Reset</button>
+  <button id="fit">Ajustar</button>
 
-    function load() {
-      const ts = Date.now();
-      img.src = `esquema_render.svg?v=${ts}`;
-      status.textContent = `Actualizando… (${new Date().toLocaleTimeString()})`;
+  <span class="status" id="status">Cargando…</span>
+</header>
+
+<div id="wrap">
+  <div id="svgContainer"></div>
+</div>
+
+<script>
+let panZoom = null;
+
+async function loadSVG() {
+  const status = document.getElementById("status");
+  const container = document.getElementById("svgContainer");
+
+  const url = "./esquema_render.svg?v=" + Date.now(); // evita caché
+
+  try {
+    const res = await fetch(url, { cache: "no-store" });
+    const txt = await res.text();
+
+    if (!res.ok) {
+      status.textContent = "ERROR HTTP " + res.status;
+      container.innerHTML = "<pre>" + txt + "</pre>";
+      return;
     }
 
-    img.addEventListener('load', () => {
-      status.textContent = `OK • Última carga: ${new Date().toLocaleTimeString()}`;
+    if (!txt.includes("<svg")) {
+      status.textContent = "ERROR: no es un SVG válido";
+      container.innerHTML = "<pre>" + txt.slice(0, 300) + "</pre>";
+      return;
+    }
+
+    container.innerHTML = txt;
+    status.textContent = "SVG cargado";
+
+    const svg = container.querySelector("svg");
+
+    panZoom = svgPanZoom(svg, {
+      zoomEnabled: true,
+      controlIconsEnabled: false,
+      fit: true,
+      center: true,
+      minZoom: 0.2,
+      maxZoom: 10,
+      zoomScaleSensitivity: 0.25
     });
 
-    img.addEventListener('error', () => {
-      status.textContent = `Error cargando el SVG. Prueba con PNG o revisa ruta/permisos. (${new Date().toLocaleTimeString()})`;
-    });
+  } catch (e) {
+    status.textContent = "ERROR cargando SVG: " + e.message;
+  }
+}
 
-    btn.addEventListener('click', load);
+document.getElementById("zoomIn").onclick  = () => panZoom && panZoom.zoomIn();
+document.getElementById("zoomOut").onclick = () => panZoom && panZoom.zoomOut();
+document.getElementById("reset").onclick   = () => panZoom && panZoom.resetZoom();
+document.getElementById("fit").onclick     = () => panZoom && panZoom.fit();
 
-    load();
-    setInterval(load, REFRESH_MS);
-  </script>
+window.addEventListener("load", loadSVG);
+</script>
+
 </body>
 </html>
