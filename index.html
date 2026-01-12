@@ -1,394 +1,403 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BMS · Index</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sala de Calderas - Dashboard</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <!-- Chart.js (muy compatible con Chrome) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     :root{
-      --bg0:#070A12; --bg1:#0B1020; --txt:#EAF0FF;
-      --muted: rgba(234,240,255,.68); --muted2: rgba(234,240,255,.45);
-      --stroke: rgba(255,255,255,.10); --stroke2: rgba(255,255,255,.16);
-      --shadow: 0 18px 45px rgba(0,0,0,.45); --r:18px;
-      --ok:#35D07F; --bad:#FF5C5C; --accent:#7C5CFF; --accent2:#3BE7FF;
-      --chipOn: rgba(53,208,127,.16);
-      --chipOff: rgba(255,92,92,.14);
+      --bg:#0b1220;
+      --panel:#0f1a2d;
+      --panel2:#0c1628;
+      --border:rgba(255,255,255,.08);
+      --muted:rgba(255,255,255,.65);
+      --text:rgba(255,255,255,.92);
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 16px;
     }
+
     *{box-sizing:border-box}
     body{
-      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
-      color:var(--txt);
-      background:
-        radial-gradient(1200px 700px at 15% 0%, rgba(124,92,255,.25), transparent 55%),
-        radial-gradient(900px 600px at 85% 10%, rgba(59,231,255,.18), transparent 60%),
-        linear-gradient(180deg, var(--bg0), var(--bg1));
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(34,197,94,.12), transparent 60%),
+                  radial-gradient(900px 500px at 110% 10%, rgba(59,130,246,.12), transparent 55%),
+                  var(--bg);
+      color:var(--text);
     }
-    .wrap{max-width:1280px;margin:0 auto;padding:22px 16px 60px}
-    .top{
+
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(11,18,32,.7);
+      border-bottom:1px solid var(--border);
+    }
+
+    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px;}
+
+    .topbar{
       display:flex; gap:12px; align-items:center; justify-content:space-between;
-      padding:14px 16px; border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
-      border-radius:calc(var(--r)+4px); box-shadow:var(--shadow); backdrop-filter: blur(10px);
       flex-wrap:wrap;
     }
-    .brand{display:flex; align-items:center; gap:12px}
-    .logo{
-      width:38px;height:38px;border-radius:12px;
-      background:
-        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.8), transparent 55%),
-        linear-gradient(135deg, rgba(124,92,255,1), rgba(59,231,255,1));
-      border:1px solid rgba(255,255,255,.18);
-      box-shadow: 0 12px 28px rgba(124,92,255,.25);
-    }
-    .brand h1{margin:0;font-size:14px;line-height:1.1;font-weight:900}
-    .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;font-weight:800}
-    .nav{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{
-      display:inline-flex; align-items:center; gap:10px;
-      padding:10px 12px; border-radius:14px;
-      border:1px solid var(--stroke2); background:rgba(255,255,255,.06);
-      color:var(--txt); text-decoration:none; font-weight:900; font-size:13px;
-    }
-    .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(180deg,var(--accent),var(--accent2));box-shadow:0 0 0 4px rgba(124,92,255,.14)}
-    .status{
+
+    .brand{
       display:flex; align-items:center; gap:10px;
-      padding:8px 10px; border-radius:999px; border:1px solid var(--stroke);
-      background:rgba(255,255,255,.05);
-      color:var(--muted); font-size:12px; font-weight:900;
+      font-weight:700; letter-spacing:.2px;
     }
-    .led{width:8px;height:8px;border-radius:999px;background:var(--bad);box-shadow:0 0 0 4px rgba(255,92,92,.12)}
-    .led.ok{background:var(--ok);box-shadow:0 0 0 4px rgba(53,208,127,.12)}
-
-    .grid{margin-top:16px;display:grid;grid-template-columns:1fr;gap:16px}
-    .card{
-      border:1px solid var(--stroke);
-      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
-      border-radius:var(--r); box-shadow:var(--shadow); backdrop-filter: blur(10px);
-      overflow:hidden;
+    .dot{
+      width:10px;height:10px;border-radius:999px;background:var(--good);
+      box-shadow:0 0 0 6px rgba(34,197,94,.12);
     }
-    .head{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
-    .head h2{margin:0;font-size:14px;font-weight:900}
-    .head .hint{font-size:12px;color:var(--muted);font-weight:900}
-    .body{padding:14px 16px}
-
-    .sectionRow{
-      display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;
-      margin-top: 12px;
-    }
-    .sectionTitle{
-      color:var(--muted); font-size:12px; font-weight:900;
-      text-transform:uppercase; letter-spacing:.25px;
-    }
-    .sectionMeta{
-      color:var(--muted2); font-size:12px; font-weight:800;
+    .sub{
+      font-size:12px; color:var(--muted); font-weight:500;
     }
 
-    .gridButtons{
-      margin-top:10px;
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-      gap: 10px;
-    }
-
-    .tile{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      border-radius: 16px;
-      padding: 12px 12px;
-      text-decoration:none;
-      color: var(--txt);
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-      transition: transform .12s ease, background .12s ease, border-color .12s ease;
-      min-height: 86px;
-    }
-    .tile:hover{
-      transform: translateY(-1px);
-      background: rgba(255,255,255,.09);
-      border-color: rgba(255,255,255,.18);
-    }
-    .ico{
-      width:40px;height:40px;border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background:
-        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.65), transparent 55%),
-        linear-gradient(135deg, rgba(124,92,255,.95), rgba(59,231,255,.85));
-      flex: 0 0 auto;
-    }
-    .tile .t{
-      min-width:0;
-      flex:1 1 auto;
-    }
-    .tile .t .id{
-      font-size:12px;
-      font-weight:900;
-      letter-spacing:.2px;
-      color: var(--muted);
-    }
-    .tile .t .label{
-      margin-top:2px;
+    .btnrow{display:flex; gap:10px; flex-wrap:wrap;}
+    .btn{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
       font-size:13px;
-      font-weight:900;
-      line-height:1.15;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 100%;
+      transition: transform .06s ease, border-color .2s ease, background .2s ease;
+      user-select:none;
     }
-    .tile .right{
-      text-align:right;
+    .btn:hover{transform: translateY(-1px); border-color: rgba(255,255,255,.18);}
+    .btn:active{transform: translateY(0px);}
+
+    main .wrap{padding:18px 16px 28px;}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
+      align-items:stretch;
+    }
+
+    /* En móvil: todo a una columna */
+    @media (max-width: 980px){
+      .grid{grid-template-columns: 1fr;}
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      min-height: 360px; /* para igualar visualmente las tarjetas */
       display:flex;
       flex-direction:column;
-      align-items:flex-end;
-      gap:6px;
-      flex: 0 0 auto;
     }
-    .value{
-      font-size: 14px;
-      font-weight: 900;
-      letter-spacing: .2px;
-      padding: 7px 10px;
+
+    .cardhead{
+      padding:12px 14px;
+      display:flex; align-items:flex-end; justify-content:space-between;
+      gap:10px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,26,45,.55);
+    }
+    .title{font-weight:800; font-size:14px;}
+    .meta{font-size:12px; color:var(--muted);}
+
+    .cardbody{padding:12px 14px; flex:1; display:flex; flex-direction:column; gap:10px;}
+
+    /* Bloque de estado bombas */
+    .statusgrid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    @media (max-width: 980px){
+      .statusgrid{grid-template-columns: repeat(2, 1fr);}
+    }
+    @media (max-width: 520px){
+      .statusgrid{grid-template-columns: 1fr;}
+    }
+
+    .pill{
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.03);
       border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.10);
+      padding:10px 10px;
+      display:flex; align-items:center; justify-content:space-between;
+      gap:10px;
+    }
+    .pill b{font-size:13px}
+    .tag{
+      font-size:12px;
+      padding:5px 9px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(0,0,0,.2);
+      color:var(--text);
+      white-space:nowrap;
+    }
+    .tag.good{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10);}
+    .tag.warn{border-color: rgba(245,158,11,.40); background: rgba(245,158,11,.10);}
+    .tag.bad{border-color: rgba(239,68,68,.40); background: rgba(239,68,68,.10);}
+
+    /* Charts */
+    .chartwrap{
+      position:relative;
+      width:100%;
+      flex:1;
+      min-height: 260px;
+    }
+    canvas{max-width:100% !important; width:100% !important; height:100% !important;}
+
+    /* Esquema (iframe) */
+    .iframewrap{
+      position:relative;
+      width:100%;
+      flex:1;
+      min-height: 260px;
+      border:1px solid var(--border);
+      border-radius: 14px;
+      overflow:hidden;
       background: rgba(0,0,0,.18);
-      min-width: 92px;
     }
-    .units{
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--muted2);
-      text-transform: uppercase;
-      letter-spacing: .6px;
+    iframe{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      border:0;
+      background: transparent;
     }
 
-    .statePill{
-      font-size: 11px;
-      font-weight: 900;
-      padding: 6px 10px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,.10);
-      letter-spacing:.3px;
-      text-transform: uppercase;
+    .footerline{
+      margin-top:14px;
+      color:var(--muted);
+      font-size:12px;
+      text-align:center;
     }
-    .on { background: var(--chipOn); }
-    .off { background: var(--chipOff); }
-
-    .note{margin-top:12px;color:var(--muted2);font-size:12px;font-weight:700}
-    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; font-size: 12px}
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <div class="logo"></div>
+  <header>
+    <div class="wrap">
+      <div class="topbar">
         <div>
-          <h1>BMS · Sala de Calderas</h1>
-          <div class="sub">Index · botones vistosos de S1..Súltimo y D1..Dúltimo (desde latest_all/latest)</div>
+          <div class="brand"><span class="dot"></span> SALA DE CALDERAS</div>
+          <div class="sub">Dashboard · Sondas y estado de bombas</div>
         </div>
-      </div>
 
-      <div class="nav">
-        <a class="btn" href="esquema.html"><span class="dot"></span> Esquema</a>
-        <a class="btn" href="visor.html"><span class="dot"></span> Visor</a>
-      </div>
-
-      <div class="status">
-        <span id="led" class="led"></span>
-        <span id="statusText">cargando…</span>
-        <span style="opacity:.6">·</span>
-        <span id="lastUpdate">—</span>
-      </div>
-    </div>
-
-    <div class="grid">
-      <div class="card">
-        <div class="head">
-          <h2>Panel de señales</h2>
-          <div class="hint">fuente: <code>latest_all.json</code> (o <code>latest.json</code>)</div>
-        </div>
-        <div class="body">
-
-          <div class="sectionRow">
-            <div class="sectionTitle">Drivers (D1 → Dúltimo)</div>
-            <div class="sectionMeta" id="drvMeta">—</div>
-          </div>
-          <div class="gridButtons" id="driversGrid"></div>
-
-          <div class="sectionRow">
-            <div class="sectionTitle">Sondas (S1 → Súltimo)</div>
-            <div class="sectionMeta" id="snsMeta">—</div>
-          </div>
-          <div class="gridButtons" id="sensorsGrid"></div>
-
-          <div class="note">
-            No se leen manifests. Se pinta **todo** lo que venga en arrays <code>drivers[]</code> y <code>sensors[]</code> del JSON,
-            y se ordena para que salga D1..Dúltimo y S1..Súltimo.
-          </div>
-
+        <div class="btnrow">
+          <button class="btn" onclick="location.href='esquema.html'">Abrir Esquema</button>
+          <button class="btn" onclick="location.href='historicos_s.html'">Históricos S</button>
+          <button class="btn" onclick="location.href='historicos_d.html'">Históricos Driver</button>
+          <button class="btn" onclick="refreshAll()">Actualizar</button>
         </div>
       </div>
     </div>
-  </div>
+  </header>
 
-<script>
-  const REFRESH_MS = 60_000;
+  <main>
+    <div class="wrap">
 
-  const $ = (id) => document.getElementById(id);
-  const safeObj = (x) => (x && typeof x === "object") ? x : {};
-  const safeArr = (x) => Array.isArray(x) ? x : [];
-  const toNum = (v) => {
-    const n = Number(String(v).replace(",", "."));
-    return Number.isFinite(n) ? n : null;
-  };
+      <!-- Estado de bombas + último valor sondas (placeholder) -->
+      <section class="card" style="min-height:auto;">
+        <div class="cardhead">
+          <div>
+            <div class="title">Estado general</div>
+            <div class="meta">Bombas · Últimos valores de sondas</div>
+          </div>
+          <div class="meta" id="lastUpdate">—</div>
+        </div>
 
-  function setStatus(ok, text){
-    $("led").classList.toggle("ok", !!ok);
-    $("statusText").textContent = text;
-  }
+        <div class="cardbody">
+          <div class="statusgrid" id="pumpGrid">
+            <!-- Ejemplo (cámbialo a tus señales reales) -->
+            <div class="pill"><b>Bomba 1</b><span class="tag good" id="p1">OK</span></div>
+            <div class="pill"><b>Bomba 2</b><span class="tag warn" id="p2">Standby</span></div>
+            <div class="pill"><b>Bomba 3</b><span class="tag bad" id="p3">Fallo</span></div>
+            <div class="pill"><b>Bomba 4</b><span class="tag good" id="p4">OK</span></div>
+            <div class="pill"><b>Bomba 5</b><span class="tag good" id="p5">OK</span></div>
+            <div class="pill"><b>Bomba 6</b><span class="tag warn" id="p6">Standby</span></div>
+          </div>
 
-  async function fetchJson(url){
-    const r = await fetch(url, { cache:"no-store" });
-    if(!r.ok) throw new Error(`No puedo leer ${url} (HTTP ${r.status})`);
-    return r.json();
-  }
+          <div class="meta" id="lastValues">
+            Últimos valores: S9 = — °C · S10 = — °C
+          </div>
+        </div>
+      </section>
 
-  async function loadLatest(){
-    try { return await fetchJson("latest_all.json"); }
-    catch { return await fetchJson("latest.json"); }
-  }
+      <div style="height:14px"></div>
 
-  function setLastUpdate(latest){
-    const ts =
-      latest.timestamp_utc ||
-      latest.timestamp ||
-      latest.ts ||
-      latest.updated_at ||
-      latest.last_update ||
-      "";
-    const d = new Date(ts);
-    $("lastUpdate").textContent = (!ts || isNaN(d.getTime())) ? "—" : d.toLocaleString("es-ES");
-  }
+      <!-- 2 columnas: izquierda gráficos S9/S10; derecha Esquema del mismo tamaño -->
+      <section class="grid">
 
-  function idNum(item){
-    // "S12" -> 12, "D3" -> 3
-    const m = String(item || "").match(/^[SD](\d+)$/i);
-    return m ? Number(m[1]) : Number.POSITIVE_INFINITY;
-  }
+        <div class="card">
+          <div class="cardhead">
+            <div>
+              <div class="title">Temperatura S9</div>
+              <div class="meta">Gráfica en tiempo</div>
+            </div>
+            <div class="meta" id="s9meta">—</div>
+          </div>
+          <div class="cardbody">
+            <div class="chartwrap">
+              <canvas id="chartS9"></canvas>
+            </div>
+          </div>
+        </div>
 
-  function normItem(x){
-    // x = {item,label,value,units}
-    const item = String(x.item || "").toUpperCase();
-    const label = String(x.label || item);
-    const units = String(x.units || "");
-    const rawValue = (x.value ?? "");
-    return { item, label, units, rawValue };
-  }
+        <div class="card">
+          <div class="cardhead">
+            <div>
+              <div class="title">Esquema</div>
+              <div class="meta">Vista integrada (mismo tamaño que las gráficas)</div>
+            </div>
+            <div class="meta">iframe</div>
+          </div>
+          <div class="cardbody">
+            <div class="iframewrap">
+              <!-- Ajusta la ruta si tu esquema está en otra carpeta -->
+              <iframe src="esquema.html" title="Esquema Sala de Calderas"></iframe>
+            </div>
+          </div>
+        </div>
 
-  function valueText(it){
-    // Si es número, lo mostramos con 2 decimales si tiene decimales, si no tal cual
-    const n = toNum(it.rawValue);
-    if (n === null) return String(it.rawValue);
-    // si es muy grande, sin decimales
-    if (Math.abs(n) >= 100000) return n.toFixed(0);
-    // si ya es entero, sin decimales
-    if (Number.isInteger(n)) return String(n);
-    return n.toFixed(2);
-  }
+        <div class="card">
+          <div class="cardhead">
+            <div>
+              <div class="title">Temperatura S10</div>
+              <div class="meta">Gráfica en tiempo</div>
+            </div>
+            <div class="meta" id="s10meta">—</div>
+          </div>
+          <div class="cardbody">
+            <div class="chartwrap">
+              <canvas id="chartS10"></canvas>
+            </div>
+          </div>
+        </div>
 
-  function stateClassForDriver(it){
-    const v = String(it.rawValue).trim().toLowerCase();
-    if (v === "on" || v === "encendido" || v === "1" || v === "true") return "on";
-    if (v === "off" || v === "apagado" || v === "0" || v === "false") return "off";
-    // analógicos (0..100) no son ON/OFF -> sin pill
-    return "";
-  }
+        <div class="card">
+          <div class="cardhead">
+            <div>
+              <div class="title">Notas</div>
+              <div class="meta">Personaliza aquí avisos / umbrales</div>
+            </div>
+            <div class="meta">info</div>
+          </div>
+          <div class="cardbody">
+            <div class="meta">
+              - Si S9 o S10 supera umbral, puedes cambiar el color del tag.<br/>
+              - Si tus datos vienen de JSON/CSV, conecta la función <code>loadSeries()</code>.
+            </div>
+          </div>
+        </div>
 
-  function makeTile(it, kind){
-    const a = document.createElement("a");
-    a.className = "tile";
-    a.href = "#"; // no navega: son “botones” informativos
-    a.addEventListener("click", (e)=> e.preventDefault());
+      </section>
 
-    const vtxt = valueText(it);
+      <div class="footerline">© Sala de Calderas · Vista local (HTML)</div>
+    </div>
+  </main>
 
-    const stateCls = (kind === "driver") ? stateClassForDriver(it) : "";
-    const pillHtml = stateCls ? `<div class="statePill ${stateCls}">${String(it.rawValue).toUpperCase()}</div>` : "";
-
-    a.innerHTML = `
-      <div class="ico"></div>
-      <div class="t">
-        <div class="id">${it.item}</div>
-        <div class="label" title="${it.label}">${it.label}</div>
-      </div>
-      <div class="right">
-        ${pillHtml || `<div class="value">${vtxt}</div>`}
-        <div class="units">${it.units || "&nbsp;"}</div>
-      </div>
-    `;
-    return a;
-  }
-
-  function renderRangeGrid(containerId, arr, kind){
-    const el = $(containerId);
-    el.innerHTML = "";
-    for (const it of arr){
-      el.appendChild(makeTile(it, kind));
+  <script>
+    // === DEMO DATA (cámbialo por tu carga real) ===
+    function demoSeries(name){
+      const now = Date.now();
+      const labels = [];
+      const data = [];
+      for(let i=60;i>=0;i--){
+        const t = new Date(now - i*60*1000);
+        labels.push(t.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}));
+        const base = (name === 'S9') ? 48 : 52;
+        data.push(base + Math.sin(i/7)*2 + (Math.random()-0.5)*0.8);
+      }
+      return {labels, data};
     }
-  }
 
-  function buildFullRange(sortedItems, prefix){
-    // Queremos D1..Dúltimo y S1..Súltimo
-    // Si faltan números (ej: D11), aquí NO inventamos items, solo mostramos los existentes.
-    // El “hasta el último” lo interpretamos como: mostrar todos los existentes y ordenados.
-    return sortedItems;
-  }
+    function makeChart(canvasId, seriesName){
+      const ctx = document.getElementById(canvasId);
+      const s = demoSeries(seriesName);
 
-  async function cycle(){
-    setStatus(false, "cargando…");
-
-    try{
-      const latest = await loadLatest();
-      setLastUpdate(latest);
-
-      const sensors = safeArr(latest.sensors).map(normItem)
-        .filter(x => /^S\d+$/i.test(x.item))
-        .sort((a,b)=> idNum(a.item) - idNum(b.item));
-
-      const drivers = safeArr(latest.drivers).map(normItem)
-        .filter(x => /^D\d+$/i.test(x.item))
-        .sort((a,b)=> idNum(a.item) - idNum(b.item));
-
-      // “D1 hasta el último” / “S1 hasta el último”: ordenado, sin inventar nada
-      const sensorsFinal = buildFullRange(sensors, "S");
-      const driversFinal = buildFullRange(drivers, "D");
-
-      $("snsMeta").textContent = sensorsFinal.length ? `${sensorsFinal[0].item} … ${sensorsFinal[sensorsFinal.length-1].item} · ${sensorsFinal.length} items` : "—";
-      $("drvMeta").textContent = driversFinal.length ? `${driversFinal[0].item} … ${driversFinal[driversFinal.length-1].item} · ${driversFinal.length} items` : "—";
-
-      renderRangeGrid("driversGrid", driversFinal, "driver");
-      renderRangeGrid("sensorsGrid", sensorsFinal, "sensor");
-
-      setStatus(true, "online");
-    }catch(e){
-      console.error(e);
-      setStatus(false, "error");
-      $("drvMeta").textContent = "Error";
-      $("snsMeta").textContent = "Error";
-      $("driversGrid").innerHTML = `<div class="note">❌ ${String(e.message || e)}</div>`;
-      $("sensorsGrid").innerHTML = `<div class="note">❌ ${String(e.message || e)}</div>`;
+      return new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: s.labels,
+          datasets: [{
+            label: seriesName + ' (°C)',
+            data: s.data,
+            tension: 0.25,
+            pointRadius: 0,
+            borderWidth: 2,
+            fill: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: {
+              ticks: { maxTicksLimit: 6, color: 'rgba(255,255,255,.65)' },
+              grid: { color: 'rgba(255,255,255,.06)' }
+            },
+            y: {
+              ticks: { color: 'rgba(255,255,255,.65)' },
+              grid: { color: 'rgba(255,255,255,.06)' }
+            }
+          }
+        }
+      });
     }
-  }
 
-  cycle();
-  setInterval(cycle, REFRESH_MS);
-</script>
+    let chart9, chart10;
+
+    function setUpdateStamp(){
+      const d = new Date();
+      document.getElementById('lastUpdate').textContent =
+        'Actualizado: ' + d.toLocaleString('es-ES');
+    }
+
+    function updateLastValues(){
+      // Aquí deberías poner tus últimos valores reales
+      // (demo: tomo el último punto de cada serie)
+      const s9 = chart9.data.datasets[0].data.at(-1);
+      const s10 = chart10.data.datasets[0].data.at(-1);
+
+      document.getElementById('lastValues').textContent =
+        `Últimos valores: S9 = ${s9.toFixed(1)} °C · S10 = ${s10.toFixed(1)} °C`;
+
+      document.getElementById('s9meta').textContent = `Último: ${s9.toFixed(1)} °C`;
+      document.getElementById('s10meta').textContent = `Último: ${s10.toFixed(1)} °C`;
+    }
+
+    function refreshAll(){
+      // Si cargas datos reales: aquí llamarías a fetch(...) y actualizarías datasets.
+      // Demo: recreo datos
+      chart9.destroy();
+      chart10.destroy();
+      chart9 = makeChart('chartS9','S9');
+      chart10 = makeChart('chartS10','S10');
+      setUpdateStamp();
+      updateLastValues();
+    }
+
+    // Init
+    window.addEventListener('load', () => {
+      chart9 = makeChart('chartS9','S9');
+      chart10 = makeChart('chartS10','S10');
+      setUpdateStamp();
+      updateLastValues();
+    });
+  </script>
 </body>
 </html>
