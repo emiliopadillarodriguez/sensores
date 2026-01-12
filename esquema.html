@@ -1,147 +1,488 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
+  <meta charset="utf-8" />
   <title>Esquema sala de calderas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
     :root{
-      --bg:#020617;
-      --panel:#020617;
-      --fg:#e5e7eb;
-      --line:#1e293b;
+      --bg:#fafafa;
+      --card:#ffffff;
+      --fg:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --chip:#f1f5f9;
+      --ok:#16a34a;
+      --bad:#b91c1c;
+      --warn:#d97706;
     }
 
     body{
       margin:0;
-      font-family: system-ui, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--fg);
     }
 
     header{
       position: sticky;
-      top: 0;
-      z-index: 10;
-      background: #020617;
+      top:0;
+      z-index: 20;
+      background: var(--card);
       border-bottom: 1px solid var(--line);
       padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+      flex-wrap:wrap;
     }
 
-    header b{
-      font-size: 14px;
-    }
+    header b{ font-size:14px; }
 
     button{
       padding: 6px 10px;
       font-size: 13px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #020617;
-      color: var(--fg);
-      cursor: pointer;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      background: #fff;
+      cursor:pointer;
     }
+    button:hover{ background:#f8fafc; }
 
-    button:hover{
-      background: #0b1220;
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      background: var(--chip);
+      font-size:12px;
+      color: var(--muted);
+      white-space:nowrap;
     }
+    .pill b{ color: var(--fg); font-weight:700; }
 
     #status{
-      margin-left: auto;
-      font-size: 12px;
-      color: #94a3b8;
+      margin-left:auto;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
     }
 
-    /* CONTENEDOR CON SCROLL */
+    /* LAYOUT: esquema izquierda + panel derecha */
+    .layout{
+      display:grid;
+      grid-template-columns: 1fr 380px;
+      gap: 10px;
+      padding: 10px;
+      height: calc(100vh - 56px);
+      box-sizing: border-box;
+    }
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; height:auto; }
+      .rightPanel{ height: auto; }
+    }
+
+    /* VISOR */
     #viewer{
-      width: 100vw;
-      height: calc(100vh - 48px);
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
       overflow: auto;
-      background: #000;
+      height: 100%;
+      position: relative;
     }
 
-    /* SVG */
     #viewer img{
-      display: block;
-      max-width: none;
-      height: auto;
+      display:block;
+      max-width:none;
+      height:auto;
       transform-origin: top left;
-
-      /* ⭐ CLAVE: invertir colores del SVG */
-      filter: invert(1) brightness(1.15) contrast(1.1);
+      user-select:none;
+      -webkit-user-drag:none;
     }
+
+    /* Panel derecho */
+    .rightPanel{
+      background: var(--card);
+      border:1px solid var(--line);
+      border-radius:14px;
+      height: 100%;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+
+    .rightHeader{
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .rightHeader .title{
+      font-size:14px;
+      font-weight:700;
+    }
+    .rightHeader .sub{
+      font-size:12px;
+      color: var(--muted);
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      padding:10px 12px;
+      border-bottom:1px solid var(--line);
+      background: #fff;
+    }
+    .tab{
+      padding:6px 10px;
+      border:1px solid var(--line);
+      border-radius: 999px;
+      font-size:12px;
+      cursor:pointer;
+      background:#fff;
+    }
+    .tab.active{
+      background: var(--chip);
+      border-color:#cbd5e1;
+      font-weight:700;
+    }
+
+    .panelBody{
+      padding: 10px 12px;
+      overflow:auto;
+      flex:1;
+    }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size:12px;
+    }
+    thead th{
+      text-align:left;
+      font-size:11px;
+      color: var(--muted);
+      font-weight:700;
+      padding:8px 6px;
+      border-bottom:1px solid var(--line);
+      position: sticky;
+      top:0;
+      background:#fff;
+      z-index: 2;
+    }
+    tbody td{
+      padding:8px 6px;
+      border-bottom:1px dashed #eef2f7;
+      vertical-align:top;
+    }
+    tbody tr:hover{ background:#fafafa; }
+
+    .k{
+      color: var(--muted);
+      font-weight:700;
+      width: 42px;
+      white-space:nowrap;
+    }
+    .lbl{ color: var(--fg); }
+    .val{
+      text-align:right;
+      font-variant-numeric: tabular-nums;
+      white-space:nowrap;
+      width: 90px;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:2px 8px;
+      border-radius: 999px;
+      font-size:11px;
+      font-weight:700;
+      border:1px solid var(--line);
+      background: #fff;
+      white-space:nowrap;
+    }
+    .on{ border-color: rgba(22,163,74,.35); background: rgba(22,163,74,.10); color: var(--ok); }
+    .off{ border-color: rgba(185,28,28,.25); background: rgba(185,28,28,.08); color: var(--bad); }
+    .na{ border-color: rgba(217,119,6,.25); background: rgba(217,119,6,.08); color: var(--warn); }
+
+    .footerNote{
+      padding:10px 12px;
+      border-top:1px solid var(--line);
+      color: var(--muted);
+      font-size:11px;
+      background:#fff;
+    }
+
+    code{ background:#f8fafc; border:1px solid #eef2f7; padding:1px 6px; border-radius:8px; }
   </style>
 </head>
 
 <body>
 
 <header>
-  <b>Esquema BMS · Sala de Calderas</b>
+  <b>Esquema (SVG)</b>
 
-  <button onclick="zoomIn()">Zoom +</button>
-  <button onclick="zoomOut()">Zoom −</button>
-  <button onclick="resetZoom()">Ajustar</button>
+  <button id="btnZoomIn">Zoom +</button>
+  <button id="btnZoomOut">Zoom −</button>
+  <button id="btnFit">Ajustar</button>
+  <button id="btn100">100%</button>
+  <button id="btnReset">Reset vista</button>
 
-  <span id="status">Cargando…</span>
+  <div id="status">
+    <span class="pill">Zoom: <b id="zoomLabel">—</b></span>
+    <span class="pill">Última act.: <b id="lastUpdate">—</b></span>
+    <span class="pill">Estado: <b id="loadStatus">Cargando…</b></span>
+  </div>
 </header>
 
-<div id="viewer">
-  <img id="svgImg" alt="Esquema">
+<div class="layout">
+  <!-- IZQUIERDA: visor esquema -->
+  <div id="viewer">
+    <img id="svgImg" alt="Esquema" />
+  </div>
+
+  <!-- DERECHA: tabla rápida -->
+  <aside class="rightPanel">
+    <div class="rightHeader">
+      <div>
+        <div class="title">Resumen rápido</div>
+        <div class="sub">S (analógicas) y D (digitales) · datos desde <code>latest_all.json</code></div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" id="tabS">Sensores (S)</div>
+      <div class="tab" id="tabD">Drivers (D)</div>
+    </div>
+
+    <div class="panelBody" id="panelS"></div>
+    <div class="panelBody" id="panelD" style="display:none;"></div>
+
+    <div class="footerNote">
+      Tip: si no ves datos aquí, revisa que exista <code>sensores/data/latest_all.json</code> (o <code>data/latest_all.json</code>).
+    </div>
+  </aside>
 </div>
 
 <script>
+  /* ===========================
+     ESQUEMA + ZOOM AUTO-FIT
+     =========================== */
   const img = document.getElementById("svgImg");
-  const statusEl = document.getElementById("status");
+  const viewer = document.getElementById("viewer");
+  const zoomLabel = document.getElementById("zoomLabel");
+  const loadStatus = document.getElementById("loadStatus");
 
   let scale = 1;
+  let fitScale = 1;
 
-  function applyZoom(){
+  function applyZoom() {
     img.style.transform = `scale(${scale})`;
-    statusEl.textContent = `Zoom ${Math.round(scale * 100)}%`;
+    zoomLabel.textContent = `${Math.round(scale * 100)}%`;
   }
 
-  function zoomIn(){
-    scale = Math.min(scale * 1.15, 6);
+  function zoomIn() {
+    scale = Math.min(scale * 1.15, 8);
     applyZoom();
   }
 
-  function zoomOut(){
-    scale = Math.max(scale / 1.15, 0.15);
+  function zoomOut() {
+    scale = Math.max(scale / 1.15, 0.1);
     applyZoom();
   }
 
-  function resetZoom(){
-    // Ajuste automático para ver el esquema completo
+  function fitToViewer() {
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
     const vw = viewer.clientWidth;
     const vh = viewer.clientHeight;
-    const iw = img.naturalWidth;
-    const ih = img.naturalHeight;
 
-    if(iw && ih){
-      scale = Math.min(vw / iw, vh / ih) * 0.97;
-    }else{
+    if (!iw || !ih || !vw || !vh) {
       scale = 1;
+      fitScale = 1;
+      applyZoom();
+      return;
     }
+
+    const pad = 0.98;
+    fitScale = Math.min(vw / iw, vh / ih) * pad;
+    fitScale = Math.max(0.1, Math.min(fitScale, 4));
+
+    scale = fitScale;
     applyZoom();
-    viewer.scrollTop = 0;
+
     viewer.scrollLeft = 0;
+    viewer.scrollTop = 0;
   }
 
-  // Cargar SVG (cache-bust)
+  function zoom100() {
+    scale = 1;
+    applyZoom();
+  }
+
+  function resetView() {
+    fitToViewer(); // reset útil: ver el esquema completo
+  }
+
+  document.getElementById("btnZoomIn").addEventListener("click", zoomIn);
+  document.getElementById("btnZoomOut").addEventListener("click", zoomOut);
+  document.getElementById("btnFit").addEventListener("click", fitToViewer);
+  document.getElementById("btn100").addEventListener("click", zoom100);
+  document.getElementById("btnReset").addEventListener("click", resetView);
+
   img.src = "esquema_render.svg?t=" + Date.now();
 
   img.onload = () => {
-    statusEl.textContent = "SVG cargado";
-    resetZoom();
+    loadStatus.textContent = "SVG OK";
+    fitToViewer();
+  };
+  img.onerror = () => {
+    loadStatus.textContent = "ERROR SVG";
   };
 
-  img.onerror = () => {
-    statusEl.textContent = "ERROR cargando esquema";
-  };
+  window.addEventListener("resize", () => {
+    const wasFit = Math.abs(scale - fitScale) < 0.02;
+    if (wasFit) fitToViewer();
+  });
+
+  /* ===========================
+     DATOS: latest_all.json + tablas
+     =========================== */
+  const lastUpdateEl = document.getElementById("lastUpdate");
+
+  const tabS = document.getElementById("tabS");
+  const tabD = document.getElementById("tabD");
+  const panelS = document.getElementById("panelS");
+  const panelD = document.getElementById("panelD");
+
+  function setTab(which){
+    const isS = which === "S";
+    tabS.classList.toggle("active", isS);
+    tabD.classList.toggle("active", !isS);
+    panelS.style.display = isS ? "block" : "none";
+    panelD.style.display = isS ? "none" : "block";
+  }
+  tabS.addEventListener("click", ()=>setTab("S"));
+  tabD.addEventListener("click", ()=>setTab("D"));
+
+  const JSON_CANDIDATES = [
+    "sensores/data/latest_all.json",
+    "data/latest_all.json",
+    "./sensores/data/latest_all.json",
+    "./data/latest_all.json"
+  ];
+
+  async function fetchFirstJSON(urls){
+    for(const u of urls){
+      try{
+        const r = await fetch(u, { cache: "no-store" });
+        if(!r.ok) continue;
+        return await r.json();
+      }catch(e){}
+    }
+    return null;
+  }
+
+  function formatLocalDateTime(isoOrDate){
+    try{
+      const d = (isoOrDate instanceof Date) ? isoOrDate : new Date(isoOrDate);
+      if (Number.isNaN(d.getTime())) return "—";
+      const pad = n => String(n).padStart(2,"0");
+      return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    }catch{ return "—"; }
+  }
+
+  function isOnValue(v){
+    const s = String(v ?? "").trim().toLowerCase();
+    if (s === "on" || s === "1" || s === "true" || s === "encendido") return true;
+    if (s === "off" || s === "0" || s === "false" || s === "apagado") return false;
+    const num = Number(s);
+    if (!Number.isNaN(num)) return num !== 0;
+    return null;
+  }
+
+  function renderSensorsTable(sensors){
+    const rows = (sensors || []).map(s => {
+      const item = s.item ?? "";
+      const label = s.label ?? "";
+      const value = (s.value ?? "").toString();
+      const units = s.units ? ` ${s.units}` : "";
+      const display = value === "" ? "—" : `${value}${units}`;
+      return `<tr>
+        <td class="k">${item}</td>
+        <td class="lbl">${label}</td>
+        <td class="val">${display}</td>
+      </tr>`;
+    }).join("");
+
+    panelS.innerHTML = `
+      <table>
+        <thead>
+          <tr><th style="width:52px;">Item</th><th>Sensor</th><th style="text-align:right;width:110px;">Valor</th></tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="3" class="muted">Sin datos de sensores.</td></tr>`}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function renderDriversTable(drivers){
+    const rows = (drivers || []).map(d => {
+      const item = d.item ?? "";
+      const label = d.label ?? "";
+      const on = isOnValue(d.value);
+      let badge = `<span class="badge na">—</span>`;
+      if (on === true) badge = `<span class="badge on">ON</span>`;
+      if (on === false) badge = `<span class="badge off">OFF</span>`;
+      return `<tr>
+        <td class="k">${item}</td>
+        <td class="lbl">${label}</td>
+        <td class="val">${badge}</td>
+      </tr>`;
+    }).join("");
+
+    panelD.innerHTML = `
+      <table>
+        <thead>
+          <tr><th style="width:52px;">Item</th><th>Equipo</th><th style="text-align:right;width:90px;">Estado</th></tr>
+        </thead>
+        <tbody>
+          ${rows || `<tr><td colspan="3" class="muted">Sin datos de drivers.</td></tr>`}
+        </tbody>
+      </table>
+    `;
+  }
+
+  async function loadJSON(){
+    const data = await fetchFirstJSON(JSON_CANDIDATES);
+
+    if(!data){
+      lastUpdateEl.textContent = "—";
+      renderSensorsTable([]);
+      renderDriversTable([]);
+      return;
+    }
+
+    const ts = data.timestamp_utc || data.timestamp || data.time || null;
+    lastUpdateEl.textContent = ts ? formatLocalDateTime(ts) : "—";
+
+    renderSensorsTable(data.sensors || []);
+    renderDriversTable(data.drivers || []);
+  }
+
+  loadJSON();
+  setInterval(loadJSON, 30000); // refresco cada 30s
 </script>
 
 </body>
