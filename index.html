@@ -17,8 +17,6 @@
     :root{
       --bg0:#070A12;
       --bg1:#0B1020;
-      --card: rgba(255,255,255,.06);
-      --card2: rgba(255,255,255,.09);
       --stroke: rgba(255,255,255,.10);
       --stroke2: rgba(255,255,255,.14);
       --txt:#EAF0FF;
@@ -226,105 +224,6 @@
     }
     canvas{display:block; width:100% !important; height:100% !important;}
 
-    /* Vistosas etiquetas */
-    .tags{
-      display:flex;
-      flex-wrap:wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
-    .tag{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,.12);
-      background: rgba(255,255,255,.06);
-      min-width: 240px;
-      flex: 1 1 240px;
-    }
-    .chip{
-      width: 36px; height: 36px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.14);
-      background:
-        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.7), transparent 55%),
-        linear-gradient(135deg, rgba(124,92,255,.95), rgba(59,231,255,.85));
-      box-shadow: 0 10px 25px rgba(59,231,255,.10);
-      flex: 0 0 auto;
-    }
-    .tag .k{
-      display:flex;
-      flex-direction:column;
-      gap: 2px;
-      min-width: 0;
-    }
-    .tag .k .name{
-      font-weight: 900;
-      font-size: 13px;
-      letter-spacing:.2px;
-    }
-    .tag .k .desc{
-      font-size: 12px;
-      color: var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 520px;
-    }
-    .tag .vals{
-      margin-left:auto;
-      display:flex;
-      gap:10px;
-      align-items:flex-end;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .valBox{
-      padding: 7px 10px;
-      border-radius: 12px;
-      border: 1px solid rgba(255,255,255,.10);
-      background: rgba(0,0,0,.20);
-      min-width: 86px;
-      text-align:right;
-    }
-    .valBox .lab{
-      font-size: 10px;
-      color: var(--muted2);
-      font-weight: 800;
-      letter-spacing:.6px;
-      text-transform: uppercase;
-    }
-    .valBox .num{
-      font-size: 13px;
-      font-weight: 900;
-      letter-spacing:.2px;
-      margin-top: 2px;
-    }
-
-    /* Tabla compacta (fallback/extra) */
-    .mini{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0 8px;
-    }
-    .mini td{
-      padding: 10px 12px;
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .mini td:first-child{
-      border-radius: 14px 0 0 14px;
-      font-weight: 900;
-    }
-    .mini td:last-child{
-      border-radius: 0 14px 14px 0;
-      text-align:right;
-      color: var(--muted);
-      font-weight: 700;
-    }
-
     .foot{
       margin-top: 14px;
       color: var(--muted2);
@@ -335,7 +234,6 @@
       justify-content:space-between;
       align-items:center;
     }
-
     .spark{
       width:10px;height:10px;border-radius:999px;
       background: rgba(255,255,255,.25);
@@ -343,6 +241,87 @@
       display:inline-block;
       margin-right: 8px;
       vertical-align: -1px;
+    }
+
+    /* Resumen (tabla) */
+    .tableWrap{
+      max-height: 520px;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    .tableWrap::-webkit-scrollbar{ width: 10px; }
+    .tableWrap::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius: 999px; }
+    .tableWrap::-webkit-scrollbar-track{ background: rgba(255,255,255,.04); border-radius: 999px; }
+
+    .mini{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 8px;
+    }
+    .mini td{
+      padding: 10px 12px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+      vertical-align: middle;
+    }
+    .mini td:first-child{
+      border-radius: 14px 0 0 14px;
+      font-weight: 900;
+    }
+    .mini td:last-child{
+      border-radius: 0 14px 14px 0;
+      text-align:right;
+      color: var(--muted);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(0,0,0,.22);
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      color: var(--txt);
+    }
+    .badge.on{ border-color: rgba(53,208,127,.25); }
+    .badge.off{ border-color: rgba(247,201,72,.25); color: rgba(234,240,255,.85); }
+
+    /* Bomba girando (solo ON) */
+    .pump{
+      width:18px;height:18px;
+      display:inline-block;
+      border-radius: 999px;
+      border: 2px solid rgba(255,255,255,.22);
+      position: relative;
+      background: radial-gradient(circle at 35% 35%, rgba(255,255,255,.55), rgba(255,255,255,.05) 55%, transparent 60%);
+    }
+    .pump::before, .pump::after{
+      content:"";
+      position:absolute;
+      left:50%; top:50%;
+      width:10px;height:2px;
+      background: rgba(59,231,255,.95);
+      transform-origin: left center;
+      border-radius: 999px;
+    }
+    .pump::before{ transform: translate(-1px,-1px) rotate(0deg); }
+    .pump::after{ transform: translate(-1px,-1px) rotate(90deg); }
+
+    .spin{
+      animation: spin 1s linear infinite;
+      filter: drop-shadow(0 0 8px rgba(59,231,255,.25));
+      border-color: rgba(59,231,255,.45);
+    }
+
+    @keyframes spin{
+      from{ transform: rotate(0deg); }
+      to{ transform: rotate(360deg); }
     }
   </style>
 </head>
@@ -356,7 +335,7 @@
         <div class="logo"></div>
         <div>
           <h1>ACS y Calefaccion de Arribes del duero</h1>
-          <div class="sub">Index · Resumen y KPIs</div>
+          <div class="sub">Index · S9 + Resumen rápido</div>
         </div>
       </div>
 
@@ -376,7 +355,7 @@
 
     <div class="grid">
 
-      <!-- IZQ: Gráfica S9 + etiquetas -->
+      <!-- IZQ: Gráfica S9 -->
       <div class="card">
         <div class="head">
           <h2>📈 Tendencia · S9</h2>
@@ -388,12 +367,9 @@
           </div>
 
           <div class="foot">
-            <div><span class="spark"></span>Debajo tienes las “etiquetas vistosas” con último / media / máx / mín.</div>
-            <div id="dataNote">Fuente: <b>data/latest_all.json</b> y <b>data/S9.txt</b></div>
+            <div><span class="spark"></span>Fuente: <b>data/latest_all.json</b> y <b>data/S9.txt</b></div>
+            <div>Auto-refresh: <b>60 s</b></div>
           </div>
-
-          <div class="tags" id="tagsDrivers"></div>
-          <div class="tags" id="tagsSensors"></div>
         </div>
       </div>
 
@@ -401,15 +377,17 @@
       <div class="card">
         <div class="head">
           <h2>🧾 Resumen rápido</h2>
-          <div class="hint">Drivers & S*</div>
+          <div class="hint">Sensores & Bombas (D)</div>
         </div>
         <div class="body">
-          <table class="mini" id="miniTable">
-            <tr><td>Cargando…</td><td>—</td></tr>
-          </table>
+          <div class="tableWrap">
+            <table class="mini" id="miniTable">
+              <tr><td>Cargando…</td><td>—</td></tr>
+            </table>
+          </div>
           <div class="foot">
-            <div>Auto-refresh: <b>60 s</b></div>
-            <div>Fuente real: <b>data/latest_all.json</b></div>
+            <div>ON = bomba girando</div>
+            <div>Fuente: <b>data/latest_all.json</b></div>
           </div>
         </div>
       </div>
@@ -421,41 +399,19 @@
     const REFRESH_MS = 60_000;
 
     // --- Utilidades
-    const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 100) / 100).toFixed(2) : "—");
     const safeObj = (x) => (x && typeof x === "object") ? x : {};
     const toDate = (s) => {
       const d = new Date(s);
       return isNaN(d.getTime()) ? null : d;
     };
-
-    function computeStats(values){
-      const arr = values.filter(v => Number.isFinite(v));
-      if (!arr.length) return { last: NaN, avg: NaN, min: NaN, max: NaN };
-      const min = Math.min(...arr);
-      const max = Math.max(...arr);
-      const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
-      const last = arr[arr.length - 1];
-      return { last, avg, min, max };
-    }
-
-    function buildTag(container, name, stats, unit=""){
-      const el = document.createElement("div");
-      el.className = "tag";
-      el.innerHTML = `
-        <div class="chip"></div>
-        <div class="k">
-          <div class="name">${name}</div>
-          <div class="desc">Último / Media / Máx / Mín</div>
-        </div>
-        <div class="vals">
-          <div class="valBox"><div class="lab">Últ</div><div class="num">${fmt(stats.last)}${unit}</div></div>
-          <div class="valBox"><div class="lab">Media</div><div class="num">${fmt(stats.avg)}${unit}</div></div>
-          <div class="valBox"><div class="lab">Máx</div><div class="num">${fmt(stats.max)}${unit}</div></div>
-          <div class="valBox"><div class="lab">Mín</div><div class="num">${fmt(stats.min)}${unit}</div></div>
-        </div>
-      `;
-      container.appendChild(el);
-    }
+    const fmtNum = (n) => (Number.isFinite(n) ? (Math.round(n * 100) / 100).toFixed(2) : "—");
+    const escapeHtml = (s) =>
+      String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
 
     function setConnection(ok, text){
       const led = document.getElementById("led");
@@ -477,7 +433,9 @@
           maintainAspectRatio: false,
           plugins: {
             legend: { display: false },
-            tooltip: { callbacks: { label: (ctx) => ` S9: ${fmt(ctx.parsed.y)}` } }
+            tooltip: {
+              callbacks: { label: (ctx) => ` S9: ${fmtNum(ctx.parsed.y)}` }
+            }
           },
           scales: {
             x: { ticks: { maxTicksLimit: 8, color: "rgba(234,240,255,.55)" }, grid: { color: "rgba(255,255,255,.06)" } },
@@ -499,7 +457,7 @@
       chart.update();
     }
 
-    // --- Carga de datos (ADAPTADA A TU ESTRUCTURA REAL)
+    // --- Carga de datos
     async function fetchJson(url){
       const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) throw new Error(`HTTP ${res.status} en ${url}`);
@@ -512,7 +470,7 @@
       return await res.text();
     }
 
-    // Parser robusto (igual filosofía que visor)
+    // Parser robusto del histórico (ISO;valor, etc)
     function parseHistoryText(text) {
       const out = [];
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
@@ -539,110 +497,94 @@
       return out;
     }
 
-    // Convierte latest_all.json -> { ts, drivers:{...}, sensors:{...} } como el antiguo latest.json
-    function latestAllToLatest(meta){
-      const out = { ts: meta.timestamp_utc || "", drivers: {}, sensors: {} };
-      const sensors = Array.isArray(meta.sensors) ? meta.sensors : [];
-      const drivers = Array.isArray(meta.drivers) ? meta.drivers : [];
-
-      for (const s of sensors){
-        const k = String(s.item || "").trim();
-        const v = Number(String(s.value ?? "").replace(",", "."));
-        out.sensors[k] = Number.isFinite(v) ? v : (s.value ?? null);
-      }
-
-      // drivers: On/Off -> 1/0 (para que puedas hacer stats)
-      for (const d of drivers){
-        const k = String(d.item || "").trim();
-        const raw = String(d.value ?? "").trim().toLowerCase();
-        let v = Number(String(d.value ?? "").replace(",", "."));
-        if (raw === "on") v = 1;
-        else if (raw === "off") v = 0;
-        out.drivers[k] = Number.isFinite(v) ? v : (d.value ?? null);
-      }
-
-      return out;
+    // --- Render resumen con NOMBRE COMPLETO
+    function buildMaps(meta){
+      const sMap = new Map((meta.sensors || []).map(x => [String(x.item||"").trim(), x]));
+      const dMap = new Map((meta.drivers || []).map(x => [String(x.item||"").trim(), x]));
+      return { sMap, dMap };
     }
 
-    function renderAll(latest, historyS9, metaFull){
+    function normalizeDriverState(raw){
+      const v = String(raw ?? "").trim().toLowerCase();
+      if (v === "on" || v === "1" || v === "true" || v === "yes") return "on";
+      if (v === "off" || v === "0" || v === "false" || v === "no") return "off";
+      return ""; // numérico u otro
+    }
+
+    function renderSummary(meta){
+      const table = document.getElementById("miniTable");
+      const { sMap, dMap } = buildMaps(meta);
+
+      // Sensores: mostramos TODOS con nombre completo
+      const sensors = (meta.sensors || [])
+        .filter(x => /^S\d+$/.test(String(x.item||"").trim()))
+        .slice()
+        .sort((a,b)=> String(a.item).localeCompare(String(b.item), "es", { numeric:true }));
+
+      // Drivers: mostramos TODOS con nombre completo
+      const drivers = (meta.drivers || [])
+        .filter(x => /^D\d+$/.test(String(x.item||"").trim()))
+        .slice()
+        .sort((a,b)=> String(a.item).localeCompare(String(b.item), "es", { numeric:true }));
+
+      const rows = [];
+
+      // Cabecera “S”
+      rows.push([
+        `<span class="badge">Sensores (S)</span>`,
+        `<span class="badge">Valor</span>`
+      ]);
+
+      for (const s of sensors){
+        const id = String(s.item).trim();
+        const label = sMap.get(id)?.label ? sMap.get(id).label : "";
+        const units = sMap.get(id)?.units ? sMap.get(id).units : "";
+        const title = `${id} · ${label}`.trim();
+
+        const num = Number(String(s.value ?? "").replace(",", "."));
+        const val = Number.isFinite(num) ? fmtNum(num) : String(s.value ?? "—");
+        const valueCell = `${escapeHtml(val)}${units ? " " + escapeHtml(units) : ""}`;
+
+        rows.push([ escapeHtml(title), valueCell ]);
+      }
+
+      // Separador “D”
+      rows.push([
+        `<span class="badge">Bombas / Equipos (D)</span>`,
+        `<span class="badge">Estado</span>`
+      ]);
+
+      for (const d of drivers){
+        const id = String(d.item).trim();
+        const label = dMap.get(id)?.label ? dMap.get(id).label : "";
+        const title = `${id} · ${label}`.trim();
+
+        const st = normalizeDriverState(d.value);
+        let stateHtml = "";
+
+        if (st === "on"){
+          stateHtml = `<span class="badge on"><span class="pump spin"></span> ON</span>`;
+        } else if (st === "off"){
+          stateHtml = `<span class="badge off">OFF</span>`;
+        } else {
+          // por si viene 0.00 / 100.00 etc (válvulas)
+          const num = Number(String(d.value ?? "").replace(",", "."));
+          const v = Number.isFinite(num) ? fmtNum(num) : escapeHtml(String(d.value ?? "—"));
+          stateHtml = `<span class="badge">${v}</span>`;
+        }
+
+        rows.push([ escapeHtml(title), stateHtml ]);
+      }
+
+      table.innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+    }
+
+    function renderLastUpdate(meta){
       const lastUpdate = document.getElementById("lastUpdate");
-      const miniTable = document.getElementById("miniTable");
-      const tagsDrivers = document.getElementById("tagsDrivers");
-      const tagsSensors = document.getElementById("tagsSensors");
-
-      tagsDrivers.innerHTML = "";
-      tagsSensors.innerHTML = "";
-
-      // Timestamp
-      const d = toDate(latest.ts);
+      const d = toDate(meta.timestamp_utc);
       lastUpdate.textContent = d
         ? d.toLocaleString("es-ES", { weekday:"short", year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" })
         : "—";
-
-      // Chart S9 (cap para que vaya fluido)
-      const series = (safeObj(historyS9).series || []).slice(-300);
-      updateChart(series);
-
-      // Stats S9 desde histórico
-      const s9Values = series.map(p => Number(p.v)).filter(Number.isFinite);
-      const s9Fallback = Number(latest?.sensors?.S9);
-      const s9Stats = computeStats(s9Values.length ? s9Values : (Number.isFinite(s9Fallback) ? [s9Fallback] : []));
-
-      // Tags: usamos labels/unidades desde metaFull (latest_all.json)
-      const sensorMeta = new Map((metaFull.sensors || []).map(x => [String(x.item).trim(), x]));
-      const driverMeta = new Map((metaFull.drivers || []).map(x => [String(x.item).trim(), x]));
-
-      // Tag especial S9 (histórico real)
-      const s9Unit = sensorMeta.get("S9")?.units ? ` ${sensorMeta.get("S9").units}` : "";
-      buildTag(tagsSensors, "S9", s9Stats, s9Unit);
-
-      // Resto de sensores S*
-      Object.keys(safeObj(latest.sensors))
-        .filter(k => k !== "S9")
-        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
-        .forEach(k=>{
-          const v = Number(latest.sensors[k]);
-          const st = { last:v, avg:v, min:v, max:v };
-          const unit = sensorMeta.get(k)?.units ? ` ${sensorMeta.get(k).units}` : "";
-          const label = sensorMeta.get(k)?.label ? ` · ${sensorMeta.get(k).label}` : "";
-          buildTag(tagsSensors, `${k}${label}`, st, unit);
-        });
-
-      // Drivers
-      Object.keys(safeObj(latest.drivers))
-        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
-        .forEach(k=>{
-          const v = Number(latest.drivers[k]);
-          const st = { last:v, avg:v, min:v, max:v };
-          const label = driverMeta.get(k)?.label ? ` · ${driverMeta.get(k).label}` : "";
-          buildTag(tagsDrivers, `${k}${label}`, st, "");
-        });
-
-      // Mini tabla resumen
-      const rows = [];
-      rows.push(["S9 (últ/media/máx/mín)", `${fmt(s9Stats.last)} / ${fmt(s9Stats.avg)} / ${fmt(s9Stats.max)} / ${fmt(s9Stats.min)}`]);
-
-      const sensors = safeObj(latest.sensors);
-      const drivers = safeObj(latest.drivers);
-
-      const topSensors = Object.keys(sensors)
-        .filter(k => k !== "S9")
-        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
-        .slice(0, 10);
-
-      topSensors.forEach(k=>{
-        rows.push([k, fmt(Number(sensors[k]))]);
-      });
-
-      const topDrivers = Object.keys(drivers)
-        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
-        .slice(0, 10);
-
-      topDrivers.forEach(k=>{
-        rows.push([k, fmt(Number(drivers[k]))]);
-      });
-
-      miniTable.innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
     }
 
     async function loadAndRender(){
@@ -651,24 +593,26 @@
 
         // 1) latest_all.json (tu formato real)
         const meta = await fetchJson("data/latest_all.json");
-        const latest = latestAllToLatest(meta);
+        renderLastUpdate(meta);
 
-        // 2) S9.txt (histórico real) -> lo convertimos a {series:[{ts,v}]}
+        // 2) S9.txt -> serie última 24h
         const txt = await fetchText("data/S9.txt");
-        const series = parseHistoryText(txt);
+        const seriesAll = parseHistoryText(txt);
 
-        // “últimas 24h (o lo que haya)” -> aquí recortamos a 24h desde el final
         const ms24h = 24 * 60 * 60 * 1000;
-        const lastT = series.length ? new Date(series[series.length - 1].ts).getTime() : Date.now();
+        const lastT = seriesAll.length ? new Date(seriesAll[seriesAll.length - 1].ts).getTime() : Date.now();
         const minT = lastT - ms24h;
-        const series24 = series.filter(p => new Date(p.ts).getTime() >= minT);
+        const series24 = seriesAll.filter(p => new Date(p.ts).getTime() >= minT).slice(-300);
+
+        updateChart(series24);
+
+        // Resumen
+        renderSummary(meta);
 
         setConnection(true, "online");
-        renderAll(latest, { series: series24 }, meta);
       }catch(e){
         console.error(e);
         setConnection(false, "error (mira consola)");
-        // mensaje visible en tabla
         document.getElementById("miniTable").innerHTML =
           `<tr><td>Error</td><td>${String(e?.message || e)}</td></tr>`;
       }
