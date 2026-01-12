@@ -9,13 +9,14 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
 
   <style>
-    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --chip:#f3f4f6; }
+    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --chip:#f3f4f6; --bad:#b00020; }
     body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; margin:16px; color:var(--fg); background:var(--bg); }
     h1 { margin:0 0 6px 0; font-size:20px; }
     .sub { color:var(--muted); font-size:13px; margin-bottom:12px; }
     .panel { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0 12px; }
     .chip { background:var(--chip); border:1px solid var(--line); padding:8px 10px; border-radius:10px; font-size:13px; }
     .chip b { font-weight:700; }
+    .chip.bad { border-color: #f3b3bd; background:#fff6f7; color: var(--bad); }
     .row { display:grid; grid-template-columns: 1fr; gap:12px; }
     .card { border:1px solid var(--line); border-radius:12px; padding:12px; }
     .card h2 { margin: 0 0 8px 0; font-size: 15px; }
@@ -25,15 +26,16 @@
     button:hover { background:#f7f7f7; }
     label { display:flex; gap:8px; align-items:center; }
     .muted { color: var(--muted); font-size: 12px; }
+    code { background:#f6f6f6; padding:1px 6px; border-radius:6px; border:1px solid #eee; }
   </style>
 </head>
 
 <body>
   <h1>Visor S + D</h1>
-  <div class="sub">Lee archivos en <code>sensores/data/</code> · S: <code>S1.txt</code>… · D: <code>drv_D1.txt</code>…</div>
+  <div class="sub">S: <code>S1.txt</code>… · D: <code>drv_D1.txt</code>… · En <code>sensores/data/</code> (según tu repo)</div>
 
   <div class="panel">
-    <div class="chip">Carpeta datos: <b id="dataDirLabel">—</b></div>
+    <div class="chip">Ruta detectada: <b id="dataDirLabel">—</b></div>
 
     <label class="chip">
       MAX_S
@@ -55,6 +57,8 @@
     <div class="chip">S cargados: <b id="loadedS">0</b></div>
     <div class="chip">D cargados: <b id="loadedD">0</b></div>
     <div class="chip">Último dato: <b id="lastTs">—</b></div>
+
+    <div class="chip" id="diagChip">Diag: <b id="diagText">—</b></div>
   </div>
 
   <div class="row">
@@ -73,10 +77,22 @@
 
 <script>
 /** =========================
- *  CONFIG (según tu repo)
+ *  RUTAS POSIBLES (autodetección)
  *  ========================= */
-const DATA_DIR = "sensores/data"; // ✅ ruta real en GitHub
-document.getElementById("dataDirLabel").textContent = DATA_DIR + "/";
+const CANDIDATE_DIRS = [
+  "sensores/data",   // visor en raíz del repo
+  "data",            // visor dentro de /sensores/
+  "./sensores/data",
+  "./data"
+];
+
+let DATA_DIR = null; // se detecta
+
+function setDiag(text, bad=false) {
+  const chip = document.getElementById("diagChip");
+  chip.classList.toggle("bad", !!bad);
+  document.getElementById("diagText").textContent = text;
+}
 
 /** =========================
  *  HELPERS
@@ -91,8 +107,20 @@ async function tryFetchText(url) {
   }
 }
 
+async function detectDataDir() {
+  // Probamos a cargar un archivo que seguro exista: S1.txt o drv_D1.txt
+  // (con uno que exista ya vale)
+  for (const dir of CANDIDATE_DIRS) {
+    const test1 = await tryFetchText(`${dir}/S1.txt`);
+    if (test1 && test1.trim().length) return dir;
+
+    const test2 = await tryFetchText(`${dir}/drv_D1.txt`);
+    if (test2 && test2.trim().length) return dir;
+  }
+  return null;
+}
+
 function parseSensorText(text) {
-  // Formato: 2026-01-10T08:48:09+00:00;59.89
   const rows = [];
   const lines = String(text).split(/\r?\n/);
   for (const line of lines) {
@@ -103,7 +131,7 @@ function parseSensorText(text) {
     if (parts.length < 2) continue;
 
     const ts = parts[0].trim();
-    const valRaw = parts[1].trim().replace(",", "."); // por si viniera con coma decimal
+    const valRaw = parts[1].trim().replace(",", ".");
 
     const d = new Date(ts);
     const v = Number(valRaw);
@@ -125,7 +153,6 @@ function stateTo01(raw) {
 }
 
 function parseDrvText(text) {
-  // Formato: 2026-01-09T11:12:30+00:00;On
   const rows = [];
   const lines = String(text).split(/\r?\n/);
   for (const line of lines) {
@@ -155,7 +182,6 @@ function toSteppedSeries(events, onLevel) {
     const yCur = cur.s === 1 ? onLevel : 0;
 
     pts.push({ x: cur.t, y: yCur });
-
     if (i < events.length - 1) {
       const nextT = events[i+1].t;
       pts.push({ x: nextT, y: yCur });
@@ -180,20 +206,10 @@ function makeSensorChart(ctx, datasets) {
       parsing: false,
       animation: false,
       interaction: { mode: "nearest", intersect: false },
-      plugins: {
-        legend: { display: true, position: "top" }
-      },
+      plugins: { legend: { display: true, position: "top" } },
       scales: {
-        x: {
-          type: "time",
-          time: { tooltipFormat: "yyyy-MM-dd HH:mm:ssXXX" },
-          grid: { color: "#eee" },
-          title: { display: true, text: "Tiempo" }
-        },
-        y: {
-          grid: { color: "#eee" },
-          title: { display: true, text: "Valor" }
-        }
+        x: { type: "time", time: { tooltipFormat: "yyyy-MM-dd HH:mm:ssXXX" }, grid: { color: "#eee" }, title: { display: true, text: "Tiempo" } },
+        y: { grid: { color: "#eee" }, title: { display: true, text: "Valor" } }
       },
       elements: { point: { radius: 0 }, line: { tension: 0, borderWidth: 2 } }
     }
@@ -224,15 +240,9 @@ function makeDriverChart(ctx, datasets, yLevelsMap) {
         }
       },
       scales: {
-        x: {
-          type: "time",
-          time: { tooltipFormat: "yyyy-MM-dd HH:mm:ssXXX" },
-          grid: { color: "#eee" },
-          title: { display: true, text: "Tiempo" }
-        },
+        x: { type: "time", time: { tooltipFormat: "yyyy-MM-dd HH:mm:ssXXX" }, grid: { color: "#eee" }, title: { display: true, text: "Tiempo" } },
         y: {
-          min: 0,
-          max: 1.02,
+          min: 0, max: 1.02,
           ticks: {
             callback: (val) => {
               const v = Number(val);
@@ -255,6 +265,19 @@ function makeDriverChart(ctx, datasets, yLevelsMap) {
  *  LOAD + RENDER
  *  ========================= */
 async function loadAllAndRender() {
+  // detectar ruta si aún no está
+  if (!DATA_DIR) {
+    setDiag("Detectando ruta...");
+    DATA_DIR = await detectDataDir();
+    if (!DATA_DIR) {
+      document.getElementById("dataDirLabel").textContent = "NO ENCONTRADA";
+      setDiag("No puedo leer S1.txt ni drv_D1.txt. Ruta mal o Pages no sirve los .txt", true);
+      return;
+    }
+    document.getElementById("dataDirLabel").textContent = DATA_DIR + "/";
+    setDiag(`OK (${DATA_DIR}/)`);
+  }
+
   const maxS = Math.max(1, Math.min(300, Number(document.getElementById("maxS").value) || 40));
   const maxD = Math.max(1, Math.min(300, Number(document.getElementById("maxD").value) || 40));
   const onStep = Math.max(0.01, Math.min(0.20, Number(document.getElementById("onStep").value) || 0.05));
@@ -265,23 +288,17 @@ async function loadAllAndRender() {
   let lastTimestamp = null;
 
   for (let i = 1; i <= maxS; i++) {
-    const url = `${DATA_DIR}/S${i}.txt`;
-    const txt = await tryFetchText(url);
+    const txt = await tryFetchText(`${DATA_DIR}/S${i}.txt`);
     if (txt == null) continue;
 
     const points = parseSensorText(txt);
     if (!points.length) continue;
 
     loadedS++;
-
     const last = points[points.length - 1]?.x ?? null;
     if (last && (!lastTimestamp || last > lastTimestamp)) lastTimestamp = last;
 
-    datasetsS.push({
-      label: `S${i}`,
-      data: points,
-      spanGaps: true
-    });
+    datasetsS.push({ label: `S${i}`, data: points, spanGaps: true });
   }
 
   // --- D ---
@@ -290,8 +307,7 @@ async function loadAllAndRender() {
   const yLevelsMap = new Map();
 
   for (let i = 1; i <= maxD; i++) {
-    const url = `${DATA_DIR}/drv_D${i}.txt`;
-    const txt = await tryFetchText(url);
+    const txt = await tryFetchText(`${DATA_DIR}/drv_D${i}.txt`);
     if (txt == null) continue;
 
     const events = parseDrvText(txt);
@@ -299,7 +315,6 @@ async function loadAllAndRender() {
 
     loadedD++;
 
-    // ON escalonado para “separar” visualmente
     const onLevelRaw = 1 - (loadedD - 1) * onStep;
     const onLevel = Math.max(0.05, Math.round(onLevelRaw * 100) / 100);
     yLevelsMap.set(onLevel.toFixed(2), `D${i}`);
@@ -309,17 +324,15 @@ async function loadAllAndRender() {
     const lastEvt = events[events.length - 1]?.t ?? null;
     if (lastEvt && (!lastTimestamp || lastEvt > lastTimestamp)) lastTimestamp = lastEvt;
 
-    datasetsD.push({
-      label: `D${i}`,
-      data: series,
-      stepped: true,
-      spanGaps: true
-    });
+    datasetsD.push({ label: `D${i}`, data: series, stepped: true, spanGaps: true });
   }
 
   document.getElementById("loadedS").textContent = String(loadedS);
   document.getElementById("loadedD").textContent = String(loadedD);
   document.getElementById("lastTs").textContent = lastTimestamp ? lastTimestamp.toISOString() : "—";
+
+  if (loadedS === 0 && loadedD === 0) setDiag(`Ruta OK pero 0 archivos con datos (sube MAX_S/MAX_D o revisa nombres)`, true);
+  else setDiag(`OK · S:${loadedS} D:${loadedD}`);
 
   // Render charts
   const ctxS = document.getElementById("chartS").getContext("2d");
@@ -331,7 +344,12 @@ async function loadAllAndRender() {
   chartD = makeDriverChart(ctxD, datasetsD, yLevelsMap);
 }
 
-document.getElementById("reloadBtn").addEventListener("click", loadAllAndRender);
+document.getElementById("reloadBtn").addEventListener("click", async () => {
+  // forzar redetección por si has movido el visor
+  DATA_DIR = null;
+  await loadAllAndRender();
+});
+
 loadAllAndRender();
 </script>
 </body>
