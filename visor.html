@@ -1,109 +1,204 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<title>BMS · Visor Tendencias S / D</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8">
+  <title>BMS · Visor Tendencias S / D</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+  <!-- ECharts -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 
-<style>
-:root{
-  --bg:#020617;
-  --panel:#020617;
-  --fg:#e5e7eb;
-  --muted:#94a3b8;
-  --grid:#1e293b;
-  --ok:#22c55e;
-}
+  <!-- Flatpickr (calendario con hora) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--fg);
-  font-family:system-ui,Segoe UI,Arial;
-}
+  <style>
+    :root{
+      --bg:#020617;
+      --panel:#0b1220;
+      --card:#060b18;
+      --fg:#e5e7eb;
+      --muted:#94a3b8;
+      --line:#1e293b;
+      --grid:#1e293b;
+      --accent:#38bdf8;
+      --ok:#22c55e;
+    }
 
-header{
-  padding:10px;
-  border-bottom:1px solid var(--grid);
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:center;
-}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--fg);
+      font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
 
-header b{ font-size:14px }
+    header{
+      position: sticky;
+      top:0;
+      z-index: 10;
+      padding:10px;
+      border-bottom:1px solid var(--line);
+      background: #020617;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    header b{ font-size:14px; }
 
-button,input{
-  background:#020617;
-  border:1px solid var(--grid);
-  color:var(--fg);
-  padding:6px 10px;
-  border-radius:8px;
-  font-size:12px;
-}
+    .ctrl{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
 
-.layout{
-  display:grid;
-  grid-template-columns:260px 1fr;
-  height:calc(100vh - 56px);
-}
+    input, button{
+      background:#020617;
+      border:1px solid var(--line);
+      color:var(--fg);
+      padding:7px 10px;
+      border-radius:10px;
+      font-size:12px;
+      outline:none;
+    }
+    button{ cursor:pointer; }
+    button:hover{ background:#0b1220; }
 
-.sidebar{
-  border-right:1px solid var(--grid);
-  padding:10px;
-  overflow:auto;
-}
+    .pill{
+      border:1px solid var(--line);
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      color:var(--muted);
+      background:#0b1220;
+      white-space:nowrap;
+    }
+    .pill b{ color:var(--fg); }
 
-h3{
-  font-size:13px;
-  margin:10px 0 6px;
-  color:#38bdf8;
-}
+    .layout{
+      display:grid;
+      grid-template-columns: 320px 1fr;
+      height: calc(100vh - 62px);
+      min-height: 620px;
+    }
 
-.item{
-  display:flex;
-  gap:6px;
-  align-items:flex-start;
-  font-size:12px;
-  margin-bottom:4px;
-}
+    .sidebar{
+      border-right:1px solid var(--line);
+      background: var(--panel);
+      padding:12px;
+      overflow:auto;
+    }
 
-.item label{ cursor:pointer }
+    .sectionTitle{
+      margin: 10px 0 6px;
+      font-size:13px;
+      color: var(--accent);
+      font-weight:800;
+    }
 
-.main{
-  padding:10px;
-}
+    .list{
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:#020617;
+      overflow:auto;
+      max-height: 340px;
+      padding:6px;
+    }
 
-#chart{
-  width:100%;
-  height:100%;
-}
-</style>
+    .row{
+      display:flex;
+      gap:8px;
+      align-items:flex-start;
+      padding:7px 6px;
+      border-bottom:1px dashed #122033;
+      font-size:12px;
+    }
+    .row:last-child{ border-bottom:none; }
+    .row label{ cursor:pointer; display:flex; flex-direction:column; gap:2px; }
+    .row .k{ color:var(--muted); font-size:11px; }
+    .row .lbl{ color:var(--fg); font-size:12px; }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+
+    .main{
+      background: var(--card);
+      padding:12px;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    /* IMPORTANTE: el chart debe tener altura real */
+    #chart{
+      width:100%;
+      height:100%;
+      min-height: 620px;
+      border:1px solid var(--line);
+      border-radius:14px;
+      background:#020617;
+    }
+
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; height:auto; }
+      #chart{ height: 680px; }
+    }
+
+    /* Flatpickr tema oscuro */
+    .flatpickr-calendar{
+      background:#0b1220 !important;
+      border:1px solid #1e293b !important;
+      box-shadow:none !important;
+    }
+    .flatpickr-time input, .flatpickr-time .flatpickr-time-separator{
+      color:#e5e7eb !important;
+    }
+    .flatpickr-day, .flatpickr-weekday{
+      color:#e5e7eb !important;
+    }
+    .flatpickr-day.today{ border-color:#38bdf8 !important; }
+    .flatpickr-day.selected{ background:#38bdf8 !important; border-color:#38bdf8 !important; }
+    .flatpickr-months .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months, .flatpickr-current-month input.cur-year{
+      color:#e5e7eb !important;
+    }
+  </style>
 </head>
 
 <body>
-
 <header>
-  <b>Visor BMS · Tendencias</b>
+  <b>Visor BMS · Tendencias (S + D)</b>
 
-  Inicio <input type="datetime-local" id="dtStart">
-  Fin <input type="datetime-local" id="dtEnd">
+  <div class="ctrl">
+    <span class="pill">Inicio</span>
+    <input id="dtStart" placeholder="Selecciona fecha/hora">
+    <span class="pill">Fin</span>
+    <input id="dtEnd" placeholder="Selecciona fecha/hora">
+    <button id="applyBtn">Aplicar rango</button>
+    <button id="resetBtn">Reset rango</button>
+  </div>
 
-  <button onclick="applyRange()">Aplicar</button>
-  <button onclick="resetRange()">Reset</button>
-
-  <span id="info" style="margin-left:auto;font-size:12px;color:var(--muted)">—</span>
+  <span class="pill" style="margin-left:auto;">Rango datos: <b id="rangeInfo">—</b></span>
 </header>
 
 <div class="layout">
   <aside class="sidebar">
-    <h3>Sensores (S)</h3>
-    <div id="listS"></div>
+    <div class="sectionTitle">Sensores (S)</div>
+    <div class="actions">
+      <button id="sAll">Mostrar todas</button>
+      <button id="sNone">Ocultar todas</button>
+    </div>
+    <div class="list" id="listS"></div>
 
-    <h3>Drivers (D)</h3>
-    <div id="listD"></div>
+    <div class="sectionTitle" style="margin-top:14px;">Drivers (D)</div>
+    <div class="actions">
+      <button id="dAll">Mostrar todas</button>
+      <button id="dNone">Ocultar todas</button>
+    </div>
+    <div class="list" id="listD"></div>
   </aside>
 
   <main class="main">
@@ -112,195 +207,456 @@ h3{
 </div>
 
 <script>
-/* ========= CONFIG ========= */
-const MAX_S = 50;
-const MAX_D = 50;
+/* =========================
+   CONFIG / RUTAS
+========================= */
+const MAX_S = 80;
+const MAX_D = 80;
 const DATA_DIRS = ["sensores/data","data","./sensores/data","./data"];
 
-let LABELS={S:{},D:{}};
-let store={S:new Map(),D:new Map(),range:{},view:{}};
-let chart=echarts.init(document.getElementById("chart"));
+let DATA_DIR = null;
+let LABELS = { S:{}, D:{} };
 
-/* ========= UTIL ========= */
-async function fetchTxt(u){
-  try{ const r=await fetch(u,{cache:"no-store"}); return r.ok?await r.text():null }catch{return null}
+const store = {
+  S: new Map(),   // S1 -> {pts, selected}
+  D: new Map(),   // D1 -> {ev, selected}
+  range: { min:null, max:null },
+  view:  { min:null, max:null } // rango seleccionado por usuario (opcional)
+};
+
+/* =========================
+   HELPERS
+========================= */
+async function fetchText(url){
+  try{
+    const r = await fetch(url, { cache:"no-store" });
+    if(!r.ok) return null;
+    return await r.text();
+  }catch{ return null; }
 }
+
 async function detectDir(){
   for(const d of DATA_DIRS){
-    if(await fetchTxt(`${d}/S1.txt`)||await fetchTxt(`${d}/drv_D1.txt`)) return d;
+    const s1 = await fetchText(`${d}/S1.txt`);
+    const d1 = await fetchText(`${d}/drv_D1.txt`);
+    if((s1 && s1.trim()) || (d1 && d1.trim())) return d;
   }
   return null;
 }
-function parseS(t){
-  return t.split(/\n/).map(l=>{
-    const [a,b]=l.split(";"); return [new Date(a).getTime(),Number(b)]
-  }).filter(v=>!isNaN(v[0])&&!isNaN(v[1]));
+
+function getLabel(kind, key){
+  return (LABELS?.[kind]?.[key]) || key;
 }
-function parseD(t){
-  return t.split(/\n/).map(l=>{
-    const [a,b]=l.split(";"); return [new Date(a).getTime(),String(b).toLowerCase()==="on"?1:0]
-  }).filter(v=>!isNaN(v[0]));
+
+function parseS(text){
+  const pts = [];
+  for(const line of String(text).split(/\r?\n/)){
+    const ln = line.trim();
+    if(!ln) continue;
+    const parts = ln.split(";");
+    if(parts.length < 2) continue;
+    const t = new Date(parts[0].trim()).getTime();
+    const v = Number(parts[1].trim().replace(",", "."));
+    if(Number.isNaN(t) || Number.isNaN(v)) continue;
+    pts.push([t, v]);
+  }
+  pts.sort((a,b)=>a[0]-b[0]);
+  return pts;
 }
-function getLabel(g,k){ return LABELS[g]?.[k]||k }
 
-/* ========= LOAD ========= */
-async function load(){
-  const dir=await detectDir();
-  if(!dir){ document.getElementById("info").textContent="Datos no encontrados"; return }
+function parseD(text){
+  const ev = [];
+  for(const line of String(text).split(/\r?\n/)){
+    const ln = line.trim();
+    if(!ln) continue;
+    const parts = ln.split(";");
+    if(parts.length < 2) continue;
+    const t = new Date(parts[0].trim()).getTime();
+    const s = String(parts[1]).trim().toLowerCase();
+    const v = (s === "on" || s === "1" || s === "true") ? 1 : 0;
+    if(Number.isNaN(t)) continue;
+    ev.push([t, v]);
+  }
+  ev.sort((a,b)=>a[0]-b[0]);
+  return ev;
+}
 
-  const lbl=await fetchTxt(`${dir}/labels.json`);
-  if(lbl) LABELS=JSON.parse(lbl);
+function calcGlobalRange(){
+  let minT = null, maxT = null;
 
-  for(let i=1;i<=MAX_S;i++){
-    const t=await fetchTxt(`${dir}/S${i}.txt`);
-    if(!t) continue;
-    const pts=parseS(t);
-    if(!pts.length) continue;
-    store.S.set(`S${i}`,{pts,selected:false});
+  for(const [,v] of store.S){
+    if(!v.pts.length) continue;
+    const a = v.pts[0][0], b = v.pts[v.pts.length-1][0];
+    minT = (minT==null) ? a : Math.min(minT, a);
+    maxT = (maxT==null) ? b : Math.max(maxT, b);
+  }
+  for(const [,v] of store.D){
+    if(!v.ev.length) continue;
+    const a = v.ev[0][0], b = v.ev[v.ev.length-1][0];
+    minT = (minT==null) ? a : Math.min(minT, a);
+    maxT = (maxT==null) ? b : Math.max(maxT, b);
   }
 
-  for(let i=1;i<=MAX_D;i++){
-    const t=await fetchTxt(`${dir}/drv_D${i}.txt`);
-    if(!t) continue;
-    const ev=parseD(t);
-    if(!ev.length) continue;
-    store.D.set(`D${i}`,{ev,selected:false});
-  }
+  store.range.min = minT;
+  store.range.max = maxT;
+}
 
-  buildLists();
-  calcRange();
+function fmtRange(t){
+  if(!t) return "—";
+  return new Date(t).toLocaleString();
+}
+
+/* =========================
+   LISTAS (checkbox)
+========================= */
+function buildList(containerId, map, kind){
+  const el = document.getElementById(containerId);
+  el.innerHTML = "";
+
+  for(const [key, obj] of map){
+    const row = document.createElement("div");
+    row.className = "row";
+
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.checked = !!obj.selected;
+    cb.addEventListener("change", ()=>{
+      obj.selected = cb.checked;
+      render();
+    });
+
+    const lab = document.createElement("label");
+    const lbl = document.createElement("div");
+    lbl.className = "lbl";
+    lbl.textContent = getLabel(kind, key);
+
+    const k = document.createElement("div");
+    k.className = "k";
+    k.textContent = key;
+
+    lab.appendChild(lbl);
+    lab.appendChild(k);
+
+    row.appendChild(cb);
+    row.appendChild(lab);
+    el.appendChild(row);
+  }
+}
+
+function setAll(kind, value){
+  const map = (kind==="S") ? store.S : store.D;
+  for(const [,v] of map) v.selected = value;
+  buildList(kind==="S" ? "listS" : "listD", map, kind);
   render();
 }
 
-function calcRange(){
-  let all=[];
-  store.S.forEach(v=>v.pts.forEach(p=>all.push(p[0])));
-  store.D.forEach(v=>v.ev.forEach(e=>all.push(e[0])));
-  store.range.min=Math.min(...all);
-  store.range.max=Math.max(...all);
-  store.view={};
-  document.getElementById("info").textContent=
-    new Date(store.range.min).toLocaleString()+" → "+
-    new Date(store.range.max).toLocaleString();
+/* =========================
+   RANGO (calendario)
+========================= */
+let fpStart, fpEnd;
+
+function setPickersFromRange(minT, maxT){
+  if(!minT || !maxT) return;
+  fpStart.setDate(new Date(minT), false);
+  fpEnd.setDate(new Date(maxT), false);
 }
 
-/* ========= LISTS ========= */
-function buildLists(){
-  const ls=document.getElementById("listS");
-  const ld=document.getElementById("listD");
-
-  ls.innerHTML=""; ld.innerHTML="";
-
-  store.S.forEach((v,k)=>{
-    const d=document.createElement("div");
-    d.className="item";
-    d.innerHTML=`<input type=checkbox>
-      <label>${getLabel("S",k)}</label>`;
-    d.querySelector("input").onchange=e=>{v.selected=e.target.checked;render()};
-    ls.appendChild(d);
-  });
-
-  store.D.forEach((v,k)=>{
-    const d=document.createElement("div");
-    d.className="item";
-    d.innerHTML=`<input type=checkbox>
-      <label>${getLabel("D",k)}</label>`;
-    d.querySelector("input").onchange=e=>{v.selected=e.target.checked;render()};
-    ld.appendChild(d);
-  });
-}
-
-/* ========= RANGE ========= */
 function applyRange(){
-  store.view.min=new Date(dtStart.value).getTime();
-  store.view.max=new Date(dtEnd.value).getTime();
-  render();
-}
-function resetRange(){
-  store.view={};
+  const a = fpStart.selectedDates?.[0]?.getTime?.() ?? null;
+  const b = fpEnd.selectedDates?.[0]?.getTime?.() ?? null;
+
+  if(store.range.min == null || store.range.max == null){
+    store.view.min = null;
+    store.view.max = null;
+    render();
+    return;
+  }
+
+  let min = a ?? store.range.min;
+  let max = b ?? store.range.max;
+  if(min > max){ const t=min; min=max; max=t; }
+
+  min = Math.max(min, store.range.min);
+  max = Math.min(max, store.range.max);
+
+  store.view.min = min;
+  store.view.max = max;
+
   render();
 }
 
-/* ========= RENDER ========= */
-function buildIntervals(ev,min,max){
-  let r=[];
-  for(let i=0;i<ev.length;i++){
-    if(ev[i][1]===1){
-      const a=Math.max(ev[i][0],min);
-      const b=i+1<ev.length?Math.min(ev[i+1][0],max):max;
-      if(b>a) r.push([a,b]);
+function resetRange(){
+  store.view.min = null;
+  store.view.max = null;
+  setPickersFromRange(store.range.min, store.range.max);
+  render();
+}
+
+/* =========================
+   RENDER SCADA: X ÚNICO
+   - S arriba con cuadrícula
+   - D abajo como bloques ON
+========================= */
+const chart = echarts.init(document.getElementById("chart"));
+
+function buildDigitalIntervals(ev, minT, maxT){
+  if(!ev || !ev.length) return [];
+  const segs = [];
+  for(let i=0; i<ev.length; i++){
+    const [t, s] = ev[i];
+    const t2 = (i < ev.length-1) ? ev[i+1][0] : maxT;
+    if(s === 1){
+      const a = Math.max(t, minT);
+      const b = Math.min(t2, maxT);
+      if(b > a) segs.push([a, b]);
     }
   }
-  return r;
+  return segs;
 }
 
 function render(){
-  const min=store.view.min||store.range.min;
-  const max=store.view.max||store.range.max;
+  const minT = store.view.min ?? store.range.min;
+  const maxT = store.view.max ?? store.range.max;
 
-  const series=[];
-  const yAxis=[];
-  const grid=[];
+  const selectedS = [...store.S.entries()].filter(([,v])=>v.selected);
+  const selectedD = [...store.D.entries()].filter(([,v])=>v.selected);
 
-  /* S */
-  grid.push({top:30,height:"45%",left:70,right:20});
-  yAxis.push({type:"value",gridIndex:0,axisLabel:{color:"#e5e7eb"},splitLine:{lineStyle:{color:"#1e293b"}}});
-  store.S.forEach((v,k)=>{
-    if(v.selected) series.push({
-      name:getLabel("S",k),
+  // Si no hay nada seleccionado, pinta ejes y mensaje (para que “se vea que funciona”)
+  if(selectedS.length === 0 && selectedD.length === 0){
+    chart.setOption({
+      backgroundColor:"#020617",
+      title:{
+        text:"Selecciona algún S o D en la izquierda",
+        left:"center",
+        top:"middle",
+        textStyle:{ color:"#94a3b8", fontSize:14, fontWeight:500 }
+      },
+      grid: [
+        { left:70, right:20, top:30, height:"45%" },
+        { left:70, right:20, top:"58%", height:"30%" }
+      ],
+      xAxis: [{ type:"time", min:minT, max:maxT, axisLabel:{color:"#e5e7eb"}, axisLine:{lineStyle:{color:"#94a3b8"}}, splitLine:{show:true, lineStyle:{color:"#1e293b"}} }],
+      yAxis: [
+        { type:"value", gridIndex:0, axisLabel:{color:"#e5e7eb"}, axisLine:{lineStyle:{color:"#94a3b8"}}, splitLine:{show:true, lineStyle:{color:"#1e293b"}} },
+        { type:"category", gridIndex:1, data:[], axisLabel:{color:"#e5e7eb"}, axisLine:{lineStyle:{color:"#94a3b8"}}, splitLine:{show:true, lineStyle:{color:"#1e293b"}} }
+      ],
+      series: [],
+      dataZoom:[
+        { type:"inside", xAxisIndex:0 },
+        { type:"slider", xAxisIndex:0, bottom:10 }
+      ]
+    }, true);
+    return;
+  }
+
+  const grids = [
+    // S (arriba)
+    { left:70, right:20, top:30, height:"45%" },
+    // D (abajo)
+    { left:70, right:20, top:"58%", height:"30%" }
+  ];
+
+  const yAxes = [
+    // Y para S (con cuadrícula)
+    {
+      type:"value",
+      gridIndex:0,
+      axisLine:{ lineStyle:{ color:"#94a3b8" } },
+      axisLabel:{ color:"#e5e7eb" },
+      splitLine:{ show:true, lineStyle:{ color:"#1e293b" } }
+    },
+    // Y para D (categorías)
+    {
+      type:"category",
+      gridIndex:1,
+      data: selectedD.map(([k])=>getLabel("D", k)),
+      axisLine:{ lineStyle:{ color:"#94a3b8" } },
+      axisLabel:{ color:"#e5e7eb", width: 260, overflow: "truncate" },
+      splitLine:{ show:true, lineStyle:{ color:"#1e293b" } },
+      axisTick:{ show:false }
+    }
+  ];
+
+  const series = [];
+
+  // S: líneas (todas comparten el mismo eje X único)
+  for(const [k, v] of selectedS){
+    series.push({
+      name: getLabel("S", k),
       type:"line",
-      data:v.pts,
       xAxisIndex:0,
       yAxisIndex:0,
-      showSymbol:false
+      data: v.pts,
+      showSymbol:false,
+      lineStyle:{ width:2 }
     });
-  });
+  }
 
-  /* D */
-  grid.push({top:"58%",height:"30%",left:70,right:20});
-  const dNames=[...store.D.entries()].filter(e=>e[1].selected).map(e=>getLabel("D",e[0]));
-  yAxis.push({type:"category",gridIndex:1,data:dNames,axisLabel:{color:"#e5e7eb"}});
-
-  let idx=0;
-  store.D.forEach((v,k)=>{
-    if(!v.selected) return;
-    buildIntervals(v.ev,min,max).forEach(([a,b])=>{
+  // D: bloques ON (custom)
+  selectedD.forEach(([k, v], idx)=>{
+    const intervals = buildDigitalIntervals(v.ev, minT, maxT);
+    for(const [a,b] of intervals){
       series.push({
+        name: getLabel("D", k),
         type:"custom",
         xAxisIndex:0,
         yAxisIndex:1,
-        data:[[a,b,idx]],
-        renderItem:(p,api)=>{
-          const y=api.coord([a,idx])[1];
-          const x0=api.coord([a,idx])[0];
-          const x1=api.coord([b,idx])[0];
-          const h=api.size([0,1])[1]*0.6;
-          return{type:"rect",shape:{x:x0,y:y-h/2,width:x1-x0,height:h},
-            style:{fill:varColor}};
+        data: [[a,b,idx, getLabel("D", k)]],
+        renderItem:(params, api)=>{
+          const start = api.value(0);
+          const end = api.value(1);
+          const lane = api.value(2);
+
+          const y = api.coord([start, lane])[1];
+          const x0 = api.coord([start, lane])[0];
+          const x1 = api.coord([end, lane])[0];
+          const h = api.size([0,1])[1] * 0.62;
+
+          return {
+            type:"rect",
+            shape:{ x:x0, y:y-h/2, width: Math.max(1, x1-x0), height:h },
+            style:{ fill:"rgba(34,197,94,0.85)", stroke:"rgba(34,197,94,1)", lineWidth:1 }
+          };
         }
       });
-    });
-    idx++;
+    }
   });
 
   chart.setOption({
     backgroundColor:"#020617",
-    grid,
-    xAxis:[{type:"time",min,max,axisLabel:{color:"#e5e7eb"},splitLine:{lineStyle:{color:"#1e293b"}}}],
-    yAxis,
-    series,
-    axisPointer:{link:[{xAxisIndex:"all"}]},
+    animation:false,
+
+    grid: grids,
+
+    // ✅ EJE X ÚNICO (time) para ambas zonas
+    xAxis: [{
+      type:"time",
+      min: minT,
+      max: maxT,
+      axisLine:{ lineStyle:{ color:"#94a3b8" } },
+      axisLabel:{ color:"#e5e7eb" },
+      splitLine:{ show:true, lineStyle:{ color:"#1e293b" } }
+    }],
+
+    yAxis: yAxes,
+
+    tooltip:{
+      trigger:"axis",
+      axisPointer:{ type:"line" },
+      backgroundColor:"rgba(15,23,42,.92)",
+      borderColor:"rgba(255,255,255,.10)",
+      textStyle:{ color:"#fff" }
+    },
+
+    // ✅ Cursor vertical sincronizado (misma hora arriba y abajo)
+    axisPointer:{
+      link:[{ xAxisIndex:"all" }],
+      lineStyle:{ color:"#f59e0b", width:1 }
+    },
+
     dataZoom:[
-      {type:"inside",xAxisIndex:0},
-      {type:"slider",xAxisIndex:0,bottom:5}
-    ]
-  },true);
+      { type:"inside", xAxisIndex:0, filterMode:"none" },
+      { type:"slider", xAxisIndex:0, bottom:10, height:22 }
+    ],
+
+    series: series,
+
+    legend:{
+      show: true,
+      top: 4,
+      left: 70,
+      textStyle:{ color:"#e5e7eb" },
+      type: "scroll"
+    }
+  }, true);
 }
 
-/* ========= START ========= */
-const varColor="#22c55e";
-load();
-</script>
+/* =========================
+   CARGA INICIAL
+========================= */
+async function loadAll(){
+  DATA_DIR = await detectDir();
+  if(!DATA_DIR){
+    document.getElementById("rangeInfo").textContent = "No se encontraron datos";
+    return;
+  }
 
+  // labels.json (si existe)
+  const lblTxt = await fetchText(`${DATA_DIR}/labels.json`);
+  if(lblTxt){
+    try{ LABELS = JSON.parse(lblTxt); }catch{}
+  }
+
+  // S*
+  for(let i=1; i<=MAX_S; i++){
+    const txt = await fetchText(`${DATA_DIR}/S${i}.txt`);
+    if(!txt) continue;
+    const pts = parseS(txt);
+    if(!pts.length) continue;
+    store.S.set(`S${i}`, { pts, selected:false });
+  }
+
+  // drv_D*
+  for(let i=1; i<=MAX_D; i++){
+    const txt = await fetchText(`${DATA_DIR}/drv_D${i}.txt`);
+    if(!txt) continue;
+    const ev = parseD(txt);
+    if(!ev.length) continue;
+    store.D.set(`D${i}`, { ev, selected:false });
+  }
+
+  calcGlobalRange();
+
+  // Info rango
+  document.getElementById("rangeInfo").textContent =
+    `${fmtRange(store.range.min)} → ${fmtRange(store.range.max)}`;
+
+  // Calendario
+  fpStart = flatpickr("#dtStart", { enableTime:true, time_24hr:true, dateFormat:"Y-m-d H:i", allowInput:true });
+  fpEnd   = flatpickr("#dtEnd",   { enableTime:true, time_24hr:true, dateFormat:"Y-m-d H:i", allowInput:true });
+  setPickersFromRange(store.range.min, store.range.max);
+
+  // Listas
+  buildList("listS", store.S, "S");
+  buildList("listD", store.D, "D");
+
+  // ✅ Auto-selección “útil”
+  // Preferidos
+  if(store.S.has("S9")) store.S.get("S9").selected = true;
+  if(store.S.has("S10")) store.S.get("S10").selected = true;
+  if(store.D.has("D1")) store.D.get("D1").selected = true;
+  if(store.D.has("D2")) store.D.get("D2").selected = true;
+
+  // Si no existían, selecciona primeras disponibles
+  if([...store.S.values()].every(v=>!v.selected)){
+    let n=0;
+    for(const [,v] of store.S){ v.selected = (n<2); n++; if(n>=2) break; }
+  }
+  if([...store.D.values()].every(v=>!v.selected)){
+    let n=0;
+    for(const [,v] of store.D){ v.selected = (n<4); n++; if(n>=4) break; }
+  }
+
+  // Reconstruye listas para reflejar auto-selección
+  buildList("listS", store.S, "S");
+  buildList("listD", store.D, "D");
+
+  // Botones sidebar
+  document.getElementById("sAll").onclick = ()=>setAll("S", true);
+  document.getElementById("sNone").onclick = ()=>setAll("S", false);
+  document.getElementById("dAll").onclick = ()=>setAll("D", true);
+  document.getElementById("dNone").onclick = ()=>setAll("D", false);
+
+  // Botones rango
+  document.getElementById("applyBtn").onclick = applyRange;
+  document.getElementById("resetBtn").onclick = resetRange;
+
+  // Render inicial
+  render();
+}
+
+window.addEventListener("resize", ()=>chart.resize());
+loadAll();
+</script>
 </body>
 </html>
