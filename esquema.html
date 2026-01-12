@@ -1,136 +1,296 @@
 <!doctype html>
 <html lang="es">
 <head>
-<meta charset="utf-8">
-<title>Esquema sala de calderas</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=5,user-scalable=yes" />
+  <title>Esquema</title>
 
-<style>
-  :root { --h: 56px; }
+  <style>
+    :root { --bg:#fff; --fg:#111; --line:#ddd; --chip:#f3f4f6; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow: hidden; /* evitamos scroll de la página, el pan/zoom es del visor */
+    }
 
-  body {
-    margin: 0;
-    font-family: system-ui, Arial, sans-serif;
-    background: #fafafa;
-  }
+    /* Barra superior */
+    .topbar {
+      position: fixed;
+      left: 0; right: 0; top: 0;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(6px);
+      z-index: 10;
+    }
+    .topbar .title {
+      font-size: 14px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .topbar .spacer { flex: 1; }
+    .btn {
+      font-size: 13px;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+    }
+    .btn:active { transform: translateY(1px); }
+    .chip {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: #444;
+      white-space: nowrap;
+    }
 
-  header {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    height: var(--h);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-  }
+    /* Área del visor */
+    #stage {
+      position: absolute;
+      inset: 44px 0 0 0; /* debajo de la topbar */
+      overflow: hidden;
+      touch-action: none; /* manejamos pan/pinch nosotros */
+      background: #fff;
+    }
 
-  header b { font-size: 14px; }
+    /* Capa transformable */
+    #content {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: 0 0;
+      will-change: transform;
+    }
 
-  button {
-    padding: 6px 10px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    background: #f7f7f7;
-    cursor: pointer;
-  }
+    /* El SVG como imagen */
+    #svgImg {
+      display: block;
+      max-width: none;
+      max-height: none;
+      user-select: none;
+      -webkit-user-drag: none;
+      pointer-events: none; /* importante: dejamos que el stage reciba los gestos */
+    }
 
-  button:hover { background: #eee; }
-
-  .status {
-    margin-left: auto;
-    font-size: 12px;
-    color: #555;
-  }
-
-  #wrap {
-    height: calc(100vh - var(--h));
-    overflow: auto;           /* SCROLL horizontal + vertical */
-    background: #fafafa;
-  }
-
-  #svgContainer {
-    display: inline-block;
-    transform-origin: 0 0;
-    padding: 10px;
-  }
-</style>
-
-<!-- Librería zoom/pan -->
-<script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    /* Mejoras mobile */
+    @media (max-width: 700px) {
+      .topbar { height: 48px; }
+      #stage { inset: 48px 0 0 0; }
+      .btn { padding: 7px 10px; }
+      .topbar .title { font-size: 13px; }
+    }
+  </style>
 </head>
 
 <body>
+  <div class="topbar">
+    <div class="title">Esquema</div>
+    <span id="info" class="chip">Auto-ajuste</span>
+    <div class="spacer"></div>
+    <button class="btn" id="btnFit">Ajustar</button>
+    <button class="btn" id="btn100">100%</button>
+  </div>
 
-<header>
-  <b>Esquema (SVG)</b>
-
-  <button id="zoomIn">Zoom +</button>
-  <button id="zoomOut">Zoom −</button>
-  <button id="reset">Reset</button>
-  <button id="fit">Ajustar</button>
-
-  <span class="status" id="status">Cargando…</span>
-</header>
-
-<div id="wrap">
-  <div id="svgContainer"></div>
-</div>
+  <div id="stage">
+    <div id="content">
+      <img id="svgImg" alt="esquema" />
+    </div>
+  </div>
 
 <script>
-let panZoom = null;
+  // ===== CONFIG =====
+  const SRC = "esquema_render.svg"; // cambia si lo tienes en otra ruta
+  const MIN_SCALE = 0.2;
+  const MAX_SCALE = 5;
 
-async function loadSVG() {
-  const status = document.getElementById("status");
-  const container = document.getElementById("svgContainer");
+  const stage = document.getElementById("stage");
+  const content = document.getElementById("content");
+  const img = document.getElementById("svgImg");
+  const info = document.getElementById("info");
 
-  const url = "./esquema_render.svg?v=" + Date.now(); // evita caché
+  let scale = 1;
+  let tx = 0; // translate x (px)
+  let ty = 0; // translate y (px)
 
-  try {
-    const res = await fetch(url, { cache: "no-store" });
-    const txt = await res.text();
+  // Para pan
+  let isPanning = false;
+  let panStart = { x: 0, y: 0, tx: 0, ty: 0 };
 
-    if (!res.ok) {
-      status.textContent = "ERROR HTTP " + res.status;
-      container.innerHTML = "<pre>" + txt + "</pre>";
-      return;
-    }
+  // Para pinch
+  let pointers = new Map(); // pointerId -> {x,y}
+  let pinchStart = null; // {dist, scale, centerX, centerY, tx, ty}
 
-    if (!txt.includes("<svg")) {
-      status.textContent = "ERROR: no es un SVG válido";
-      container.innerHTML = "<pre>" + txt.slice(0, 300) + "</pre>";
-      return;
-    }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
-    container.innerHTML = txt;
-    status.textContent = "SVG cargado";
-
-    const svg = container.querySelector("svg");
-
-    panZoom = svgPanZoom(svg, {
-      zoomEnabled: true,
-      controlIconsEnabled: false,
-      fit: true,
-      center: true,
-      minZoom: 0.2,
-      maxZoom: 10,
-      zoomScaleSensitivity: 0.25
-    });
-
-  } catch (e) {
-    status.textContent = "ERROR cargando SVG: " + e.message;
+  function setTransform() {
+    // content está anclado a 50%/50%. tx/ty son desplazamientos adicionales.
+    content.style.transform = `translate(${tx}px, ${ty}px) scale(${scale}) translate(-50%, -50%)`;
   }
-}
 
-document.getElementById("zoomIn").onclick  = () => panZoom && panZoom.zoomIn();
-document.getElementById("zoomOut").onclick = () => panZoom && panZoom.zoomOut();
-document.getElementById("reset").onclick   = () => panZoom && panZoom.resetZoom();
-document.getElementById("fit").onclick     = () => panZoom && panZoom.fit();
+  function getStageSize() {
+    const r = stage.getBoundingClientRect();
+    return { w: r.width, h: r.height };
+  }
 
-window.addEventListener("load", loadSVG);
+  function fitToScreen() {
+    const { w: sw, h: sh } = getStageSize();
+    const iw = img.naturalWidth || img.width;
+    const ih = img.naturalHeight || img.height;
+
+    if (!iw || !ih) return;
+
+    // margen para que no quede pegado a los bordes
+    const margin = Math.max(16, Math.min(sw, sh) * 0.04);
+    const availW = sw - margin * 2;
+    const availH = sh - margin * 2;
+
+    // escala que hace que la imagen "quepa" completa (contain)
+    const s = Math.min(availW / iw, availH / ih);
+    scale = clamp(s, MIN_SCALE, MAX_SCALE);
+
+    // centrado perfecto
+    tx = 0;
+    ty = 0;
+
+    setTransform();
+    info.textContent = `Ajustado (${Math.round(scale*100)}%)`;
+  }
+
+  function set100() {
+    scale = 1;
+    tx = 0;
+    ty = 0;
+    setTransform();
+    info.textContent = "100%";
+  }
+
+  function zoomAt(factor, cx, cy) {
+    // cx,cy: coordenadas en stage (px)
+    const prev = scale;
+    const next = clamp(prev * factor, MIN_SCALE, MAX_SCALE);
+    factor = next / prev;
+    scale = next;
+
+    // Mantener el punto bajo el cursor estable:
+    // Como el content está centrado, hacemos un ajuste relativo simple:
+    // trasladamos proporcionalmente al cambio de escala
+    const r = stage.getBoundingClientRect();
+    const dx = cx - (r.width / 2 + tx);
+    const dy = cy - (r.height / 2 + ty);
+    tx -= dx * (factor - 1);
+    ty -= dy * (factor - 1);
+
+    setTransform();
+    info.textContent = `${Math.round(scale*100)}%`;
+  }
+
+  // ===== Eventos =====
+  document.getElementById("btnFit").addEventListener("click", fitToScreen);
+  document.getElementById("btn100").addEventListener("click", set100);
+
+  // Rueda (desktop)
+  stage.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.08 : 1/1.08;
+    zoomAt(factor, e.clientX, e.clientY);
+  }, { passive: false });
+
+  // Pointer events (pan + pinch)
+  stage.addEventListener("pointerdown", (e) => {
+    stage.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointers.size === 1) {
+      isPanning = true;
+      panStart = { x: e.clientX, y: e.clientY, tx, ty };
+    } else if (pointers.size === 2) {
+      // iniciar pinch
+      const pts = Array.from(pointers.values());
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      const dist = Math.hypot(dx, dy);
+      const centerX = (pts[0].x + pts[1].x) / 2;
+      const centerY = (pts[0].y + pts[1].y) / 2;
+      pinchStart = { dist, scale, centerX, centerY, tx, ty };
+      isPanning = false;
+    }
+  });
+
+  stage.addEventListener("pointermove", (e) => {
+    if (!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointers.size === 1 && isPanning) {
+      const p = pointers.get(e.pointerId);
+      tx = panStart.tx + (p.x - panStart.x);
+      ty = panStart.ty + (p.y - panStart.y);
+      setTransform();
+      return;
+    }
+
+    if (pointers.size === 2 && pinchStart) {
+      const pts = Array.from(pointers.values());
+      const dx = pts[0].x - pts[1].x;
+      const dy = pts[0].y - pts[1].y;
+      const dist = Math.hypot(dx, dy);
+      const centerX = (pts[0].x + pts[1].x) / 2;
+      const centerY = (pts[0].y + pts[1].y) / 2;
+
+      const factor = dist / pinchStart.dist;
+      const targetScale = clamp(pinchStart.scale * factor, MIN_SCALE, MAX_SCALE);
+      const actualFactor = targetScale / scale;
+      // aplicar zoom en el centro del pinch actual
+      zoomAt(actualFactor, centerX, centerY);
+
+      // ajustar pan para acompañar el cambio de centro
+      tx += (centerX - pinchStart.centerX);
+      ty += (centerY - pinchStart.centerY);
+      pinchStart.centerX = centerX;
+      pinchStart.centerY = centerY;
+
+      setTransform();
+    }
+  });
+
+  function endPointer(e) {
+    pointers.delete(e.pointerId);
+    if (pointers.size === 0) {
+      isPanning = false;
+      pinchStart = null;
+    }
+    if (pointers.size === 1) {
+      // si queda uno, volver a pan con el que queda
+      const pt = Array.from(pointers.values())[0];
+      isPanning = true;
+      panStart = { x: pt.x, y: pt.y, tx, ty };
+      pinchStart = null;
+    }
+  }
+
+  stage.addEventListener("pointerup", endPointer);
+  stage.addEventListener("pointercancel", endPointer);
+  stage.addEventListener("pointerleave", (e) => {
+    // no siempre se dispara, pero por si acaso
+  });
+
+  // ===== Carga SVG =====
+  img.addEventListener("load", () => {
+    // Ajustar automáticamente al entrar
+    fitToScreen();
+  });
+
+  // cache-bust para que siempre coja el último svg (si lo generas con actions)
+  img.src = `${SRC}?t=${Date.now()}`;
 </script>
-
 </body>
 </html>
