@@ -3,689 +3,336 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Visor S (Temperaturas) + D (Bombas / Equipos)</title>
+  <title>Visor S + D (Sensores y Drivers)</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
 
   <style>
-    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --chip:#f3f4f6; --warn:#b00020; }
-    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 16px; color: var(--fg); background: var(--bg); }
-    h1 { margin: 0 0 6px 0; font-size: 22px; }
-    .sub { color: var(--muted); margin-bottom: 14px; font-size: 13px; }
-    .bar {
-      display:flex; gap:10px; align-items:center; flex-wrap: wrap;
-      border:1px solid var(--line); padding:10px; border-radius:10px;
-    }
-    .bar label { font-size: 13px; color: var(--fg); }
-    select, button {
-      font-size: 13px; padding:6px 10px; border:1px solid var(--line); border-radius: 8px; background: #fff;
-      cursor: pointer;
-    }
-    button:hover { background: #fafafa; }
-    .chip {
-      display:inline-block; padding:4px 8px; border-radius: 999px; background: var(--chip);
-      font-size: 12px; color: var(--muted);
-    }
-
-    .grid {
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: 10px;
-      padding: 10px;
-      min-height: 120px;
-    }
-    .panel h2 { font-size: 14px; margin: 0 0 8px 0; }
-    .list {
-      max-height: 260px;
-      overflow: auto;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 8px;
-    }
-    .row {
-      display:flex; gap:8px; align-items:center;
-      padding: 4px 2px;
-      border-bottom: 1px dashed #eee;
-      font-size: 13px;
-    }
-    .row:last-child { border-bottom: none; }
-    .row code { background:#f7f7f7; padding:2px 6px; border-radius:6px; font-size: 12px; }
-    .badge {
-      margin-left:auto;
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border:1px solid var(--line);
-      color: var(--muted);
-      background:#fff;
-      white-space: nowrap;
-    }
-    .badge.on { color:#0a7a2f; border-color:#bfe3c7; background:#f2fbf5; }
-    .badge.off { color:#8a1f1f; border-color:#f0c1c1; background:#fff4f4; }
-
-    .actions { display:flex; gap:8px; justify-content:flex-end; margin: 8px 0 0 0; }
-
-    .plots {
-      display:grid;
-      grid-template-columns: 1fr;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    .plotbox {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 8px;
-    }
-    #plotS { height: 460px; }
-    #plotD { height: 320px; }
-
-    .note { font-size: 12px; color: var(--muted); margin-top: 6px; }
-    .err {
-      display:none;
-      margin-top: 12px;
-      border: 1px solid #f2b8b5;
-      background: #fff5f5;
-      border-radius: 10px;
-      padding: 10px;
-      color: var(--warn);
-      white-space: pre-wrap;
-      font-size: 12px;
-    }
-
-    @media (max-width: 900px) {
-      .grid { grid-template-columns: 1fr; }
-      #plotS { height: 420px; }
-      #plotD { height: 300px; }
-    }
+    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --chip:#f3f4f6; }
+    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; margin:16px; color:var(--fg); background:var(--bg); }
+    h1 { margin:0 0 6px 0; font-size:20px; }
+    .sub { color:var(--muted); font-size:13px; margin-bottom:12px; }
+    .panel { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0 12px; }
+    .chip { background:var(--chip); border:1px solid var(--line); padding:8px 10px; border-radius:10px; font-size:13px; }
+    .chip b { font-weight:700; }
+    .row { display:grid; grid-template-columns: 1fr; gap:12px; }
+    .card { border:1px solid var(--line); border-radius:12px; padding:12px; }
+    .card h2 { margin: 0 0 8px 0; font-size: 15px; }
+    canvas { width:100%; height:420px; }
+    input[type="number"]{ width:88px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; }
+    button { padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; cursor:pointer; }
+    button:hover { background:#f7f7f7; }
+    label { display:flex; gap:8px; align-items:center; }
+    .muted { color: var(--muted); font-size: 12px; }
   </style>
 </head>
 
 <body>
-  <h1>Visor S (Temperaturas) + D (Bombas / Equipos)</h1>
-  <div class="sub">
-    2 gráficas: S (°C) y D (0/1). Zoom con rueda y pan arrastrando.
-  
+  <h1>Visor S + D</h1>
+  <div class="sub">Lee archivos en <code>sensores/data/</code> · S: <code>S1.txt</code>… · D: <code>drv_D1.txt</code>…</div>
+
+  <div class="panel">
+    <div class="chip">Carpeta datos: <b id="dataDirLabel">—</b></div>
+
+    <label class="chip">
+      MAX_S
+      <input id="maxS" type="number" min="1" max="300" value="40">
+    </label>
+
+    <label class="chip">
+      MAX_D
+      <input id="maxD" type="number" min="1" max="300" value="40">
+    </label>
+
+    <label class="chip">
+      Paso ON (D)
+      <input id="onStep" type="number" min="0.01" max="0.20" step="0.01" value="0.05">
+    </label>
+
+    <button id="reloadBtn">Recargar</button>
+
+    <div class="chip">S cargados: <b id="loadedS">0</b></div>
+    <div class="chip">D cargados: <b id="loadedD">0</b></div>
+    <div class="chip">Último dato: <b id="lastTs">—</b></div>
   </div>
 
-  <div class="bar">
-    <label>Rango:</label>
-    <select id="rangeSel">
-      <option value="24h">Últimas 24h</option>
-      <option value="7d">Últimos 7 días</option>
-      <option value="30d">Últimos 30 días</option>
-      <option value="all">Todo</option>
-    </select>
-    <button id="btnReload">Recargar</button>
-    <button id="btnResetZoomS">Reset zoom S</button>
-    <button id="btnResetZoomD">Reset zoom D</button>
-    <span id="status" class="chip">Cargando…</span>
-  </div>
-
-  <div class="grid">
-    <div class="panel">
-      <h2>Temperaturas (S)</h2>
-      <div class="actions">
-        <button id="sAll">Mostrar todas</button>
-        <button id="sNone">Ocultar todas</button>
-      </div>
-      <div id="sList" class="list"></div>
+  <div class="row">
+    <div class="card">
+      <h2>Sensores (S)</h2>
+      <div class="muted">Formato: <code>ISO8601;valor</code> (ej.: 2026-01-10T08:48:09+00:00;59.89)</div>
+      <canvas id="chartS"></canvas>
     </div>
 
-    <div class="panel">
-      <h2>Bombas / Equipos (D)</h2>
-      <div class="actions">
-        <button id="dAll">Mostrar todas</button>
-        <button id="dNone">Ocultar todas</button>
-      </div>
-      <div id="dList" class="list"></div>
-      <div class="note">Nota: los drivers se muestran como 0/1 (OFF/ON). Si el JSON trae <code>value</code>, verás ON/OFF al lado.</div>
+    <div class="card">
+      <h2>Drivers (D) · ON/OFF</h2>
+      <div class="muted">OFF=0 · ON escalonado: 1.00, 0.95, 0.90… para distinguir varios ON a la vez</div>
+      <canvas id="chartD"></canvas>
     </div>
   </div>
-
-  <div class="plots">
-    <div class="plotbox">
-      <div class="note"><b>Gráfica S</b> (Temperaturas superpuestas)</div>
-      <div id="plotS"></div>
-    </div>
-    <div class="plotbox">
-      <div class="note"><b>Gráfica D</b> (Drivers 0/1)</div>
-      <div id="plotD"></div>
-    </div>
-  </div>
-
-  <div id="err" class="err"></div>
 
 <script>
-/**
- * Esperado (pero ahora tolerante):
- *  - data/latest_all.json
- *  - históricos: data/S1.txt... y drivers como data/d_D1.txt o data/D1.txt (y variantes)
- */
-const DATA_DIR = "data";
-const $ = (id) => document.getElementById(id);
+/** =========================
+ *  CONFIG (según tu repo)
+ *  ========================= */
+const DATA_DIR = "sensores/data"; // ✅ ruta real en GitHub
+document.getElementById("dataDirLabel").textContent = DATA_DIR + "/";
 
-function showError(msg) {
-  const box = $("err");
-  box.style.display = "block";
-  box.textContent = msg;
-}
-function clearError() {
-  const box = $("err");
-  box.style.display = "none";
-  box.textContent = "";
-}
-
-// ---- Plotly loader con fallback
-async function loadPlotly() {
-  if (window.Plotly) return true;
-
-  const cdns = [
-    "https://cdn.plot.ly/plotly-2.30.0.min.js",
-    "https://unpkg.com/plotly.js-dist-min@2.30.0/plotly.min.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.30.0/plotly.min.js"
-  ];
-
-  for (const src of cdns) {
-    try {
-      await new Promise((resolve, reject) => {
-        const s = document.createElement("script");
-        s.src = src;
-        s.async = true;
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-      if (window.Plotly) return true;
-    } catch (e) {}
+/** =========================
+ *  HELPERS
+ *  ========================= */
+async function tryFetchText(url) {
+  try {
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) return null;
+    return await r.text();
+  } catch {
+    return null;
   }
-  return false;
 }
 
-const state = {
-  meta: null,
-  sensors: [],
-  drivers: [],
-  selectedS: new Set(),
-  selectedD: new Set(),
-  cache: new Map(), // item -> [{t:Date, v:number}]
-  lastUpdated: null,
-  latestValue: new Map() // item -> number|string
-};
-
-function setStatus(txt) { $("status").textContent = txt; }
-
-function normalizeOnOffTo01(x) {
-  const v = String(x ?? "").trim().toLowerCase();
-  if (v === "on" || v === "true" || v === "yes" || v === "1") return 1;
-  if (v === "off" || v === "false" || v === "no" || v === "0") return 0;
-  const n = Number(v);
-  if (!Number.isNaN(n)) return n;
-  return null;
-}
-
-function parseHistoryText(text, isDriver=false) {
-  const out = [];
-  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-
+function parseSensorText(text) {
+  // Formato: 2026-01-10T08:48:09+00:00;59.89
+  const rows = [];
+  const lines = String(text).split(/\r?\n/);
   for (const line of lines) {
-    let parts = line.split(",");
-    if (parts.length < 2) parts = line.split(";");
-    if (parts.length < 2) parts = line.split(/\s+/);
+    const ln = line.trim();
+    if (!ln) continue;
+
+    const parts = ln.split(";");
     if (parts.length < 2) continue;
 
     const ts = parts[0].trim();
-    const raw = parts.slice(1).join(" ").trim();
+    const valRaw = parts[1].trim().replace(",", "."); // por si viniera con coma decimal
 
-    const t = new Date(ts);
-    if (Number.isNaN(t.getTime())) continue;
+    const d = new Date(ts);
+    const v = Number(valRaw);
 
-    let v;
-    if (isDriver) {
-      v = normalizeOnOffTo01(raw);
-      if (v === null) continue;
-    } else {
-      v = Number(String(raw).replace(",", "."));
-      if (Number.isNaN(v)) continue;
-    }
-    out.push({ t, v });
+    if (Number.isNaN(d.getTime())) continue;
+    if (Number.isNaN(v)) continue;
+
+    rows.push({ x: d, y: v });
   }
-  out.sort((a,b) => a.t - b.t);
-  return out;
+  rows.sort((a,b)=>a.x - b.x);
+  return rows;
 }
 
-async function fetchText(url) {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status} al cargar ${url}`);
-  return await res.text();
-}
-async function fetchJSON(url) {
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) throw new Error(`HTTP ${res.status} al cargar ${url}`);
-  return await res.json();
+function stateTo01(raw) {
+  const s = String(raw ?? "").trim().toLowerCase();
+  if (s === "on" || s === "1" || s === "true" || s === "encendido") return 1;
+  if (s === "off" || s === "0" || s === "false" || s === "apagado") return 0;
+  return (s && s !== "off") ? 1 : 0;
 }
 
-function rangeToMs(r) {
-  if (r === "24h") return 24 * 60 * 60 * 1000;
-  if (r === "7d")  return 7  * 24 * 60 * 60 * 1000;
-  if (r === "30d") return 30 * 24 * 60 * 60 * 1000;
-  return null;
-}
-function filterByRange(series, rangeKey) {
-  const ms = rangeToMs(rangeKey);
-  if (!ms) return series;
-  const last = series.length ? series[series.length - 1].t.getTime() : Date.now();
-  const minT = last - ms;
-  return series.filter(p => p.t.getTime() >= minT);
-}
+function parseDrvText(text) {
+  // Formato: 2026-01-09T11:12:30+00:00;On
+  const rows = [];
+  const lines = String(text).split(/\r?\n/);
+  for (const line of lines) {
+    const ln = line.trim();
+    if (!ln) continue;
 
-/** Construye filas con checkbox + estado opcional (para D) */
-function buildCheckboxRow(container, item, label, checked, onChange, badgeText=null, badgeClass="") {
-  const row = document.createElement("div");
-  row.className = "row";
+    const parts = ln.split(";");
+    if (parts.length < 2) continue;
 
-  const cb = document.createElement("input");
-  cb.type = "checkbox";
-  cb.checked = checked;
-  cb.addEventListener("change", () => onChange(cb.checked));
+    const ts = parts[0].trim();
+    const st = parts[1].trim();
 
-  const code = document.createElement("code");
-  code.textContent = item;
+    const d = new Date(ts);
+    if (Number.isNaN(d.getTime())) continue;
 
-  const span = document.createElement("span");
-  span.textContent = label || "";
-
-  row.appendChild(cb);
-  row.appendChild(code);
-  row.appendChild(span);
-
-  if (badgeText !== null) {
-    const b = document.createElement("span");
-    b.className = "badge " + (badgeClass || "");
-    b.textContent = badgeText;
-    row.appendChild(b);
+    rows.push({ t: d, s: stateTo01(st) });
   }
-
-  container.appendChild(row);
+  rows.sort((a,b)=>a.t - b.t);
+  return rows;
 }
 
-function labelFor(item) {
-  const s = state.sensors.find(x => x.item === item);
-  if (s) return `${s.item} · ${s.label || ""}`.trim();
-  const d = state.drivers.find(x => x.item === item);
-  if (d) return `${d.item} · ${d.label || ""}`.trim();
-  return item;
-}
+function toSteppedSeries(events, onLevel) {
+  if (!events.length) return [];
+  const pts = [];
+  for (let i = 0; i < events.length; i++) {
+    const cur = events[i];
+    const yCur = cur.s === 1 ? onLevel : 0;
 
-/** Saca arrays de drivers/sensors aunque el JSON use otras keys */
-function pickArrays(meta) {
-  const arrays = [];
-  for (const k of Object.keys(meta || {})) {
-    if (Array.isArray(meta[k])) arrays.push(meta[k]);
-  }
-  return arrays;
-}
+    pts.push({ x: cur.t, y: yCur });
 
-/** Normaliza item tipo "d1" -> "D1" etc */
-function normItem(x) {
-  const s = String(x ?? "").trim();
-  if (!s) return "";
-  const m = s.match(/^([sSdD])\s*0*(\d+)$/);
-  if (m) return m[1].toUpperCase() + m[2];
-  return s;
-}
-
-/** Extrae sensores S y drivers D de cualquier array que exista en latest_all.json */
-function extractSD(meta) {
-  const all = [];
-  for (const arr of pickArrays(meta)) {
-    for (const o of (arr || [])) {
-      if (o && typeof o === "object") all.push(o);
+    if (i < events.length - 1) {
+      const nextT = events[i+1].t;
+      pts.push({ x: nextT, y: yCur });
     }
   }
-
-  const sensors = [];
-  const drivers = [];
-
-  for (const o of all) {
-    const item = normItem(o.item);
-    if (!item) continue;
-
-    const rec = {
-      item,
-      label: o.label || o.name || "",
-      units: o.units || "",
-      value: (o.value !== undefined ? o.value : (o.state !== undefined ? o.state : undefined))
-    };
-
-    if (/^S\d+$/.test(item)) sensors.push(rec);
-    if (/^D\d+$/.test(item)) drivers.push(rec);
-  }
-
-  // dedupe por item (último gana)
-  const dedupe = (arr) => {
-    const m = new Map();
-    for (const x of arr) m.set(x.item, x);
-    return Array.from(m.values()).sort((a,b) => Number(a.item.slice(1)) - Number(b.item.slice(1)));
-  };
-
-  return {
-    sensors: dedupe(sensors),
-    drivers: dedupe(drivers)
-  };
+  return pts;
 }
 
-/** Render de listas */
-function renderLists() {
-  const sList = $("sList");
-  const dList = $("dList");
-  sList.innerHTML = "";
-  dList.innerHTML = "";
+/** =========================
+ *  CHARTS
+ *  ========================= */
+let chartS = null;
+let chartD = null;
 
-  for (const s of state.sensors) {
-    buildCheckboxRow(
-      sList,
-      s.item,
-      `${s.label || ""}${s.units ? " ("+s.units+")" : ""}`.trim(),
-      state.selectedS.has(s.item),
-      (ok) => { ok ? state.selectedS.add(s.item) : state.selectedS.delete(s.item); redrawAll(); }
-    );
-  }
-
-  for (const d of state.drivers) {
-    const v = state.latestValue.get(d.item);
-    let badgeText = null, badgeClass = "";
-    const v01 = normalizeOnOffTo01(v);
-    if (v !== undefined && v !== null && v !== "") {
-      if (v01 === 1) { badgeText = "ON"; badgeClass = "on"; }
-      else if (v01 === 0) { badgeText = "OFF"; badgeClass = "off"; }
-      else { badgeText = String(v); }
+function makeSensorChart(ctx, datasets) {
+  return new Chart(ctx, {
+    type: "line",
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      parsing: false,
+      animation: false,
+      interaction: { mode: "nearest", intersect: false },
+      plugins: {
+        legend: { display: true, position: "top" }
+      },
+      scales: {
+        x: {
+          type: "time",
+          time: { tooltipFormat: "yyyy-MM-dd HH:mm:ssXXX" },
+          grid: { color: "#eee" },
+          title: { display: true, text: "Tiempo" }
+        },
+        y: {
+          grid: { color: "#eee" },
+          title: { display: true, text: "Valor" }
+        }
+      },
+      elements: { point: { radius: 0 }, line: { tension: 0, borderWidth: 2 } }
     }
-
-    buildCheckboxRow(
-      dList,
-      d.item,
-      (d.label || "").trim(),
-      state.selectedD.has(d.item),
-      (ok) => { ok ? state.selectedD.add(d.item) : state.selectedD.delete(d.item); redrawAll(); },
-      badgeText,
-      badgeClass
-    );
-  }
+  });
 }
 
-/** Genera candidatos de nombre de fichero para un item */
-function candidateFiles(item) {
-  const n = normItem(item); // "D1"
-  const low = n.toLowerCase(); // "d1"
-  const num = n.replace(/^[SD]/, ""); // "1"
-  if (/^S\d+$/.test(n)) {
-    return [
-      `${DATA_DIR}/${n}.txt`,
-      `${DATA_DIR}/${low}.txt`,
-      `${DATA_DIR}/S${num}.txt`,
-      `${DATA_DIR}/s${num}.txt`,
-    ];
-  }
-  if (/^D\d+$/.test(n)) {
-    return [
-      `${DATA_DIR}/d_${n}.txt`,
-      `${DATA_DIR}/d_${low}.txt`,
-      `${DATA_DIR}/d-${n}.txt`,
-      `${DATA_DIR}/${n}.txt`,
-      `${DATA_DIR}/${low}.txt`,
-      `${DATA_DIR}/dD${num}.txt`,
-      `${DATA_DIR}/d${n}.txt`,
-    ];
-  }
-  return [];
-}
-
-/** Intenta cargar serie probando varios nombres */
-async function loadSeries(item) {
-  if (state.cache.has(item)) return state.cache.get(item);
-
-  const isDriver = /^D\d+$/.test(normItem(item));
-  const files = candidateFiles(item);
-  let lastErr = null;
-
-  for (const url of files) {
-    try {
-      const txt = await fetchText(url);
-      const series = parseHistoryText(txt, isDriver);
-      state.cache.set(item, series);
-      return series;
-    } catch (e) {
-      lastErr = e;
+function makeDriverChart(ctx, datasets, yLevelsMap) {
+  return new Chart(ctx, {
+    type: "line",
+    data: { datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      parsing: false,
+      animation: false,
+      interaction: { mode: "nearest", intersect: false },
+      plugins: {
+        legend: { display: true, position: "top" },
+        tooltip: {
+          callbacks: {
+            label: (item) => {
+              const name = item.dataset.label || "";
+              const y = item.parsed.y;
+              const state = (y === 0) ? "OFF" : "ON";
+              return `${name}: ${state}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          type: "time",
+          time: { tooltipFormat: "yyyy-MM-dd HH:mm:ssXXX" },
+          grid: { color: "#eee" },
+          title: { display: true, text: "Tiempo" }
+        },
+        y: {
+          min: 0,
+          max: 1.02,
+          ticks: {
+            callback: (val) => {
+              const v = Number(val);
+              if (Math.abs(v - 0) < 1e-6) return "0 (OFF)";
+              const key = v.toFixed(2);
+              if (yLevelsMap.has(key)) return `${key} (ON ${yLevelsMap.get(key)})`;
+              return v.toFixed(2);
+            }
+          },
+          grid: { color: "#eee" },
+          title: { display: true, text: "Estado (OFF=0, ON escalonado)" }
+        }
+      },
+      elements: { point: { radius: 0 }, line: { tension: 0, borderWidth: 2 } }
     }
-  }
-
-  // si no encuentra ninguno, cachea vacío para no reintentar infinito
-  state.cache.set(item, []);
-  if (lastErr) console.warn("No pude cargar histórico para", item, "probé:", files, "último error:", lastErr);
-  return [];
+  });
 }
 
-function emptyLayoutCommon(title) {
-  return {
-    margin: { l: 60, r: 30, t: 30, b: 50 },
-    title: { text: title, font: { size: 14 } },
-    xaxis: { title: "Fecha y hora", showgrid: true, zeroline: false },
-    hovermode: "x unified"
-  };
-}
+/** =========================
+ *  LOAD + RENDER
+ *  ========================= */
+async function loadAllAndRender() {
+  const maxS = Math.max(1, Math.min(300, Number(document.getElementById("maxS").value) || 40));
+  const maxD = Math.max(1, Math.min(300, Number(document.getElementById("maxD").value) || 40));
+  const onStep = Math.max(0.01, Math.min(0.20, Number(document.getElementById("onStep").value) || 0.05));
 
-async function redrawS(rangeKey) {
-  const sel = Array.from(state.selectedS);
-  const seriesArr = await Promise.all(sel.map(it => loadSeries(it).catch(() => [])));
+  // --- S ---
+  const datasetsS = [];
+  let loadedS = 0;
+  let lastTimestamp = null;
 
-  const traces = [];
-  for (let i = 0; i < sel.length; i++) {
-    const item = sel[i];
-    const raw = seriesArr[i] || [];
-    const serie = filterByRange(raw, rangeKey);
+  for (let i = 1; i <= maxS; i++) {
+    const url = `${DATA_DIR}/S${i}.txt`;
+    const txt = await tryFetchText(url);
+    if (txt == null) continue;
 
-    traces.push({
-      type: "scatter",
-      mode: "lines",
-      name: labelFor(item),
-      x: serie.map(p => p.t),
-      y: serie.map(p => p.v),
-      hovertemplate: "%{x}<br>%{y:.2f}°C<extra></extra>",
+    const points = parseSensorText(txt);
+    if (!points.length) continue;
+
+    loadedS++;
+
+    const last = points[points.length - 1]?.x ?? null;
+    if (last && (!lastTimestamp || last > lastTimestamp)) lastTimestamp = last;
+
+    datasetsS.push({
+      label: `S${i}`,
+      data: points,
+      spanGaps: true
     });
   }
 
-  const layout = {
-    ...emptyLayoutCommon("Temperaturas (S)"),
-    yaxis: { title: "Temperatura (°C)", showgrid: true, zeroline: false, automargin: true }
-  };
-  const config = { responsive: true, scrollZoom: true, displaylogo: false };
+  // --- D ---
+  const datasetsD = [];
+  let loadedD = 0;
+  const yLevelsMap = new Map();
 
-  if (!traces.length) {
-    await Plotly.newPlot("plotS", [{type:"scatter", mode:"lines", x:[], y:[]}], layout, config);
-    return { lastTs: null };
-  }
+  for (let i = 1; i <= maxD; i++) {
+    const url = `${DATA_DIR}/drv_D${i}.txt`;
+    const txt = await tryFetchText(url);
+    if (txt == null) continue;
 
-  await Plotly.newPlot("plotS", traces, layout, config);
+    const events = parseDrvText(txt);
+    if (!events.length) continue;
 
-  let lastTs = null;
-  for (const it of sel) {
-    const s = state.cache.get(it);
-    if (s && s.length) lastTs = Math.max(lastTs || 0, s[s.length - 1].t.getTime());
-  }
-  return { lastTs };
-}
+    loadedD++;
 
-async function redrawD(rangeKey) {
-  const sel = Array.from(state.selectedD);
-  const seriesArr = await Promise.all(sel.map(it => loadSeries(it).catch(() => [])));
+    // ON escalonado para “separar” visualmente
+    const onLevelRaw = 1 - (loadedD - 1) * onStep;
+    const onLevel = Math.max(0.05, Math.round(onLevelRaw * 100) / 100);
+    yLevelsMap.set(onLevel.toFixed(2), `D${i}`);
 
-  const traces = [];
-  for (let i = 0; i < sel.length; i++) {
-    const item = sel[i];
-    const raw = seriesArr[i] || [];
-    const serie = filterByRange(raw, rangeKey);
+    const series = toSteppedSeries(events, onLevel);
 
-    traces.push({
-      type: "scatter",
-      mode: "lines",
-      name: labelFor(item) + " (0/1)",
-      x: serie.map(p => p.t),
-      y: serie.map(p => p.v),
-      line: { shape: "hv" },
-      hovertemplate: "%{x}<br>%{y}<extra></extra>",
+    const lastEvt = events[events.length - 1]?.t ?? null;
+    if (lastEvt && (!lastTimestamp || lastEvt > lastTimestamp)) lastTimestamp = lastEvt;
+
+    datasetsD.push({
+      label: `D${i}`,
+      data: series,
+      stepped: true,
+      spanGaps: true
     });
   }
 
-  const layout = {
-    ...emptyLayoutCommon("Drivers (D)"),
-    yaxis: { title: "Estado (0/1)", range: [-0.1, 1.1], showgrid: true, zeroline: false, automargin: true }
-  };
-  const config = { responsive: true, scrollZoom: true, displaylogo: false };
+  document.getElementById("loadedS").textContent = String(loadedS);
+  document.getElementById("loadedD").textContent = String(loadedD);
+  document.getElementById("lastTs").textContent = lastTimestamp ? lastTimestamp.toISOString() : "—";
 
-  if (!traces.length) {
-    await Plotly.newPlot("plotD", [{type:"scatter", mode:"lines", x:[], y:[]}], layout, config);
-    return { lastTs: null };
-  }
+  // Render charts
+  const ctxS = document.getElementById("chartS").getContext("2d");
+  if (chartS) chartS.destroy();
+  chartS = makeSensorChart(ctxS, datasetsS);
 
-  await Plotly.newPlot("plotD", traces, layout, config);
-
-  let lastTs = null;
-  for (const it of sel) {
-    const s = state.cache.get(it);
-    if (s && s.length) lastTs = Math.max(lastTs || 0, s[s.length - 1].t.getTime());
-  }
-  return { lastTs };
+  const ctxD = document.getElementById("chartD").getContext("2d");
+  if (chartD) chartD.destroy();
+  chartD = makeDriverChart(ctxD, datasetsD, yLevelsMap);
 }
 
-async function redrawAll() {
-  clearError();
-  const okPlotly = await loadPlotly();
-  if (!okPlotly) {
-    setStatus("Error: Plotly no carga.");
-    showError(
-      "No se pudo cargar Plotly (CDN bloqueado o sin conexión).\n" +
-      "Prueba sin bloqueadores / en otra red.\n"
-    );
-    return;
-  }
-
-  const rangeKey = $("rangeSel").value;
-  const selS = state.selectedS.size;
-  const selD = state.selectedD.size;
-
-  setStatus(`Cargando… (${selS} S + ${selD} D)`);
-
-  try {
-    const a = await redrawS(rangeKey);
-    const b = await redrawD(rangeKey);
-
-    const last = Math.max(a.lastTs || 0, b.lastTs || 0);
-    state.lastUpdated = last ? new Date(last) : null;
-
-    const stamp = state.lastUpdated ? state.lastUpdated.toISOString() : "—";
-    setStatus(`Mostrando: ${selS} S + ${selD} D · ${stamp}`);
-  } catch (e) {
-    console.error(e);
-    setStatus("Error al dibujar (mira detalle).");
-    showError(String(e?.stack || e?.message || e));
-  }
-}
-
-function resetZoomS() {
-  if (!window.Plotly) return;
-  Plotly.relayout("plotS", { "xaxis.autorange": true, "yaxis.autorange": true });
-}
-function resetZoomD() {
-  if (!window.Plotly) return;
-  Plotly.relayout("plotD", { "xaxis.autorange": true });
-}
-
-async function init() {
-  clearError();
-
-  const okPlotly = await loadPlotly();
-  if (!okPlotly) {
-    setStatus("Error: Plotly no carga.");
-    showError(
-      "No se pudo cargar Plotly.\n" +
-      "Si estás abriendo desde github.com/blob, no va a funcionar.\n" +
-      "Ábrelo desde GitHub Pages.\n"
-    );
-    return;
-  }
-
-  try {
-    setStatus("Cargando latest_all.json…");
-    const meta = await fetchJSON(`${DATA_DIR}/latest_all.json`);
-    state.meta = meta;
-
-    const { sensors, drivers } = extractSD(meta);
-
-    state.sensors = sensors.map(x => ({ item: x.item, label: x.label || "", units: x.units || "" }));
-    state.drivers = drivers.map(x => ({ item: x.item, label: x.label || "", units: x.units || "" }));
-
-    // guarda valores actuales si existen
-    state.latestValue.clear();
-    for (const x of [...sensors, ...drivers]) {
-      if (x.value !== undefined) state.latestValue.set(x.item, x.value);
-    }
-
-    // Selección inicial: si hay pocos drivers, los marco todos (así “se ven” sí o sí)
-    state.selectedS = new Set();
-    state.selectedD = new Set();
-    if (state.drivers.length > 0) state.drivers.forEach(d => state.selectedD.add(d.item));
-
-    renderLists();
-    await redrawAll();
-
-    // Si NO detectó drivers, lo aviso con pistas concretas
-    if (state.drivers.length === 0) {
-      showError(
-        "He cargado latest_all.json pero no he encontrado ningún driver D.\n" +
-        "Causas típicas:\n" +
-        " - Tu JSON no incluye objetos con item=\"D1\", \"D2\"...\n" +
-        " - Los drivers vienen con otro formato de 'item'.\n" +
-        "Solución: abre la consola (F12) y mira el JSON. Los drivers deben tener item tipo D1.\n"
-      );
-    }
-
-  } catch (e) {
-    console.error(e);
-    setStatus("Error cargando datos (mira detalle).");
-    showError(String(e?.stack || e?.message || e));
-  }
-}
-
-// botones
-$("btnReload").addEventListener("click", async () => {
-  state.cache.clear();
-  await init();
-});
-$("btnResetZoomS").addEventListener("click", resetZoomS);
-$("btnResetZoomD").addEventListener("click", resetZoomD);
-$("rangeSel").addEventListener("change", () => redrawAll());
-
-$("sAll").addEventListener("click", () => {
-  state.sensors.forEach(s => state.selectedS.add(s.item));
-  renderLists(); redrawAll();
-});
-$("sNone").addEventListener("click", () => {
-  state.selectedS.clear();
-  renderLists(); redrawAll();
-});
-$("dAll").addEventListener("click", () => {
-  state.drivers.forEach(d => state.selectedD.add(d.item));
-  renderLists(); redrawAll();
-});
-$("dNone").addEventListener("click", () => {
-  state.selectedD.clear();
-  renderLists(); redrawAll();
-});
-
-init();
+document.getElementById("reloadBtn").addEventListener("click", loadAllAndRender);
+loadAllAndRender();
 </script>
 </body>
 </html>
