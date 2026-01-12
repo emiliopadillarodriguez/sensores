@@ -1,70 +1,121 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8">
-  <title>Esquema sala de calderas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8">
+<title>Esquema BMS · Sala de Calderas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <style>
-    :root{
-      --bg:#0b1220;      /* oscuro, no negro */
-      --panel:#0f172a;
-      --fg:#e5e7eb;
-      --line:#1e293b;
-    }
+<style>
+:root{
+  --fg-dark:#e5e7eb;
+  --fg-light:#0f172a;
+  --line:#1e293b;
+  --ok:#22c55e;
+  --bad:#ef4444;
+}
 
-    body{
-      margin:0;
-      font-family: system-ui, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--fg);
-    }
+/* ======== FONDO SEGÚN DISPOSITIVO ======== */
 
-    header{
-      position: sticky;
-      top: 0;
-      z-index: 10;
-      background: var(--panel);
-      border-bottom: 1px solid var(--line);
-      padding: 8px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+/* MÓVIL / TABLET */
+@media (max-width: 900px){
+  body{ background:#000; color:var(--fg-dark); }
+  header{ background:#020617; }
+  #viewer{ background:#000; }
+}
 
-    header b{ font-size:14px; }
+/* ORDENADOR */
+@media (min-width: 901px){
+  body{ background:#fff; color:var(--fg-light); }
+  header{ background:#f8fafc; }
+  #viewer{ background:#fff; }
+}
 
-    button{
-      padding: 6px 10px;
-      font-size: 13px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      color: var(--fg);
-      cursor: pointer;
-    }
-    button:hover{ background:#111827; }
+body{
+  margin:0;
+  font-family: system-ui, Arial, sans-serif;
+}
 
-    #status{
-      margin-left:auto;
-      font-size:12px;
-      color:#94a3b8;
-    }
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  padding:8px 12px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
 
-    /* CONTENEDOR */
-    #viewer{
-      width:100vw;
-      height: calc(100vh - 48px);
-      overflow:auto;
-      background: var(--bg);
-    }
+header b{ font-size:14px; }
 
-    /* SVG embebido */
-    #svgObj{
-      display:block;
-      transform-origin: top left;
-    }
-  </style>
+button{
+  padding:6px 10px;
+  font-size:13px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:transparent;
+  cursor:pointer;
+}
+
+#status{
+  margin-left:auto;
+  font-size:12px;
+  color:#64748b;
+}
+
+/* ======== LAYOUT ======== */
+#viewer{
+  width:100vw;
+  height: calc(100vh - 48px);
+  overflow:auto;
+}
+
+#svgObj{
+  display:block;
+  transform-origin: top left;
+}
+
+/* ======== PANEL ESTADO ======== */
+#panel{
+  position:fixed;
+  right:10px;
+  bottom:10px;
+  width:320px;
+  max-height:60vh;
+  overflow:auto;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px;
+  background:rgba(2,6,23,.92);
+  color:#e5e7eb;
+  font-size:12px;
+}
+
+#panel h4{
+  margin:6px 0 4px;
+  font-size:12px;
+  color:#38bdf8;
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  padding:4px 0;
+  border-bottom:1px dashed #1e293b;
+}
+.row:last-child{ border-bottom:none; }
+
+.k{ color:#94a3b8; font-weight:700; }
+.on{ color:var(--ok); font-weight:700; }
+.off{ color:var(--bad); font-weight:700; }
+
+.time{
+  font-size:11px;
+  color:#cbd5f5;
+  margin-bottom:6px;
+}
+</style>
 </head>
 
 <body>
@@ -80,75 +131,111 @@
 </header>
 
 <div id="viewer">
-  <object id="svgObj"
-          type="image/svg+xml"
-          data="esquema_render.svg?t=<?=Date.now()?>">
-  </object>
+  <object id="svgObj" type="image/svg+xml" data="esquema_render.svg"></object>
+</div>
+
+<!-- PANEL ESTADO -->
+<div id="panel">
+  <div class="time" id="lastUpdate">Última actualización: —</div>
+
+  <h4>Sensores</h4>
+  <div id="panelS"></div>
+
+  <h4>Drivers</h4>
+  <div id="panelD"></div>
 </div>
 
 <script>
-  const obj = document.getElementById("svgObj");
-  const viewer = document.getElementById("viewer");
-  const statusEl = document.getElementById("status");
+/* ======== ZOOM ======== */
+const obj = document.getElementById("svgObj");
+const viewer = document.getElementById("viewer");
+const statusEl = document.getElementById("status");
 
-  let scale = 1;
+let scale = 1;
 
-  function applyZoom(){
-    obj.style.transform = `scale(${scale})`;
-    statusEl.textContent = `Zoom ${Math.round(scale*100)}%`;
+function applyZoom(){
+  obj.style.transform = `scale(${scale})`;
+  statusEl.textContent = `Zoom ${Math.round(scale*100)}%`;
+}
+function zoomIn(){ scale=Math.min(scale*1.15,6); applyZoom(); }
+function zoomOut(){ scale=Math.max(scale/1.15,0.2); applyZoom(); }
+
+function fit(){
+  const svg = obj.contentDocument?.documentElement;
+  if(!svg) return;
+  const vb = svg.viewBox.baseVal;
+  const iw = vb.width || svg.getBoundingClientRect().width;
+  const ih = vb.height || svg.getBoundingClientRect().height;
+  const vw = viewer.clientWidth;
+  const vh = viewer.clientHeight;
+  scale = Math.min(vw/iw, vh/ih)*0.97;
+  applyZoom();
+  viewer.scrollTop = viewer.scrollLeft = 0;
+}
+
+/* ======== RECOLOR SOLO NEGRO ======== */
+function recolorSVG(){
+  const svg = obj.contentDocument;
+  if(!svg) return;
+  svg.querySelectorAll("*").forEach(el=>{
+    const s = el.getAttribute("stroke");
+    const f = el.getAttribute("fill");
+    if(s && ["#000","#000000","black"].includes(s)) el.setAttribute("stroke","#ffffff");
+    if(el.tagName==="text" && f && ["#000","#000000","black"].includes(f)) el.setAttribute("fill","#ffffff");
+  });
+}
+
+/* ======== ESTADO DESDE latest_all.json ======== */
+const JSONS=[
+  "sensores/data/latest_all.json",
+  "data/latest_all.json"
+];
+
+async function loadJSON(){
+  let data=null;
+  for(const u of JSONS){
+    try{
+      const r=await fetch(u,{cache:"no-store"});
+      if(r.ok){ data=await r.json(); break; }
+    }catch{}
   }
+  if(!data) return;
 
-  function zoomIn(){ scale=Math.min(scale*1.15,6); applyZoom(); }
-  function zoomOut(){ scale=Math.max(scale/1.15,0.15); applyZoom(); }
+  document.getElementById("lastUpdate").textContent =
+    "Última actualización: "+new Date(data.timestamp_utc).toLocaleString();
 
-  function fit(){
-    const svg = obj.contentDocument?.documentElement;
-    if(!svg) return;
+  const sBox=document.getElementById("panelS");
+  const dBox=document.getElementById("panelD");
+  sBox.innerHTML=""; dBox.innerHTML="";
 
-    const iw = svg.viewBox.baseVal.width || svg.getBoundingClientRect().width;
-    const ih = svg.viewBox.baseVal.height || svg.getBoundingClientRect().height;
-    const vw = viewer.clientWidth;
-    const vh = viewer.clientHeight;
+  data.sensors?.forEach(s=>{
+    sBox.innerHTML+=`
+      <div class="row">
+        <span class="k">${s.item}</span>
+        <span>${s.value} ${s.units||""}</span>
+      </div>`;
+  });
 
-    scale = Math.min(vw/iw, vh/ih) * 0.97;
-    applyZoom();
-    viewer.scrollTop = 0;
-    viewer.scrollLeft = 0;
-  }
+  data.drivers?.forEach(d=>{
+    const on=String(d.value).toLowerCase()==="on"||d.value==1;
+    dBox.innerHTML+=`
+      <div class="row">
+        <span class="k">${d.item}</span>
+        <span class="${on?"on":"off"}">${on?"ON":"OFF"}</span>
+      </div>`;
+  });
+}
 
-  /* ========= CLAVE: recolorizar SOLO líneas negras ========= */
-  function recolorSVG(){
-    const svg = obj.contentDocument;
-    if(!svg) return;
+/* ======== INIT ======== */
+obj.onload=()=>{
+  statusEl.textContent="SVG cargado";
+  recolorSVG();
+  fit();
+};
+obj.onerror=()=>statusEl.textContent="ERROR SVG";
 
-    const elements = svg.querySelectorAll("*");
-
-    elements.forEach(el=>{
-      const stroke = el.getAttribute("stroke");
-      const fill = el.getAttribute("fill");
-
-      // Líneas negras → blancas
-      if(stroke && (stroke === "#000" || stroke === "#000000" || stroke === "black")){
-        el.setAttribute("stroke", "#ffffff");
-      }
-
-      // Textos negros → blancos (pero no rellenos decorativos)
-      if(el.tagName === "text" && fill &&
-         (fill === "#000" || fill === "#000000" || fill === "black")){
-        el.setAttribute("fill", "#ffffff");
-      }
-    });
-  }
-
-  obj.onload = () => {
-    statusEl.textContent = "SVG cargado";
-    recolorSVG();   // ⭐ SOLO líneas negras
-    fit();
-  };
-
-  obj.onerror = () => {
-    statusEl.textContent = "ERROR cargando SVG";
-  };
+loadJSON();
+setInterval(loadJSON,30000);
 </script>
 
 </body>
