@@ -16,6 +16,8 @@
       --stroke: rgba(255,255,255,.10); --stroke2: rgba(255,255,255,.16);
       --shadow: 0 18px 45px rgba(0,0,0,.45); --r:18px;
       --ok:#35D07F; --bad:#FF5C5C; --accent:#7C5CFF; --accent2:#3BE7FF;
+      --chipOn: rgba(53,208,127,.16);
+      --chipOff: rgba(255,92,92,.14);
     }
     *{box-sizing:border-box}
     body{
@@ -62,57 +64,123 @@
     .led{width:8px;height:8px;border-radius:999px;background:var(--bad);box-shadow:0 0 0 4px rgba(255,92,92,.12)}
     .led.ok{background:var(--ok);box-shadow:0 0 0 4px rgba(53,208,127,.12)}
 
-    .grid{margin-top:16px;display:grid;grid-template-columns:1.25fr .75fr;gap:16px;align-items:start}
-    @media(max-width:980px){.grid{grid-template-columns:1fr}}
-
+    .grid{margin-top:16px;display:grid;grid-template-columns:1fr;gap:16px}
     .card{
       border:1px solid var(--stroke);
       background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
       border-radius:var(--r); box-shadow:var(--shadow); backdrop-filter: blur(10px);
       overflow:hidden;
     }
-    .head{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .head{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
     .head h2{margin:0;font-size:14px;font-weight:900}
     .head .hint{font-size:12px;color:var(--muted);font-weight:900}
     .body{padding:14px 16px}
 
-    .section{margin-top:14px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.2px}
-    .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
-    .tag{
-      display:flex;align-items:center;gap:10px;
-      padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.06);
-      flex:1 1 280px; min-width:280px;
+    .sectionRow{
+      display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;
+      margin-top: 12px;
     }
-    .chip{
-      width:36px;height:36px;border-radius:12px;
-      background:
-        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.7), transparent 55%),
-        linear-gradient(135deg, rgba(124,92,255,.95), rgba(59,231,255,.85));
+    .sectionTitle{
+      color:var(--muted); font-size:12px; font-weight:900;
+      text-transform:uppercase; letter-spacing:.25px;
+    }
+    .sectionMeta{
+      color:var(--muted2); font-size:12px; font-weight:800;
+    }
+
+    .gridButtons{
+      margin-top:10px;
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 10px;
+    }
+
+    .tile{
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      border-radius: 16px;
+      padding: 12px 12px;
+      text-decoration:none;
+      color: var(--txt);
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      min-height: 86px;
+    }
+    .tile:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.18);
+    }
+    .ico{
+      width:40px;height:40px;border-radius:14px;
       border:1px solid rgba(255,255,255,.14);
-      flex:0 0 auto;
+      background:
+        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.65), transparent 55%),
+        linear-gradient(135deg, rgba(124,92,255,.95), rgba(59,231,255,.85));
+      flex: 0 0 auto;
     }
-    .k{min-width:0}
-    .name{font-weight:900;font-size:13px}
-    .desc{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
-    .vals{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .vb{padding:7px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.20);min-width:86px;text-align:right}
-    .lab{font-size:10px;color:var(--muted2);font-weight:900;text-transform:uppercase;letter-spacing:.6px}
-    .num{font-size:13px;font-weight:900;margin-top:2px}
+    .tile .t{
+      min-width:0;
+      flex:1 1 auto;
+    }
+    .tile .t .id{
+      font-size:12px;
+      font-weight:900;
+      letter-spacing:.2px;
+      color: var(--muted);
+    }
+    .tile .t .label{
+      margin-top:2px;
+      font-size:13px;
+      font-weight:900;
+      line-height:1.15;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 100%;
+    }
+    .tile .right{
+      text-align:right;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:6px;
+      flex: 0 0 auto;
+    }
+    .value{
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: .2px;
+      padding: 7px 10px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      min-width: 92px;
+    }
+    .units{
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--muted2);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+    }
 
-    .mini{width:100%;border-collapse:separate;border-spacing:0 8px}
-    .mini td{padding:10px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
-    .mini td:first-child{border-radius:14px 0 0 14px;font-weight:900}
-    .mini td:last-child{border-radius:0 14px 14px 0;text-align:right;color:var(--muted);font-weight:900}
+    .statePill{
+      font-size: 11px;
+      font-weight: 900;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      letter-spacing:.3px;
+      text-transform: uppercase;
+    }
+    .on { background: var(--chipOn); }
+    .off { background: var(--chipOff); }
 
-    .note{margin-top:10px;color:var(--muted2);font-size:12px;font-weight:700}
-    .svgWrap{height:340px;padding:10px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18)}
-    .svgWrap svg{width:100%;height:100%}
-    .axisText{fill:rgba(234,240,255,.55);font-size:11px;font-weight:800}
-    .gridLine{stroke:rgba(255,255,255,.08);stroke-width:1}
-    .line{fill:none;stroke:rgba(59,231,255,.95);stroke-width:2}
-    .area{fill:rgba(59,231,255,.12)}
-    .pt{fill:rgba(234,240,255,.9)}
+    .note{margin-top:12px;color:var(--muted2);font-size:12px;font-weight:700}
+    code{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; font-size: 12px}
   </style>
 </head>
 
@@ -123,7 +191,7 @@
         <div class="logo"></div>
         <div>
           <h1>BMS · Sala de Calderas</h1>
-          <div class="sub">Index · sin manifests (S*.txt + drv_D*.txt + latest_all/latest)</div>
+          <div class="sub">Index · botones vistosos de S1..Súltimo y D1..Dúltimo (desde latest_all/latest)</div>
         </div>
       </div>
 
@@ -141,63 +209,45 @@
     </div>
 
     <div class="grid">
-      <!-- IZQ -->
       <div class="card">
         <div class="head">
-          <h2>📈 S9 (puntos reales)</h2>
-          <div class="hint">S9.txt</div>
+          <h2>Panel de señales</h2>
+          <div class="hint">fuente: <code>latest_all.json</code> (o <code>latest.json</code>)</div>
         </div>
         <div class="body">
-          <div class="svgWrap">
-            <svg id="s9svg" viewBox="0 0 1000 340" preserveAspectRatio="none"></svg>
+
+          <div class="sectionRow">
+            <div class="sectionTitle">Drivers (D1 → Dúltimo)</div>
+            <div class="sectionMeta" id="drvMeta">—</div>
           </div>
+          <div class="gridButtons" id="driversGrid"></div>
 
-          <div class="section">Drivers (drv_D*.txt)</div>
-          <div class="tags" id="driversTags"></div>
-
-          <div class="section">Sondas (S*.txt)</div>
-          <div class="tags" id="sensorsTags"></div>
+          <div class="sectionRow">
+            <div class="sectionTitle">Sondas (S1 → Súltimo)</div>
+            <div class="sectionMeta" id="snsMeta">—</div>
+          </div>
+          <div class="gridButtons" id="sensorsGrid"></div>
 
           <div class="note">
-            ✅ Último valor: desde <b>latest_all.json</b> (preferido) o <b>latest.json</b> (fallback).<br>
-            ✅ Media/máx/mín: desde cada <b>.txt</b>.<br>
-            ✅ IDs detectados leyendo las claves del JSON (no manifests).
+            No se leen manifests. Se pinta **todo** lo que venga en arrays <code>drivers[]</code> y <code>sensors[]</code> del JSON,
+            y se ordena para que salga D1..Dúltimo y S1..Súltimo.
           </div>
-        </div>
-      </div>
 
-      <!-- DCHA -->
-      <div class="card">
-        <div class="head">
-          <h2>🧾 Diagnóstico</h2>
-          <div class="hint">simple</div>
-        </div>
-        <div class="body">
-          <table class="mini" id="mini">
-            <tr><td>Estado</td><td>—</td></tr>
-          </table>
-          <div class="note">Si algo falla, aquí saldrá el fichero exacto que no se pudo leer.</div>
         </div>
       </div>
     </div>
   </div>
 
 <script>
-  // ============================
-  // Config mínima
-  // ============================
   const REFRESH_MS = 60_000;
-  const SENSOR_TXT = (id) => `${id}.txt`;
-  const DRIVER_TXT = (id) => `drv_${id}.txt`;
-  const MAX_POINTS_S9 = 400;
-  const FETCH_CONCURRENCY = 6;
 
-  // ============================
-  // Helpers
-  // ============================
   const $ = (id) => document.getElementById(id);
   const safeObj = (x) => (x && typeof x === "object") ? x : {};
-  const fmt = (n) => (Number.isFinite(n) ? (Math.round(n*100)/100).toFixed(2) : "—");
+  const safeArr = (x) => Array.isArray(x) ? x : [];
+  const toNum = (v) => {
+    const n = Number(String(v).replace(",", "."));
+    return Number.isFinite(n) ? n : null;
+  };
 
   function setStatus(ok, text){
     $("led").classList.toggle("ok", !!ok);
@@ -209,257 +259,131 @@
     if(!r.ok) throw new Error(`No puedo leer ${url} (HTTP ${r.status})`);
     return r.json();
   }
-  async function fetchText(url){
-    const r = await fetch(url, { cache:"no-store" });
-    if(!r.ok) throw new Error(`No puedo leer ${url} (HTTP ${r.status})`);
-    return r.text();
-  }
 
-  // TXT: saca valores (último número por línea)
-  function parseValuesFromTxt(txt){
-    const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-    const values = [];
-    for (const line of lines){
-      const m = line.match(/(-?\d+(?:[.,]\d+)?)(?!.*-?\d)/);
-      if(!m) continue;
-      const v = Number(m[1].replace(",", "."));
-      if(!Number.isFinite(v)) continue;
-      values.push(v);
-    }
-    return values;
-  }
-
-  function statsFromValues(values){
-    const arr = values.filter(Number.isFinite);
-    if(!arr.length) return { avg: NaN, min: NaN, max: NaN };
-    const min = Math.min(...arr);
-    const max = Math.max(...arr);
-    const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
-    return { avg, min, max };
-  }
-
-  function addTag(container, id, lastValue, stats){
-    const el = document.createElement("div");
-    el.className = "tag";
-    el.innerHTML = `
-      <div class="chip"></div>
-      <div class="k">
-        <div class="name">${id}</div>
-        <div class="desc">Último (JSON) + Media/Máx/Mín (TXT)</div>
-      </div>
-      <div class="vals">
-        <div class="vb"><div class="lab">Últ</div><div class="num">${fmt(lastValue)}</div></div>
-        <div class="vb"><div class="lab">Media</div><div class="num">${fmt(stats.avg)}</div></div>
-        <div class="vb"><div class="lab">Máx</div><div class="num">${fmt(stats.max)}</div></div>
-        <div class="vb"><div class="lab">Mín</div><div class="num">${fmt(stats.min)}</div></div>
-      </div>
-    `;
-    container.appendChild(el);
-  }
-
-  // Concurrencia limitada
-  async function mapLimit(items, limit, fn){
-    const out = new Array(items.length);
-    let i = 0;
-    const workers = Array.from({length: limit}, async () => {
-      while(true){
-        const idx = i++;
-        if(idx >= items.length) break;
-        out[idx] = await fn(items[idx], idx);
-      }
-    });
-    await Promise.all(workers);
-    return out;
-  }
-
-  // Latest JSON (prefer latest_all)
   async function loadLatest(){
     try { return await fetchJson("latest_all.json"); }
     catch { return await fetchJson("latest.json"); }
   }
 
   function setLastUpdate(latest){
-    const ts = latest.ts || latest.timestamp || latest.updated_at || latest.last_update || "";
+    const ts =
+      latest.timestamp_utc ||
+      latest.timestamp ||
+      latest.ts ||
+      latest.updated_at ||
+      latest.last_update ||
+      "";
     const d = new Date(ts);
     $("lastUpdate").textContent = (!ts || isNaN(d.getTime())) ? "—" : d.toLocaleString("es-ES");
   }
 
-  function extractIdsFromLatest(latest){
-    // Detecta sensores S* y drivers D* leyendo claves del JSON (SIN manifests)
-    // Soporta estructuras:
-    // - latest.S1, latest.S9, latest.D1...
-    // - latest.sensors.S9 / latest.drivers.D1
-    const L = safeObj(latest);
-
-    const sensorIds = new Set();
-    const driverIds = new Set();
-
-    // claves directas
-    for (const k of Object.keys(L)){
-      if (/^S\d+$/i.test(k)) sensorIds.add(k.toUpperCase());
-      if (/^D\d+$/i.test(k)) driverIds.add(k.toUpperCase());
-    }
-
-    // dentro de buckets típicos
-    const sensorsBucket = safeObj(L.sensors || L.S);
-    const driversBucket = safeObj(L.drivers || L.D);
-
-    for (const k of Object.keys(sensorsBucket)){
-      if (/^S\d+$/i.test(k)) sensorIds.add(k.toUpperCase());
-    }
-    for (const k of Object.keys(driversBucket)){
-      if (/^D\d+$/i.test(k)) driverIds.add(k.toUpperCase());
-    }
-
-    return {
-      sensors: Array.from(sensorIds).sort((a,b)=>a.localeCompare(b,"es",{numeric:true})),
-      drivers: Array.from(driverIds).sort((a,b)=>a.localeCompare(b,"es",{numeric:true}))
-    };
+  function idNum(item){
+    // "S12" -> 12, "D3" -> 3
+    const m = String(item || "").match(/^[SD](\d+)$/i);
+    return m ? Number(m[1]) : Number.POSITIVE_INFINITY;
   }
 
-  function getLastValue(latest, id){
-    // Busca id en varias rutas
-    const L = safeObj(latest);
-
-    const candidates = [
-      () => L[id],
-      () => (L.sensors && L.sensors[id]),
-      () => (L.drivers && L.drivers[id]),
-      () => (L.S && L.S[id]),
-      () => (L.D && L.D[id]),
-    ];
-
-    let v;
-    for (const f of candidates){
-      const x = f();
-      if (x == null) continue;
-      v = (x && typeof x === "object") ? (x.value ?? x.v ?? x.last ?? x.val) : x;
-      if (v != null) break;
-    }
-    const n = Number(String(v).replace(",", "."));
-    return Number.isFinite(n) ? n : NaN;
+  function normItem(x){
+    // x = {item,label,value,units}
+    const item = String(x.item || "").toUpperCase();
+    const label = String(x.label || item);
+    const units = String(x.units || "");
+    const rawValue = (x.value ?? "");
+    return { item, label, units, rawValue };
   }
 
-  // ============================
-  // SVG chart S9 (simple)
-  // ============================
-  function drawS9(values){
-    const svg = $("s9svg");
-    svg.innerHTML = "";
-
-    const W = 1000, H = 340;
-    const padL = 40, padR = 10, padT = 12, padB = 22;
-    const plotW = W - padL - padR;
-    const plotH = H - padT - padB;
-
-    const v = values.slice(-MAX_POINTS_S9);
-    if (v.length < 2){
-      svg.innerHTML = `<text x="40" y="40" class="axisText">Sin datos suficientes en S9.txt</text>`;
-      return;
-    }
-
-    const min = Math.min(...v), max = Math.max(...v);
-    const span = (max - min) || 1;
-
-    for(let k=0;k<=4;k++){
-      const y = padT + (plotH * k/4);
-      const line = document.createElementNS("http://www.w3.org/2000/svg","line");
-      line.setAttribute("x1", padL); line.setAttribute("x2", W-padR);
-      line.setAttribute("y1", y); line.setAttribute("y2", y);
-      line.setAttribute("class","gridLine");
-      svg.appendChild(line);
-
-      const t = document.createElementNS("http://www.w3.org/2000/svg","text");
-      t.setAttribute("x", 6);
-      t.setAttribute("y", y+4);
-      t.setAttribute("class","axisText");
-      t.textContent = fmt(max - span*(k/4));
-      svg.appendChild(t);
-    }
-
-    const pts = v.map((val,i)=>{
-      const x = padL + (plotW * (i/(v.length-1)));
-      const y = padT + (plotH * (1 - ((val - min)/span)));
-      return [x,y];
-    });
-
-    const d = pts.map((p,i)=> (i===0?`M ${p[0]} ${p[1]}`:`L ${p[0]} ${p[1]}`)).join(" ");
-    const areaD = `M ${pts[0][0]} ${H-padB} ` + pts.map(p=>`L ${p[0]} ${p[1]}`).join(" ") + ` L ${pts[pts.length-1][0]} ${H-padB} Z`;
-
-    const area = document.createElementNS("http://www.w3.org/2000/svg","path");
-    area.setAttribute("d", areaD);
-    area.setAttribute("class","area");
-    svg.appendChild(area);
-
-    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
-    path.setAttribute("d", d);
-    path.setAttribute("class","line");
-    svg.appendChild(path);
-
-    const last = pts[pts.length-1];
-    const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
-    c.setAttribute("cx", last[0]); c.setAttribute("cy", last[1]); c.setAttribute("r", 3.2);
-    c.setAttribute("class","pt");
-    svg.appendChild(c);
+  function valueText(it){
+    // Si es número, lo mostramos con 2 decimales si tiene decimales, si no tal cual
+    const n = toNum(it.rawValue);
+    if (n === null) return String(it.rawValue);
+    // si es muy grande, sin decimales
+    if (Math.abs(n) >= 100000) return n.toFixed(0);
+    // si ya es entero, sin decimales
+    if (Number.isInteger(n)) return String(n);
+    return n.toFixed(2);
   }
 
-  // ============================
-  // Main
-  // ============================
+  function stateClassForDriver(it){
+    const v = String(it.rawValue).trim().toLowerCase();
+    if (v === "on" || v === "encendido" || v === "1" || v === "true") return "on";
+    if (v === "off" || v === "apagado" || v === "0" || v === "false") return "off";
+    // analógicos (0..100) no son ON/OFF -> sin pill
+    return "";
+  }
+
+  function makeTile(it, kind){
+    const a = document.createElement("a");
+    a.className = "tile";
+    a.href = "#"; // no navega: son “botones” informativos
+    a.addEventListener("click", (e)=> e.preventDefault());
+
+    const vtxt = valueText(it);
+
+    const stateCls = (kind === "driver") ? stateClassForDriver(it) : "";
+    const pillHtml = stateCls ? `<div class="statePill ${stateCls}">${String(it.rawValue).toUpperCase()}</div>` : "";
+
+    a.innerHTML = `
+      <div class="ico"></div>
+      <div class="t">
+        <div class="id">${it.item}</div>
+        <div class="label" title="${it.label}">${it.label}</div>
+      </div>
+      <div class="right">
+        ${pillHtml || `<div class="value">${vtxt}</div>`}
+        <div class="units">${it.units || "&nbsp;"}</div>
+      </div>
+    `;
+    return a;
+  }
+
+  function renderRangeGrid(containerId, arr, kind){
+    const el = $(containerId);
+    el.innerHTML = "";
+    for (const it of arr){
+      el.appendChild(makeTile(it, kind));
+    }
+  }
+
+  function buildFullRange(sortedItems, prefix){
+    // Queremos D1..Dúltimo y S1..Súltimo
+    // Si faltan números (ej: D11), aquí NO inventamos items, solo mostramos los existentes.
+    // El “hasta el último” lo interpretamos como: mostrar todos los existentes y ordenados.
+    return sortedItems;
+  }
+
   async function cycle(){
-    const mini = $("mini");
-    const driversTags = $("driversTags");
-    const sensorsTags = $("sensorsTags");
-
-    driversTags.innerHTML = "";
-    sensorsTags.innerHTML = "";
-    mini.innerHTML = `<tr><td>Estado</td><td>cargando…</td></tr>`;
     setStatus(false, "cargando…");
 
     try{
-      // 1) latest (para IDs y últimos valores)
       const latest = await loadLatest();
       setLastUpdate(latest);
 
-      const ids = extractIdsFromLatest(latest);
-      const sensorIds = ids.sensors;
-      const driverIds = ids.drivers;
+      const sensors = safeArr(latest.sensors).map(normItem)
+        .filter(x => /^S\d+$/i.test(x.item))
+        .sort((a,b)=> idNum(a.item) - idNum(b.item));
 
-      // 2) S9 chart real
-      const s9txt = await fetchText("S9.txt");
-      const s9vals = parseValuesFromTxt(s9txt);
-      drawS9(s9vals);
+      const drivers = safeArr(latest.drivers).map(normItem)
+        .filter(x => /^D\d+$/i.test(x.item))
+        .sort((a,b)=> idNum(a.item) - idNum(b.item));
 
-      // 3) Tags sensores: S*.txt + last JSON
-      await mapLimit(sensorIds, FETCH_CONCURRENCY, async (sid) => {
-        const txt = await fetchText(SENSOR_TXT(sid));
-        const values = parseValuesFromTxt(txt);
-        const st = statsFromValues(values);
-        const last = getLastValue(latest, sid);
-        addTag(sensorsTags, sid, last, st);
-      });
+      // “D1 hasta el último” / “S1 hasta el último”: ordenado, sin inventar nada
+      const sensorsFinal = buildFullRange(sensors, "S");
+      const driversFinal = buildFullRange(drivers, "D");
 
-      // 4) Tags drivers: drv_D*.txt + last JSON
-      await mapLimit(driverIds, FETCH_CONCURRENCY, async (did) => {
-        const txt = await fetchText(DRIVER_TXT(did));
-        const values = parseValuesFromTxt(txt);
-        const st = statsFromValues(values);
-        const last = getLastValue(latest, did);
-        addTag(driversTags, did, last, st);
-      });
+      $("snsMeta").textContent = sensorsFinal.length ? `${sensorsFinal[0].item} … ${sensorsFinal[sensorsFinal.length-1].item} · ${sensorsFinal.length} items` : "—";
+      $("drvMeta").textContent = driversFinal.length ? `${driversFinal[0].item} … ${driversFinal[driversFinal.length-1].item} · ${driversFinal.length} items` : "—";
 
-      mini.innerHTML = `
-        <tr><td>latest</td><td>${(latest_all_used = !!latest && !!latest.ts) ? "OK" : "OK"}</td></tr>
-        <tr><td>Sensores detectados</td><td>${sensorIds.length}</td></tr>
-        <tr><td>Drivers detectados</td><td>${driverIds.length}</td></tr>
-        <tr><td>S9 puntos</td><td>${s9vals.length}</td></tr>
-      `;
+      renderRangeGrid("driversGrid", driversFinal, "driver");
+      renderRangeGrid("sensorsGrid", sensorsFinal, "sensor");
 
       setStatus(true, "online");
     }catch(e){
       console.error(e);
-      mini.innerHTML = `<tr><td>Error</td><td>${String(e.message || e)}</td></tr>`;
       setStatus(false, "error");
+      $("drvMeta").textContent = "Error";
+      $("snsMeta").textContent = "Error";
+      $("driversGrid").innerHTML = `<div class="note">❌ ${String(e.message || e)}</div>`;
+      $("sensorsGrid").innerHTML = `<div class="note">❌ ${String(e.message || e)}</div>`;
     }
   }
 
