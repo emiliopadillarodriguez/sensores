@@ -577,7 +577,7 @@
       const t = document.getElementById("tableSensors");
 
       const sensors = (meta.sensors || [])
-        .filter(x => /^S\\d+$/.test(String(x.item||"").trim()))
+        .filter(x => /^S\d+$/.test(String(x.item||"").trim()))
         .slice()
         .sort((a,b)=> String(a.item).localeCompare(String(b.item), "es", { numeric:true }));
 
@@ -599,7 +599,7 @@
       const t = document.getElementById("tableDrivers");
 
       const drivers = (meta.drivers || [])
-        .filter(x => /^D\\d+$/.test(String(x.item||"").trim()))
+        .filter(x => /^D\d+$/.test(String(x.item||"").trim()))
         .slice()
         .sort((a,b)=> String(a.item).localeCompare(String(b.item), "es", { numeric:true }));
 
@@ -615,7 +615,6 @@
         } else if (st === "off"){
           stateHtml = `<span class="badge off">OFF</span>`;
         } else {
-          // válvulas u otros: 0.00 / 100.00 / etc
           const num = Number(String(d.value ?? "").replace(",", "."));
           const v = Number.isFinite(num) ? fmtNum(num) : escapeHtml(String(d.value ?? "—"));
           stateHtml = `<span class="badge">${v}</span>`;
@@ -651,10 +650,9 @@
       }catch(e){
         console.error(e);
         setConnection(false, "error (mira consola)");
-        document.getElementById("tableSensors").innerHTML =
-          `<tr><td>Error</td><td>${escapeHtml(String(e?.message || e))}</td></tr>`;
-        document.getElementById("tableDrivers").innerHTML =
-          `<tr><td>Error</td><td>${escapeHtml(String(e?.message || e))}</td></tr>`;
+        const msg = escapeHtml(String(e?.message || e));
+        document.getElementById("tableSensors").innerHTML = `<tr><td>Error</td><td>${msg}</td></tr>`;
+        document.getElementById("tableDrivers").innerHTML = `<tr><td>Error</td><td>${msg}</td></tr>`;
       }
     }
 
