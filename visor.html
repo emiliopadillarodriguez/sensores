@@ -24,7 +24,11 @@
       padding:8px 10px; border-radius:12px; font-size:13px; display:flex; gap:8px; align-items:center;
     }
     .chip b{ font-weight:700; }
-    input[type="number"]{ width:92px; padding:6px 8px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+    input[type="number"], input[type="datetime-local"]{
+      padding:6px 8px; border:1px solid var(--line); border-radius:10px; background:#fff;
+    }
+    input[type="number"]{ width:92px; }
+    input[type="datetime-local"]{ width:190px; }
     button{ padding:8px 10px; border:1px solid var(--line); border-radius:12px; background:#fff; cursor:pointer; }
     button:hover{ background:#f8fafc; }
 
@@ -62,7 +66,7 @@
 <body>
   <h1>BMS Trends · Analógicas (S) + Digitales (D)</h1>
   <div class="sub">
-    Estilo SCADA/BMS: S en bandas (small multiples) + D como “digital trend” con bloques ON.
+    S en bandas + D en “digital trend” tipo SCADA. Rango de fechas aplicable a los ejes X.
     Labels desde <code>labels.json</code> (si existe).
   </div>
 
@@ -71,10 +75,19 @@
     <div class="chip">Labels: <b id="labelsLabel">—</b></div>
     <div class="chip">S con datos: <b id="loadedS">0</b></div>
     <div class="chip">D con datos: <b id="loadedD">0</b></div>
-    <div class="chip">Rango: <b id="rangeLabel">—</b></div>
+    <div class="chip">Rango actual: <b id="rangeLabel">—</b></div>
 
     <div class="chip">MAX_S <input id="maxS" type="number" min="1" max="300" value="40"></div>
     <div class="chip">MAX_D <input id="maxD" type="number" min="1" max="300" value="40"></div>
+
+    <div class="chip">
+      Inicio <input id="dtStart" type="datetime-local">
+    </div>
+    <div class="chip">
+      Fin <input id="dtEnd" type="datetime-local">
+    </div>
+    <button id="applyRangeBtn">Aplicar rango</button>
+    <button id="resetRangeBtn">Reset</button>
 
     <button id="reloadBtn">Recargar</button>
   </div>
@@ -88,7 +101,7 @@
           <button id="hideAllS">Ocultar todas</button>
         </span>
       </h2>
-      <div class="muted">Lista con nombres (desde labels.json). Cada S seleccionado se dibuja como una banda autoajustada.</div>
+      <div class="muted">Cada S seleccionado se dibuja como una banda autoajustada con mismo eje X.</div>
       <div class="list" id="listS"></div>
     </div>
 
@@ -100,7 +113,7 @@
           <button id="hideAllD">Ocultar todas</button>
         </span>
       </h2>
-      <div class="muted">Carriles por driver y bloques ON (SCADA). Lista con nombres (desde labels.json).</div>
+      <div class="muted">Carriles por driver y bloques ON (SCADA). OFF queda tenue.</div>
       <div class="list" id="listD"></div>
     </div>
   </div>
@@ -142,19 +155,15 @@ async function detectDataDir(){
 let LABELS = { S:{}, D:{} };
 
 function getLabel(kind, key){
-  // kind: "S" o "D", key: "S1" o "D1"
   return (LABELS?.[kind]?.[key]) || key;
 }
 
 async function loadLabels(dir){
-  // Intento: labels.json dentro del mismo DATA_DIR
   const txt = await tryFetchText(`${dir}/labels.json`);
   if(!txt) return null;
   try{
     const obj = JSON.parse(txt);
-    const S = obj?.S || {};
-    const D = obj?.D || {};
-    return { S, D };
+    return { S: obj?.S || {}, D: obj?.D || {} };
   }catch{
     return null;
   }
@@ -197,10 +206,24 @@ function parseD(text){
 
 /* ===== Store ===== */
 const store = {
-  S: new Map(), // "S1" -> { pts, selected }
-  D: new Map(), // "D1" -> { ev, selected }
-  range: { minT:null, maxT:null }
+  S: new Map(),
+  D: new Map(),
+  range: { minT:null, maxT:null },     // rango total de datos
+  view:  { minT:null, maxT:null }      // rango seleccionado por el usuario (si aplica)
 };
+
+function fmt(t){
+  if(t == null) return "—";
+  const d = new Date(t);
+  const s = d.toISOString().slice(0,19).replace("T"," ");
+  return s;
+}
+
+function updateRangeLabel(){
+  const minT = store.view.minT ?? store.range.minT;
+  const maxT = store.view.maxT ?? store.range.maxT;
+  document.getElementById("rangeLabel").textContent = (minT && maxT) ? `${fmt(minT)} → ${fmt(maxT)}` : "—";
+}
 
 /* ===== UI list ===== */
 function buildList(containerId, keys, group){
@@ -226,17 +249,16 @@ function buildList(containerId, keys, group){
     const nameBox = document.createElement("div");
     nameBox.className = "name";
 
-    const k = document.createElement("div");
-    k.className = "k";
-    k.textContent = key;
-
     const lbl = document.createElement("div");
     lbl.className = "lbl";
     lbl.textContent = getLabel(group, key);
 
+    const k = document.createElement("div");
+    k.className = "k";
+    k.textContent = key;
+
     nameBox.appendChild(lbl);
     nameBox.appendChild(k);
-
     label.appendChild(nameBox);
 
     const tag = document.createElement("span");
@@ -265,11 +287,16 @@ function initCharts(){
   window.addEventListener("resize", ()=>{ chartS && chartS.resize(); chartD && chartD.resize(); });
 }
 
-/* ----- S bands ----- */
+function getActiveMinMax(){
+  const minT = store.view.minT ?? store.range.minT;
+  const maxT = store.view.maxT ?? store.range.maxT;
+  return { minT, maxT };
+}
+
+/* ----- Render S: bandas ----- */
 function renderS(){
   const selected = Array.from(store.S.entries()).filter(([,v])=>v.selected);
-  const minT = store.range.minT;
-  const maxT = store.range.maxT;
+  const { minT, maxT } = getActiveMinMax();
 
   if(selected.length === 0){
     chartS.setOption({
@@ -281,7 +308,6 @@ function renderS(){
   }
 
   const n = Math.min(selected.length, 16);
-
   const grids = [], xAxes = [], yAxes = [], series = [];
   const topPad = 24, bottomPad = 38, gap = 10;
   const usableH = 100 - topPad - bottomPad;
@@ -327,7 +353,6 @@ function renderS(){
       emphasis:{ focus:"series" }
     });
 
-    // Etiqueta de carril (nombre bonito)
     series.push({
       name: nice + "_label",
       type:"custom",
@@ -362,8 +387,8 @@ function renderS(){
     },
     axisPointer:{ link:[{ xAxisIndex:"all" }] },
     dataZoom:[
-      { type:"inside", xAxisIndex: xAxes.map((_,i)=>i), filterMode:"none" },
-      { type:"slider", xAxisIndex: xAxes.map((_,i)=>i), height:22, bottom:8 }
+      { type:"inside", xAxisIndex: xAxes.map((_,i)=>i), filterMode:"none", startValue: minT, endValue: maxT },
+      { type:"slider", xAxisIndex: xAxes.map((_,i)=>i), height:22, bottom:8, startValue: minT, endValue: maxT }
     ],
     grid:grids,
     xAxis:xAxes,
@@ -372,7 +397,7 @@ function renderS(){
   }, true);
 }
 
-/* ----- D digital timeline ----- */
+/* ----- Render D: digital timeline ----- */
 function buildDigitalIntervals(events, minT, maxT){
   if(!events || events.length===0) return [];
   const segs = [];
@@ -386,8 +411,7 @@ function buildDigitalIntervals(events, minT, maxT){
 
 function renderD(){
   const selected = Array.from(store.D.entries()).filter(([,v])=>v.selected);
-  const minT = store.range.minT;
-  const maxT = store.range.maxT;
+  const { minT, maxT } = getActiveMinMax();
 
   if(selected.length===0){
     chartD.setOption({
@@ -398,7 +422,7 @@ function renderD(){
     return;
   }
 
-  const cats = selected.map(([k]) => getLabel("D", k)); // 👈 nombres bonitos en el carril
+  const cats = selected.map(([k]) => getLabel("D", k));
   const blocks = [];
   selected.forEach(([k, v], idx)=>{
     const intervals = buildDigitalIntervals(v.ev, minT, maxT);
@@ -407,7 +431,7 @@ function renderD(){
 
   chartD.setOption({
     animation:false,
-    grid:{ left: 260, right: 18, top: 12, bottom: 38 }, // más ancho porque los nombres son largos
+    grid:{ left: 260, right: 18, top: 12, bottom: 38 },
     tooltip:{
       trigger:"item",
       backgroundColor:"rgba(15,23,42,.92)",
@@ -434,8 +458,8 @@ function renderD(){
       splitLine:{ show:true, lineStyle:{ color:"#f1f5f9" } }
     },
     dataZoom:[
-      { type:"inside", xAxisIndex:0, filterMode:"none" },
-      { type:"slider", xAxisIndex:0, height:22, bottom:8 }
+      { type:"inside", xAxisIndex:0, filterMode:"none", startValue: minT, endValue: maxT },
+      { type:"slider", xAxisIndex:0, height:22, bottom:8, startValue: minT, endValue: maxT }
     ],
     series:[
       {
@@ -443,13 +467,13 @@ function renderD(){
         silent:true,
         renderItem:(params, api)=>{
           const idx = api.value(2);
-          const y = api.coord([store.range.minT, idx])[1];
+          const y = api.coord([minT, idx])[1];
           const h = api.size([0,1])[1]*0.65;
-          const x0 = api.coord([store.range.minT, idx])[0];
-          const x1 = api.coord([store.range.maxT, idx])[0];
+          const x0 = api.coord([minT, idx])[0];
+          const x1 = api.coord([maxT, idx])[0];
           return { type:"rect", shape:{ x:x0, y:y-h/2, width:(x1-x0), height:h }, style:{ fill:"rgba(148,163,184,0.10)" } };
         },
-        data: cats.map((_,i)=>[store.range.minT, store.range.maxT, i])
+        data: cats.map((_,i)=>[minT, maxT, i])
       },
       {
         name:"ON",
@@ -474,8 +498,67 @@ function renderD(){
   }, true);
 }
 
-/* ===== Render global ===== */
-function renderAll(){ renderS(); renderD(); }
+function renderAll(){
+  updateRangeLabel();
+  renderS();
+  renderD();
+}
+
+/* ===== Rango elegido por el usuario ===== */
+function setInputsFromRange(minT, maxT){
+  // datetime-local requiere formato YYYY-MM-DDTHH:MM (en hora local)
+  function toLocalInput(t){
+    const d = new Date(t);
+    const pad = (n)=>String(n).padStart(2,"0");
+    const yyyy = d.getFullYear();
+    const mm = pad(d.getMonth()+1);
+    const dd = pad(d.getDate());
+    const hh = pad(d.getHours());
+    const mi = pad(d.getMinutes());
+    return `${yyyy}-${mm}-${dd}T${hh}:${mi}`;
+  }
+  if(minT) document.getElementById("dtStart").value = toLocalInput(minT);
+  if(maxT) document.getElementById("dtEnd").value = toLocalInput(maxT);
+}
+
+function applyUserRange(){
+  const startStr = document.getElementById("dtStart").value;
+  const endStr = document.getElementById("dtEnd").value;
+
+  if(!store.range.minT || !store.range.maxT) return;
+
+  let a = startStr ? new Date(startStr).getTime() : null;
+  let b = endStr ? new Date(endStr).getTime() : null;
+
+  if(a != null && Number.isNaN(a)) a = null;
+  if(b != null && Number.isNaN(b)) b = null;
+
+  // Si falta uno, usamos el rango total en ese extremo
+  if(a == null) a = store.range.minT;
+  if(b == null) b = store.range.maxT;
+
+  // Orden correcto
+  if(a > b){ const tmp = a; a = b; b = tmp; }
+
+  // Clamp al rango real de datos
+  a = Math.max(a, store.range.minT);
+  b = Math.min(b, store.range.maxT);
+
+  store.view.minT = a;
+  store.view.maxT = b;
+
+  // actualizar inputs con valores “normalizados”
+  setInputsFromRange(a,b);
+  renderAll();
+}
+
+function resetUserRange(){
+  store.view.minT = null;
+  store.view.maxT = null;
+  // ponemos por defecto el rango completo en los inputs
+  if(store.range.minT && store.range.maxT) setInputsFromRange(store.range.minT, store.range.maxT);
+  renderAll();
+}
 
 /* ===== Carga de datos ===== */
 async function loadAll(){
@@ -484,7 +567,6 @@ async function loadAll(){
   DATA_DIR = await detectDataDir();
   document.getElementById("dataDirLabel").textContent = DATA_DIR ? (DATA_DIR + "/") : "NO ENCONTRADA";
 
-  // labels.json
   LABELS = { S:{}, D:{} };
   const labelsLoaded = DATA_DIR ? await loadLabels(DATA_DIR) : null;
   if(labelsLoaded){
@@ -497,7 +579,9 @@ async function loadAll(){
   if(!DATA_DIR){
     document.getElementById("loadedS").textContent = "0";
     document.getElementById("loadedD").textContent = "0";
-    document.getElementById("rangeLabel").textContent = "—";
+    store.range.minT = store.range.maxT = null;
+    store.view.minT = store.view.maxT = null;
+    updateRangeLabel();
     chartS.clear(); chartD.clear();
     return;
   }
@@ -543,16 +627,15 @@ async function loadAll(){
   document.getElementById("loadedS").textContent = String(loadedS);
   document.getElementById("loadedD").textContent = String(loadedD);
 
-  if(store.range.minT != null && store.range.maxT != null){
-    const a = new Date(store.range.minT).toISOString().slice(0,19).replace("T"," ");
-    const b = new Date(store.range.maxT).toISOString().slice(0,19).replace("T"," ");
-    document.getElementById("rangeLabel").textContent = `${a} → ${b}`;
-  }else{
-    document.getElementById("rangeLabel").textContent = "—";
-  }
-
   buildList("listS", Array.from(store.S.keys()), "S");
   buildList("listD", Array.from(store.D.keys()), "D");
+
+  // Por defecto ponemos en inputs el rango completo
+  if(store.range.minT && store.range.maxT) setInputsFromRange(store.range.minT, store.range.maxT);
+
+  // al recargar, reseteamos vista al rango completo (si prefieres mantenerlo, dímelo)
+  store.view.minT = null;
+  store.view.maxT = null;
 
   renderAll();
 }
@@ -563,6 +646,9 @@ document.getElementById("showAllS").addEventListener("click", ()=>setAll("S", tr
 document.getElementById("hideAllS").addEventListener("click", ()=>setAll("S", false));
 document.getElementById("showAllD").addEventListener("click", ()=>setAll("D", true));
 document.getElementById("hideAllD").addEventListener("click", ()=>setAll("D", false));
+
+document.getElementById("applyRangeBtn").addEventListener("click", applyUserRange);
+document.getElementById("resetRangeBtn").addEventListener("click", resetUserRange);
 
 loadAll();
 </script>
