@@ -150,4 +150,96 @@
         return ka[0]-kb[0] || ka[1]-kb[1] || a.item.localeCompare(b.item);
       });
 
-    return { ts, i
+    return { ts, items };
+  }
+
+  function tileHTML(it){
+    const ok = it.value !== "";
+    return `
+      <button class="tile" data-item="${it.item}">
+        <div class="top">
+          <span class="tag">${it.item}</span>
+          <span class="status ${ok ? "ok":"bad"}">${ok ? "OK":"sin dato"}</span>
+        </div>
+        <div class="value">${it.value || "—"} ${it.units ? `<span style="font-size:12px;color:var(--muted);font-weight:800">(${it.units})</span>` : ""}</div>
+        <div class="label">${it.label}</div>
+        <div class="meta">🕒 ${it.timestamp_utc ? prettyTs(it.timestamp_utc) : "—"}</div>
+      </button>
+    `;
+  }
+
+  function renderTiles(items){
+    elTiles.innerHTML = items.map(tileHTML).join("");
+  }
+
+  async function loadS9Series(){
+    const txt = await fetchText(base + "S9.txt");
+    const lines = txt.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+    const pts = [];
+    for (const line of lines){
+      const [tsRaw, valRaw] = line.split(";");
+      if (!tsRaw || !valRaw) continue;
+      const d = new Date(tsRaw.trim());
+      const v = Number(String(valRaw).trim().replace(",", "."));
+      if (isNaN(d.getTime()) || !Number.isFinite(v)) continue;
+      pts.push({ x: d, y: v });
+    }
+    pts.sort((a,b)=>a.x-b.x);
+    return pts;
+  }
+
+  function renderChart(points){
+    const ctx = document.getElementById("chartS9");
+    if (chart) chart.destroy();
+    chart = new Chart(ctx, {
+      type:"line",
+      data:{ datasets:[{ label:"S9", data:points, pointRadius:0, borderWidth:2, tension:.2 }]},
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        parsing:false,
+        scales:{
+          x:{ type:"time", ticks:{ color:"#a9b8d6" }, grid:{ color:"rgba(255,255,255,.08)" }},
+          y:{ ticks:{ color:"#a9b8d6" }, grid:{ color:"rgba(255,255,255,.08)" }}
+        },
+        plugins:{ legend:{ labels:{ color:"#e7eefc" } } }
+      }
+    });
+  }
+
+  async function refresh(){
+    btnRefresh.disabled = true;
+    btnRefresh.textContent = "Actualizando…";
+    try{
+      if (!base) base = await detectBase();
+      elBaseUsed.textContent = base;
+
+      const pack = await loadLatestAll();
+      elLastUpdate.textContent = pack.ts ? prettyTs(pack.ts) : "—";
+      renderTiles(pack.items);
+
+      const s9 = await loadS9Series();
+      renderChart(s9);
+
+    }catch(e){
+      console.error(e);
+      elTiles.innerHTML = `<div class="err">❌ No se pudieron cargar los datos. (Mira consola F12) <br><br><span class="mono">${String(e.message || e)}</span></div>`;
+      elLastUpdate.textContent = "—";
+      elBaseUsed.textContent = "—";
+    }finally{
+      btnRefresh.disabled = false;
+      btnRefresh.textContent = "Actualizar";
+    }
+  }
+
+  btnRefresh.addEventListener("click", refresh);
+  refresh();
+})();
+</script>
+
+<!-- Si el eje X no se ve, descomenta:
+<script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+-->
+</body>
+</html>
