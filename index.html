@@ -3,177 +3,127 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>BMS Dashboard · Index</title>
+  <title>BMS · Index</title>
 
-  <!-- Tipografía -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 
   <style>
     :root{
-      --bg0:#070A12;
-      --bg1:#0B1020;
-      --card: rgba(255,255,255,.06);
-      --stroke: rgba(255,255,255,.10);
-      --stroke2: rgba(255,255,255,.14);
-      --txt:#EAF0FF;
-      --muted: rgba(234,240,255,.68);
-      --muted2: rgba(234,240,255,.45);
-      --ok:#35D07F;
-      --warn:#F7C948;
-      --bad:#FF5C5C;
-      --accent:#7C5CFF;
-      --accent2:#3BE7FF;
-      --shadow: 0 18px 45px rgba(0,0,0,.45);
-      --radius: 18px;
+      --bg0:#070A12; --bg1:#0B1020; --txt:#EAF0FF;
+      --muted: rgba(234,240,255,.68); --muted2: rgba(234,240,255,.45);
+      --stroke: rgba(255,255,255,.10); --stroke2: rgba(255,255,255,.16);
+      --shadow: 0 18px 45px rgba(0,0,0,.45); --r:18px;
+      --ok:#35D07F; --bad:#FF5C5C; --accent:#7C5CFF; --accent2:#3BE7FF;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
-      margin:0;
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
       color:var(--txt);
       background:
         radial-gradient(1200px 700px at 15% 0%, rgba(124,92,255,.25), transparent 55%),
         radial-gradient(900px 600px at 85% 10%, rgba(59,231,255,.18), transparent 60%),
-        radial-gradient(700px 700px at 55% 90%, rgba(53,208,127,.10), transparent 62%),
         linear-gradient(180deg, var(--bg0), var(--bg1));
-      overflow-x:hidden;
     }
-    .wrap{max-width:1280px;margin:0 auto;padding:26px 18px 70px}
-
-    .topbar{
-      display:flex;gap:14px;align-items:center;justify-content:space-between;
-      padding:14px 16px;border:1px solid var(--stroke);
+    .wrap{max-width:1280px;margin:0 auto;padding:22px 16px 60px}
+    .top{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      padding:14px 16px; border:1px solid var(--stroke);
       background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
-      border-radius: calc(var(--radius) + 4px);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
+      border-radius:calc(var(--r)+4px); box-shadow:var(--shadow); backdrop-filter: blur(10px);
+      flex-wrap:wrap;
     }
-    .brand{display:flex;align-items:center;gap:12px;min-width:260px}
+    .brand{display:flex; align-items:center; gap:12px}
     .logo{
       width:38px;height:38px;border-radius:12px;
       background:
         radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.8), transparent 55%),
         linear-gradient(135deg, rgba(124,92,255,1), rgba(59,231,255,1));
-      box-shadow:0 10px 25px rgba(124,92,255,.25);
-      border:1px solid rgba(255,255,255,.16);
+      border:1px solid rgba(255,255,255,.18);
+      box-shadow: 0 12px 28px rgba(124,92,255,.25);
     }
-    .brand h1{font-size:14px;line-height:1.1;margin:0;letter-spacing:.2px}
-    .brand .sub{font-size:12px;color:var(--muted);margin-top:2px}
-    .nav{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .brand h1{margin:0;font-size:14px;line-height:1.1;font-weight:900}
+    .brand .sub{font-size:12px;color:var(--muted);margin-top:2px;font-weight:800}
+    .nav{display:flex;gap:10px;flex-wrap:wrap}
     .btn{
-      display:inline-flex;align-items:center;gap:10px;
-      padding:10px 12px;border-radius:14px;border:1px solid var(--stroke2);
-      background:rgba(255,255,255,.06);color:var(--txt);text-decoration:none;
-      font-weight:800;font-size:13px;transition:transform .12s ease, background .12s ease, border-color .12s ease;
-      user-select:none;
+      display:inline-flex; align-items:center; gap:10px;
+      padding:10px 12px; border-radius:14px;
+      border:1px solid var(--stroke2); background:rgba(255,255,255,.06);
+      color:var(--txt); text-decoration:none; font-weight:900; font-size:13px;
     }
-    .btn:hover{transform:translateY(-1px);background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.22)}
-    .btn .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(180deg, var(--accent), var(--accent2));box-shadow:0 0 0 4px rgba(124,92,255,.14)}
+    .dot{width:10px;height:10px;border-radius:999px;background:linear-gradient(180deg,var(--accent),var(--accent2));box-shadow:0 0 0 4px rgba(124,92,255,.14)}
+    .status{
+      display:flex; align-items:center; gap:10px;
+      padding:8px 10px; border-radius:999px; border:1px solid var(--stroke);
+      background:rgba(255,255,255,.05);
+      color:var(--muted); font-size:12px; font-weight:900;
+    }
+    .led{width:8px;height:8px;border-radius:999px;background:var(--bad);box-shadow:0 0 0 4px rgba(255,92,92,.12)}
+    .led.ok{background:var(--ok);box-shadow:0 0 0 4px rgba(53,208,127,.12)}
 
-    .status{display:flex;align-items:flex-end;gap:14px;min-width:290px;justify-content:flex-end;text-align:right}
-    .pill{
-      display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;
-      border:1px solid var(--stroke);background:rgba(255,255,255,.05);
-      color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap;
-    }
-    .led{width:8px;height:8px;border-radius:999px;background:var(--warn);box-shadow:0 0 0 4px rgba(247,201,72,.12)}
-    .led.ok{background:var(--ok); box-shadow:0 0 0 4px rgba(53,208,127,.12)}
-    .led.bad{background:var(--bad); box-shadow:0 0 0 4px rgba(255,92,92,.12)}
-    .meta{display:flex;flex-direction:column;gap:2px}
-    .meta .t{font-size:12px;color:var(--muted);font-weight:800}
-    .meta .v{font-size:13px;font-weight:900;letter-spacing:.2px}
-
-    .grid{margin-top:16px;display:grid;grid-template-columns:1.4fr .9fr;gap:16px;align-items:start}
-    @media (max-width: 980px){
-      .grid{grid-template-columns:1fr}
-      .status{min-width:auto}
-      .brand{min-width:auto}
-    }
+    .grid{margin-top:16px;display:grid;grid-template-columns:1.25fr .75fr;gap:16px;align-items:start}
+    @media(max-width:980px){.grid{grid-template-columns:1fr}}
 
     .card{
       border:1px solid var(--stroke);
-      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
+      background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border-radius:var(--r); box-shadow:var(--shadow); backdrop-filter: blur(10px);
       overflow:hidden;
     }
-    .card .head{
-      padding:14px 16px;display:flex;align-items:center;justify-content:space-between;
-      border-bottom:1px solid rgba(255,255,255,.08);gap:10px
-    }
-    .card .head h2{margin:0;font-size:14px;font-weight:900;letter-spacing:.2px}
-    .card .head .hint{color:var(--muted);font-size:12px;font-weight:800;white-space:nowrap}
-    .card .body{padding:14px 16px}
+    .head{padding:14px 16px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .head h2{margin:0;font-size:14px;font-weight:900}
+    .head .hint{font-size:12px;color:var(--muted);font-weight:900}
+    .body{padding:14px 16px}
 
-    .chartWrap{height:360px;padding:10px 8px 12px}
-    canvas{display:block;width:100% !important;height:100% !important}
-
-    .foot{
-      margin-top:14px;color:var(--muted2);font-size:12px;
-      display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between;align-items:center
-    }
-    .spark{width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.25);box-shadow:0 0 0 4px rgba(255,255,255,.06);display:inline-block;margin-right:8px;vertical-align:-1px}
-
-    .sectionTitle{
-      margin:14px 0 8px;
-      display:flex;align-items:center;justify-content:space-between;gap:10px;
-      color: var(--muted);
-      font-weight: 900;
-      letter-spacing:.2px;
-      font-size:12px;
-      text-transform: uppercase;
-    }
-
-    .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+    .section{margin-top:14px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.2px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
     .tag{
       display:flex;align-items:center;gap:10px;
       padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.06);
-      min-width:240px;flex:1 1 240px;
+      flex:1 1 280px; min-width:280px;
     }
     .chip{
-      width:36px;height:36px;border-radius:12px;border:1px solid rgba(255,255,255,.14);
+      width:36px;height:36px;border-radius:12px;
       background:
         radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.7), transparent 55%),
         linear-gradient(135deg, rgba(124,92,255,.95), rgba(59,231,255,.85));
-      box-shadow:0 10px 25px rgba(59,231,255,.10);
+      border:1px solid rgba(255,255,255,.14);
       flex:0 0 auto;
     }
-    .tag .k{display:flex;flex-direction:column;gap:2px;min-width:0}
-    .tag .k .name{font-weight:900;font-size:13px;letter-spacing:.2px}
-    .tag .k .desc{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
-    .tag .vals{margin-left:auto;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end}
-    .valBox{
-      padding:7px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.10);
-      background:rgba(0,0,0,.20);min-width:86px;text-align:right
-    }
-    .valBox .lab{font-size:10px;color:var(--muted2);font-weight:900;letter-spacing:.6px;text-transform:uppercase}
-    .valBox .num{font-size:13px;font-weight:900;letter-spacing:.2px;margin-top:2px}
+    .k{min-width:0}
+    .name{font-weight:900;font-size:13px}
+    .desc{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:520px}
+    .vals{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .vb{padding:7px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.20);min-width:86px;text-align:right}
+    .lab{font-size:10px;color:var(--muted2);font-weight:900;text-transform:uppercase;letter-spacing:.6px}
+    .num{font-size:13px;font-weight:900;margin-top:2px}
 
     .mini{width:100%;border-collapse:separate;border-spacing:0 8px}
     .mini td{padding:10px 12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10)}
     .mini td:first-child{border-radius:14px 0 0 14px;font-weight:900}
-    .mini td:last-child{border-radius:0 14px 14px 0;text-align:right;color:var(--muted);font-weight:800}
+    .mini td:last-child{border-radius:0 14px 14px 0;text-align:right;color:var(--muted);font-weight:900}
 
-    .tinyNote{color:var(--muted2);font-size:11px;font-weight:700}
+    .note{margin-top:10px;color:var(--muted2);font-size:12px;font-weight:700}
+    .svgWrap{height:340px;padding:10px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18)}
+    .svgWrap svg{width:100%;height:100%}
+    .axisText{fill:rgba(234,240,255,.55);font-size:11px;font-weight:800}
+    .gridLine{stroke:rgba(255,255,255,.08);stroke-width:1}
+    .line{fill:none;stroke:rgba(59,231,255,.95);stroke-width:2}
+    .area{fill:rgba(59,231,255,.12)}
+    .pt{fill:rgba(234,240,255,.9)}
   </style>
 </head>
 
 <body>
   <div class="wrap">
-    <div class="topbar">
+    <div class="top">
       <div class="brand">
         <div class="logo"></div>
         <div>
           <h1>BMS · Sala de Calderas</h1>
-          <div class="sub">Index · Resumen comercial (sin inventar datos)</div>
+          <div class="sub">Index · Últimos valores desde latest_all.json / latest.json</div>
         </div>
       </div>
 
@@ -183,11 +133,10 @@
       </div>
 
       <div class="status">
-        <span class="pill"><span id="led" class="led"></span><span id="connText">cargando…</span></span>
-        <div class="meta">
-          <div class="t">Última actualización</div>
-          <div class="v" id="lastUpdate">—</div>
-        </div>
+        <span id="led" class="led"></span>
+        <span id="statusText">cargando…</span>
+        <span style="opacity:.6">·</span>
+        <span id="lastUpdate">—</span>
       </div>
     </div>
 
@@ -195,416 +144,334 @@
       <!-- IZQ -->
       <div class="card">
         <div class="head">
-          <h2>📈 Tendencia real · S9</h2>
-          <div class="hint">puntos leídos de <b>S9.txt</b></div>
+          <h2>📈 S9 (puntos reales)</h2>
+          <div class="hint">S9.txt</div>
         </div>
         <div class="body">
-          <div class="chartWrap">
-            <canvas id="chartS9"></canvas>
+          <div class="svgWrap">
+            <svg id="s9svg" viewBox="0 0 1000 340" preserveAspectRatio="none"></svg>
           </div>
 
-          <div class="foot">
-            <div><span class="spark"></span>Etiquetas con último / media / máx / mín calculado desde los <b>.txt</b>.</div>
-            <div class="tinyNote">
-              Nombres desde <b>sensors_manifest.json</b> y <b>drivers_manifest.json</b>.
-              Últimas lecturas desde <b>latest_all.json</b> / <b>latest.json</b> / <b>drivers_latest.json</b>.
-            </div>
+          <div class="section"><span>Drivers</span><span id="driversCount" class="hint">—</span></div>
+          <div class="tags" id="driversTags"></div>
+
+          <div class="section"><span>Sondas</span><span id="sensorsCount" class="hint">—</span></div>
+          <div class="tags" id="sensorsTags"></div>
+
+          <div class="note">
+            ✅ Últimos valores: <b>latest_all.json</b> (preferido) o <b>latest.json</b> (fallback).<br>
+            ✅ Nombres: <b>drivers_manifest.json</b> y <b>sensors_manifest.json</b>.<br>
+            ✅ Media/máx/mín: desde cada <b>.txt</b>.
           </div>
-
-          <div class="sectionTitle">Drivers</div>
-          <div class="tags" id="tagsDrivers"></div>
-
-          <div class="sectionTitle">Sondas</div>
-          <div class="tags" id="tagsSensors"></div>
         </div>
       </div>
 
       <!-- DCHA -->
       <div class="card">
         <div class="head">
-          <h2>🧾 Resumen rápido</h2>
-          <div class="hint">KPIs</div>
+          <h2>🧾 Diagnóstico</h2>
+          <div class="hint">qué está cargando</div>
         </div>
         <div class="body">
-          <table class="mini" id="miniTable">
-            <tr><td>Cargando…</td><td>—</td></tr>
+          <table class="mini" id="mini">
+            <tr><td>Estado</td><td>—</td></tr>
           </table>
-          <div class="foot">
-            <div>Auto-refresh: <b>60 s</b></div>
-            <div id="pathsNote" class="tinyNote">Leyendo ficheros en la misma ruta del index.html</div>
-          </div>
+          <div class="note">Si algo falla, el “Diagnóstico” te dirá exactamente qué fichero no se pudo leer.</div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <script>
-    // =========================
-    // Config
-    // =========================
-    const REFRESH_MS = 60_000;
+<script>
+  // ============================
+  // Config mínima
+  // ============================
+  const REFRESH_MS = 60_000;
+  const SENSOR_TXT = (id) => `${id}.txt`;
+  const DRIVER_TXT = (id) => `drv_${id}.txt`;
+  const MAX_POINTS_S9 = 400;
+  const FETCH_CONCURRENCY = 6;
 
-    // TXT por defecto (si el manifest no trae el nombre del fichero)
-    const SENSOR_TXT = (id) => `${id}.txt`;          // p.ej. S9 -> S9.txt
-    const DRIVER_TXT = (id) => `drv_${id}.txt`;      // p.ej. D1 -> drv_D1.txt
+  // ============================
+  // Helpers
+  // ============================
+  const $ = (id) => document.getElementById(id);
+  const safeObj = (x) => (x && typeof x === "object") ? x : {};
+  const fmt = (n) => (Number.isFinite(n) ? (Math.round(n*100)/100).toFixed(2) : "—");
 
-    // =========================
-    // Helpers
-    // =========================
-    const safeObj = (x) => (x && typeof x === "object") ? x : {};
-    const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 100) / 100).toFixed(2) : "—");
+  function setStatus(ok, text){
+    $("led").classList.toggle("ok", !!ok);
+    $("statusText").textContent = text;
+  }
 
-    function setConnection(ok, text){
-      const led = document.getElementById("led");
-      const connText = document.getElementById("connText");
-      led.classList.remove("ok","bad");
-      led.classList.add(ok ? "ok" : "bad");
-      connText.textContent = text;
-    }
+  async function fetchJson(url){
+    const r = await fetch(url, { cache:"no-store" });
+    if(!r.ok) throw new Error(`No puedo leer ${url} (HTTP ${r.status})`);
+    return r.json();
+  }
+  async function fetchText(url){
+    const r = await fetch(url, { cache:"no-store" });
+    if(!r.ok) throw new Error(`No puedo leer ${url} (HTTP ${r.status})`);
+    return r.text();
+  }
 
-    async function fetchText(url){
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
-      return await res.text();
-    }
-    async function fetchJson(url){
-      const res = await fetch(url, { cache: "no-store" });
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${url}`);
-      return await res.json();
-    }
-
-    // Parser robusto para líneas tipo:
-    // - "2026-01-12T10:00:00+01:00,52.3"
-    // - "2026-01-12 10:00:00; 52.3"
-    // - "timestamp value"
-    // - "52.3"
-    function parseSeriesFromTxt(txt){
-      const lines = txt.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-
-      const series = [];
-      for (const line of lines){
-        // extrae el último número "real" de la línea
-        const m = line.match(/(-?\d+(?:[.,]\d+)?)(?!.*-?\d)/);
-        if (!m) continue;
-
-        const rawNum = m[1].replace(",", ".");
-        const v = Number(rawNum);
-        if (!Number.isFinite(v)) continue;
-
-        // timestamp: lo que haya antes del número
-        const left = line.slice(0, m.index).trim().replace(/[;,]$/, "").trim();
-        const ts = left || ""; // si no hay fecha, dejamos vacío
-
-        series.push({ ts, v });
+  function normalizeManifest(raw){
+    const o = safeObj(raw);
+    let arr = [];
+    if (Array.isArray(o)) arr = o;
+    else if (Array.isArray(o.items)) arr = o.items;
+    else if (Array.isArray(o.sensors)) arr = o.sensors;
+    else if (Array.isArray(o.drivers)) arr = o.drivers;
+    else {
+      for (const [id, v] of Object.entries(o)){
+        if (v && typeof v === "object") arr.push({ id, ...v });
       }
-      return series;
     }
+    return arr
+      .map(it => ({
+        id: (it.id || it.code || it.key || "").toString().trim(),
+        name: (it.name || it.title || it.label || "").toString().trim()
+      }))
+      .filter(it => it.id);
+  }
 
-    function computeStats(values){
-      const arr = values.filter(v => Number.isFinite(v));
-      if (!arr.length) return { last: NaN, avg: NaN, min: NaN, max: NaN };
-      const min = Math.min(...arr);
-      const max = Math.max(...arr);
-      const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
-      const last = arr[arr.length - 1];
-      return { last, avg, min, max };
+  // TXT: saca valores (último número por línea)
+  function parseValuesFromTxt(txt){
+    const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    const values = [];
+    const tss = [];
+    for (const line of lines){
+      const m = line.match(/(-?\d+(?:[.,]\d+)?)(?!.*-?\d)/);
+      if(!m) continue;
+      const v = Number(m[1].replace(",", "."));
+      if(!Number.isFinite(v)) continue;
+      const left = line.slice(0, m.index).trim().replace(/[;,]$/, "").trim();
+      tss.push(left);
+      values.push(v);
     }
+    return { tss, values };
+  }
 
-    function labelFromTs(ts, idx){
-      // Si ts se puede convertir a Date, lo formateamos. Si no, mostramos algo corto.
-      const d = new Date(ts);
-      if (!ts || isNaN(d.getTime())) return `${idx+1}`;
-      return d.toLocaleString("es-ES", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"2-digit" });
-    }
+  function statsFromValues(values){
+    const arr = values.filter(Number.isFinite);
+    if(!arr.length) return { last: NaN, avg: NaN, min: NaN, max: NaN };
+    const min = Math.min(...arr);
+    const max = Math.max(...arr);
+    const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
+    const last = arr[arr.length-1];
+    return { last, avg, min, max };
+  }
 
-    function buildTag(container, name, stats, unit=""){
-      const el = document.createElement("div");
-      el.className = "tag";
-      el.innerHTML = `
-        <div class="chip"></div>
-        <div class="k">
-          <div class="name">${name}</div>
-          <div class="desc">Último / Media / Máx / Mín</div>
-        </div>
-        <div class="vals">
-          <div class="valBox"><div class="lab">Últ</div><div class="num">${fmt(stats.last)}${unit}</div></div>
-          <div class="valBox"><div class="lab">Media</div><div class="num">${fmt(stats.avg)}${unit}</div></div>
-          <div class="valBox"><div class="lab">Máx</div><div class="num">${fmt(stats.max)}${unit}</div></div>
-          <div class="valBox"><div class="lab">Mín</div><div class="num">${fmt(stats.min)}${unit}</div></div>
-        </div>
-      `;
-      container.appendChild(el);
-    }
+  function addTag(container, title, lastValue, stats){
+    const el = document.createElement("div");
+    el.className = "tag";
+    el.innerHTML = `
+      <div class="chip"></div>
+      <div class="k">
+        <div class="name">${title}</div>
+        <div class="desc">Último (JSON) + Media/Máx/Mín (TXT)</div>
+      </div>
+      <div class="vals">
+        <div class="vb"><div class="lab">Últ</div><div class="num">${fmt(lastValue)}</div></div>
+        <div class="vb"><div class="lab">Media</div><div class="num">${fmt(stats.avg)}</div></div>
+        <div class="vb"><div class="lab">Máx</div><div class="num">${fmt(stats.max)}</div></div>
+        <div class="vb"><div class="lab">Mín</div><div class="num">${fmt(stats.min)}</div></div>
+      </div>
+    `;
+    container.appendChild(el);
+  }
 
-    // =========================
-    // Chart S9
-    // =========================
-    let chart;
-    function initChart(){
-      const ctx = document.getElementById("chartS9");
-      chart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels: [],
-          datasets: [{
-            label: "S9",
-            data: [],
-            tension: 0.25,
-            borderWidth: 2,
-            pointRadius: 1.5,
-            pointHoverRadius: 4,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              callbacks: {
-                label: (c) => ` S9: ${fmt(c.parsed.y)}`
-              }
-            }
-          },
-          scales: {
-            x: {
-              ticks: { maxTicksLimit: 10, color: "rgba(234,240,255,.55)" },
-              grid: { color: "rgba(255,255,255,.06)" }
-            },
-            y: {
-              ticks: { color: "rgba(234,240,255,.55)" },
-              grid: { color: "rgba(255,255,255,.06)" }
-            }
-          }
-        }
-      });
-    }
-
-    function updateChartFromSeries(series){
-      const labels = series.map((p,i) => labelFromTs(p.ts, i));
-      const values = series.map(p => Number(p.v));
-      chart.data.labels = labels;
-      chart.data.datasets[0].data = values;
-      chart.update();
-    }
-
-    // =========================
-    // Lectura de manifests + latest
-    // =========================
-    function normalizeManifest(obj, kind){
-      // Acepta varias formas típicas:
-      // - array: [{id:"S9", name:"Impulsión", file:"S9.txt"}, ...]
-      // - objeto: {"S9":{"name":"...","file":"S9.txt"}, ...}
-      // - objeto con claves: {items:[...]} o {sensors:[...]} / {drivers:[...]}
-      const o = safeObj(obj);
-
-      let items = [];
-      if (Array.isArray(o)) items = o;
-      else if (Array.isArray(o.items)) items = o.items;
-      else if (Array.isArray(o[kind])) items = o[kind];
-      else {
-        // objeto mapa
-        for (const [id, v] of Object.entries(o)){
-          if (!v || typeof v !== "object") continue;
-          items.push({ id, ...v });
-        }
+  // Concurrencia limitada (para que no se "cuelgue")
+  async function mapLimit(items, limit, fn){
+    const out = new Array(items.length);
+    let i = 0;
+    const workers = Array.from({length: limit}, async () => {
+      while(true){
+        const idx = i++;
+        if(idx >= items.length) break;
+        out[idx] = await fn(items[idx], idx);
       }
+    });
+    await Promise.all(workers);
+    return out;
+  }
 
-      // normaliza campos
-      return items
-        .filter(it => it && (it.id || it.code || it.key))
-        .map(it => {
-          const id = it.id || it.code || it.key;
-          const name = it.name || it.title || id;
-          const file = it.file || it.txt || it.path || "";
-          return { id, name, file };
-        });
+  // ============================
+  // Latest JSON (prefer latest_all)
+  // ============================
+  async function loadLatest(){
+    try { return await fetchJson("latest_all.json"); }
+    catch { return await fetchJson("latest.json"); }
+  }
+
+  function getLastFromLatest(latest, id){
+    // Soporta varias formas:
+    // 1) latest[id] = number
+    // 2) latest.sensors[id] / latest.drivers[id]
+    // 3) latest.sensors[id].value / latest.drivers[id].value
+    const L = safeObj(latest);
+
+    const tryPaths = [
+      () => L[id],
+      () => L.sensors && L.sensors[id],
+      () => L.drivers && L.drivers[id],
+      () => L.S && L.S[id],
+      () => L.D && L.D[id],
+    ];
+
+    let v;
+    for (const f of tryPaths){
+      const x = f();
+      if (x == null) continue;
+      v = (x && typeof x === "object") ? (x.value ?? x.v ?? x.last ?? x.val) : x;
+      if (v != null) break;
+    }
+    const n = Number(String(v).replace(",", "."));
+    return Number.isFinite(n) ? n : NaN;
+  }
+
+  function setLastUpdate(latest){
+    const ts = latest.ts || latest.timestamp || latest.updated_at || latest.last_update || "";
+    const d = new Date(ts);
+    $("lastUpdate").textContent = (!ts || isNaN(d.getTime())) ? "—" : d.toLocaleString("es-ES");
+  }
+
+  // ============================
+  // SVG chart S9 (simple)
+  // ============================
+  function drawS9(values){
+    const svg = $("s9svg");
+    svg.innerHTML = "";
+
+    const W = 1000, H = 340;
+    const padL = 40, padR = 10, padT = 12, padB = 22;
+    const plotW = W - padL - padR;
+    const plotH = H - padT - padB;
+
+    const v = values.slice(-MAX_POINTS_S9);
+    if (v.length < 2){
+      svg.innerHTML = `<text x="40" y="40" class="axisText">Sin datos suficientes en S9.txt</text>`;
+      return;
     }
 
-    function pickLastUpdate(latestAny){
-      // Intenta sacar fecha desde varios JSON habituales
-      const cands = [
-        latestAny?.ts, latestAny?.timestamp, latestAny?.updated_at,
-        latestAny?.last_update, latestAny?.date
-      ].filter(Boolean);
+    const min = Math.min(...v), max = Math.max(...v);
+    const span = (max - min) || 1;
 
-      if (!cands.length) return null;
-      const d = new Date(cands[0]);
-      return isNaN(d.getTime()) ? null : d;
+    for(let k=0;k<=4;k++){
+      const y = padT + (plotH * k/4);
+      const line = document.createElementNS("http://www.w3.org/2000/svg","line");
+      line.setAttribute("x1", padL); line.setAttribute("x2", W-padR);
+      line.setAttribute("y1", y); line.setAttribute("y2", y);
+      line.setAttribute("class","gridLine");
+      svg.appendChild(line);
+
+      const t = document.createElementNS("http://www.w3.org/2000/svg","text");
+      t.setAttribute("x", 6);
+      t.setAttribute("y", y+4);
+      t.setAttribute("class","axisText");
+      t.textContent = fmt(max - span*(k/4));
+      svg.appendChild(t);
     }
 
-    function setLastUpdateFromJson(json){
-      const el = document.getElementById("lastUpdate");
-      const d = pickLastUpdate(json);
-      el.textContent = d
-        ? d.toLocaleString("es-ES", { weekday:"short", year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" })
-        : "—";
-    }
+    const pts = v.map((val,i)=>{
+      const x = padL + (plotW * (i/(v.length-1)));
+      const y = padT + (plotH * (1 - ((val - min)/span)));
+      return [x,y];
+    });
 
-    function valueFromLatest(latest, id, kind){
-      // kind: "sensors" | "drivers"
-      // Soportamos:
-      // - latest.sensors.S9 = 52.3
-      // - latest.sensors.S9.value = 52.3
-      // - latest.S9 = 52.3
-      // - latest.drivers.D1 ...
-      const l = safeObj(latest);
+    const d = pts.map((p,i)=> (i===0?`M ${p[0]} ${p[1]}`:`L ${p[0]} ${p[1]}`)).join(" ");
+    const areaD = `M ${pts[0][0]} ${H-padB} ` + pts.map(p=>`L ${p[0]} ${p[1]}`).join(" ") + ` L ${pts[pts.length-1][0]} ${H-padB} Z`;
 
-      const bucket = safeObj(l[kind]);
-      let v = bucket[id];
+    const area = document.createElementNS("http://www.w3.org/2000/svg","path");
+    area.setAttribute("d", areaD);
+    area.setAttribute("class","area");
+    svg.appendChild(area);
 
-      if (v && typeof v === "object") {
-        v = v.value ?? v.v ?? v.last ?? v.reading ?? v.val;
-      }
-      if (v == null) v = l[id];
-      if (v && typeof v === "object") v = v.value ?? v.v;
-      const n = Number(String(v).replace(",", "."));
-      return Number.isFinite(n) ? n : NaN;
-    }
+    const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+    path.setAttribute("d", d);
+    path.setAttribute("class","line");
+    svg.appendChild(path);
 
-    // =========================
-    // Render
-    // =========================
-    async function loadStatsFromTxt(txtFile){
-      const txt = await fetchText(txtFile);
-      const series = parseSeriesFromTxt(txt);
-      const values = series.map(p => Number(p.v)).filter(Number.isFinite);
-      const stats = computeStats(values);
-      return { series, stats };
-    }
+    const last = pts[pts.length-1];
+    const c = document.createElementNS("http://www.w3.org/2000/svg","circle");
+    c.setAttribute("cx", last[0]); c.setAttribute("cy", last[1]); c.setAttribute("r", 3.2);
+    c.setAttribute("class","pt");
+    svg.appendChild(c);
+  }
 
-    async function renderAll(){
-      const tagsDrivers = document.getElementById("tagsDrivers");
-      const tagsSensors = document.getElementById("tagsSensors");
-      const miniTable = document.getElementById("miniTable");
+  // ============================
+  // Main
+  // ============================
+  async function cycle(){
+    const mini = $("mini");
+    const driversTags = $("driversTags");
+    const sensorsTags = $("sensorsTags");
 
-      tagsDrivers.innerHTML = "";
-      tagsSensors.innerHTML = "";
-      miniTable.innerHTML = `<tr><td>Cargando…</td><td>—</td></tr>`;
+    driversTags.innerHTML = "";
+    sensorsTags.innerHTML = "";
+    mini.innerHTML = `<tr><td>Estado</td><td>cargando…</td></tr>`;
+    setStatus(false, "cargando…");
 
-      // 1) Carga manifests (nombres)
-      const [sensorsManifestRaw, driversManifestRaw] = await Promise.all([
+    try{
+      // 1) Manifests (nombres)
+      const [sensManRaw, drvManRaw] = await Promise.all([
         fetchJson("sensors_manifest.json"),
         fetchJson("drivers_manifest.json")
       ]);
+      const sensors = normalizeManifest(sensManRaw);
+      const drivers = normalizeManifest(drvManRaw);
 
-      const sensorsList = normalizeManifest(sensorsManifestRaw, "sensors");
-      const driversList = normalizeManifest(driversManifestRaw, "drivers");
+      $("sensorsCount").textContent = sensors.length.toString();
+      $("driversCount").textContent = drivers.length.toString();
 
-      // 2) Carga latest (últimas lecturas) - probamos varios, sin inventar
-      //    Si no existe uno, seguimos con los otros.
-      let latestAll = null, latestSensors = null, latestDrivers = null;
+      // 2) Latest (últimos valores)
+      const latest = await loadLatest();
+      setLastUpdate(latest);
 
-      const tryLoad = async (fn) => { try { return await fn(); } catch { return null; } };
+      // 3) S9 chart (puntos reales)
+      const s9txt = await fetchText("S9.txt");
+      const s9vals = parseValuesFromTxt(s9txt).values;
+      drawS9(s9vals);
 
-      latestAll = await tryLoad(() => fetchJson("latest_all.json"));
-      latestSensors = await tryLoad(() => fetchJson("latest.json"));
-      latestDrivers = await tryLoad(() => fetchJson("drivers_latest.json"));
-
-      const latestForDate = latestAll || latestSensors || latestDrivers || {};
-      setLastUpdateFromJson(latestForDate);
-
-      // 3) S9 REAL desde S9.txt (gráfica + stats)
-      const s9Txt = (sensorsList.find(s => String(s.id).toUpperCase() === "S9")?.file) || "S9.txt";
-      const s9 = await loadStatsFromTxt(s9Txt);
-      // Limitamos puntos por rendimiento (si tiene miles de líneas)
-      const seriesTrim = s9.series.slice(-600);
-      updateChartFromSeries(seriesTrim);
-
-      // 4) Etiquetas SONDAS: stats desde TXT (cada S*.txt)
-      //    Para no saturar el navegador, hacemos carga concurrente "limitada"
-      async function mapLimit(items, limit, mapper){
-        const out = [];
-        let i = 0;
-        const workers = Array.from({length: limit}, async () => {
-          while (i < items.length){
-            const idx = i++;
-            out[idx] = await mapper(items[idx], idx);
-          }
-        });
-        await Promise.all(workers);
-        return out;
-      }
-
-      // Sensors
-      const sensorsSorted = sensorsList
-        .slice()
-        .sort((a,b)=> String(a.id).localeCompare(String(b.id), "es", {numeric:true}));
-
-      const sensorsStats = await mapLimit(sensorsSorted, 6, async (s) => {
-        const txtFile = s.file || SENSOR_TXT(s.id);
-        const { stats } = await loadStatsFromTxt(txtFile);
-        // Si quieres, podrías comparar stats.last con latest JSON, pero NO lo forzamos.
-        // (por si el JSON tiene la última lectura y el TXT también; normalmente coinciden)
-        return { ...s, txtFile, stats };
+      // 4) Tags: last desde JSON + stats desde TXT
+      // Sondas
+      const sensorsSorted = sensors.slice().sort((a,b)=>a.id.localeCompare(b.id,"es",{numeric:true}));
+      await mapLimit(sensorsSorted, FETCH_CONCURRENCY, async (s) => {
+        const txt = await fetchText(SENSOR_TXT(s.id));
+        const { values } = parseValuesFromTxt(txt);
+        const st = statsFromValues(values);
+        const last = getLastFromLatest(latest, s.id);
+        addTag(sensorsTags, `${s.name || s.id} (${s.id})`, last, st);
       });
 
       // Drivers
-      const driversSorted = driversList
-        .slice()
-        .sort((a,b)=> String(a.id).localeCompare(String(b.id), "es", {numeric:true}));
-
-      const driversStats = await mapLimit(driversSorted, 6, async (d) => {
-        const txtFile = d.file || DRIVER_TXT(d.id);
-        const { stats } = await loadStatsFromTxt(txtFile);
-        return { ...d, txtFile, stats };
+      const driversSorted = drivers.slice().sort((a,b)=>a.id.localeCompare(b.id,"es",{numeric:true}));
+      await mapLimit(driversSorted, FETCH_CONCURRENCY, async (d) => {
+        const txt = await fetchText(DRIVER_TXT(d.id));
+        const { values } = parseValuesFromTxt(txt);
+        const st = statsFromValues(values);
+        const last = getLastFromLatest(latest, d.id);
+        addTag(driversTags, `${d.name || d.id} (${d.id})`, last, st);
       });
 
-      // 5) Pintar tags (primero S9 destacado)
-      // S9 destacado usando stats reales ya cargadas
-      const s9Name = sensorsList.find(s => String(s.id).toUpperCase() === "S9")?.name || "S9";
-      buildTag(tagsSensors, `${s9Name} (S9)`, s9.stats);
+      // 5) Diagnóstico OK
+      mini.innerHTML = `
+        <tr><td>latest usado</td><td>${latest && (latest.ts || latest.timestamp || latest.updated_at || latest.last_update) ? "OK" : "OK (sin ts)"}</td></tr>
+        <tr><td>S9.txt</td><td>${s9vals.length} puntos</td></tr>
+        <tr><td>Sondas</td><td>${sensors.length}</td></tr>
+        <tr><td>Drivers</td><td>${drivers.length}</td></tr>
+      `;
 
-      for (const s of sensorsStats){
-        if (String(s.id).toUpperCase() === "S9") continue;
-        buildTag(tagsSensors, `${s.name} (${s.id})`, s.stats);
-      }
-
-      for (const d of driversStats){
-        buildTag(tagsDrivers, `${d.name} (${d.id})`, d.stats);
-      }
-
-      // 6) Mini resumen (sin inventar: usamos stats calculadas de TXT)
-      const rows = [];
-
-      rows.push([`S9 (últ/media/máx/mín)`, `${fmt(s9.stats.last)} / ${fmt(s9.stats.avg)} / ${fmt(s9.stats.max)} / ${fmt(s9.stats.min)}`]);
-
-      // top 10 sensores
-      sensorsStats
-        .filter(s => String(s.id).toUpperCase() !== "S9")
-        .slice(0, 10)
-        .forEach(s => rows.push([`${s.id} · ${s.name}`, `${fmt(s.stats.last)} (avg ${fmt(s.stats.avg)})`]));
-
-      // top 10 drivers
-      driversStats.slice(0, 10)
-        .forEach(d => rows.push([`${d.id} · ${d.name}`, `${fmt(d.stats.last)} (avg ${fmt(d.stats.avg)})`]));
-
-      miniTable.innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+      setStatus(true, "online");
+    }catch(e){
+      console.error(e);
+      mini.innerHTML = `<tr><td>Error</td><td>${String(e.message || e)}</td></tr>`;
+      setStatus(false, "error");
     }
+  }
 
-    // =========================
-    // Init + Refresh
-    // =========================
-    initChart();
-
-    async function cycle(){
-      try{
-        setConnection(false, "cargando…");
-        await renderAll();
-        setConnection(true, "online");
-      }catch(e){
-        console.error(e);
-        setConnection(false, "error de carga");
-        // Mostramos el error mínimo sin romper diseño
-        const miniTable = document.getElementById("miniTable");
-        miniTable.innerHTML = `<tr><td>Error</td><td>${String(e.message || e)}</td></tr>`;
-      }
-    }
-
-    cycle();
-    setInterval(cycle, REFRESH_MS);
-  </script>
+  cycle();
+  setInterval(cycle, REFRESH_MS);
+</script>
 </body>
 </html>
