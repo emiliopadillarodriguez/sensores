@@ -1,277 +1,659 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Sala de Calderas - Dashboard</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>BMS Dashboard · Index</title>
 
-  <!-- Chart.js -->
+  <!-- Tipografía -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js (gráfica) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     :root{
-      --bg:#0b1220;
-      --panel:#0f1a2d;
-      --border:rgba(255,255,255,.08);
-      --muted:rgba(255,255,255,.65);
-      --text:rgba(255,255,255,.92);
-      --good:#22c55e;
-      --warn:#f59e0b;
-      --bad:#ef4444;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --radius: 16px;
+      --bg0:#070A12;
+      --bg1:#0B1020;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.09);
+      --stroke: rgba(255,255,255,.10);
+      --stroke2: rgba(255,255,255,.14);
+      --txt:#EAF0FF;
+      --muted: rgba(234,240,255,.68);
+      --muted2: rgba(234,240,255,.45);
+      --ok:#35D07F;
+      --warn:#F7C948;
+      --bad:#FF5C5C;
+      --accent:#7C5CFF;
+      --accent2:#3BE7FF;
+      --shadow: 0 18px 45px rgba(0,0,0,.45);
+      --radius: 18px;
     }
 
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: var(--bg);
-      color:var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--txt);
+      background:
+        radial-gradient(1200px 700px at 15% 0%, rgba(124,92,255,.25), transparent 55%),
+        radial-gradient(900px 600px at 85% 10%, rgba(59,231,255,.18), transparent 60%),
+        radial-gradient(700px 700px at 55% 90%, rgba(53,208,127,.10), transparent 62%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
     }
 
-    header{
-      position:sticky; top:0; z-index:10;
-      background: rgba(11,18,32,.9);
-      border-bottom:1px solid var(--border);
+    .wrap{
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 26px 18px 70px;
     }
 
-    .wrap{max-width:1200px;margin:0 auto;padding:14px 16px;}
-
+    /* Topbar */
     .topbar{
-      display:flex; gap:12px; align-items:center; justify-content:space-between;
-      flex-wrap:wrap;
+      display:flex;
+      gap:14px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 14px 16px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
 
     .brand{
-      display:flex; align-items:center; gap:10px;
-      font-weight:700;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
     }
-    .dot{
-      width:10px;height:10px;border-radius:50%;
-      background:var(--good);
-    }
-    .sub{font-size:12px;color:var(--muted)}
 
-    .btnrow{display:flex; gap:10px; flex-wrap:wrap;}
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background:
+        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.8), transparent 55%),
+        linear-gradient(135deg, rgba(124,92,255,1), rgba(59,231,255,1));
+      box-shadow: 0 10px 25px rgba(124,92,255,.25);
+      border: 1px solid rgba(255,255,255,.16);
+    }
+
+    .brand h1{
+      font-size: 14px;
+      line-height: 1.1;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .brand .sub{
+      font-size:12px;
+      color: var(--muted);
+      margin-top:2px;
+    }
+
+    .nav{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+
     .btn{
-      border:1px solid var(--border);
-      background: rgba(255,255,255,.05);
-      color:var(--text);
-      padding:10px 12px;
-      border-radius:12px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:13px;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke2);
+      background: rgba(255,255,255,.06);
+      color: var(--txt);
+      text-decoration:none;
+      font-weight: 600;
+      font-size: 13px;
+      transition: transform .12s ease, background .12s ease, border-color .12s ease;
+      user-select:none;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.22);
+    }
+    .btn .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 4px rgba(124,92,255,.14);
     }
 
-    main .wrap{padding:18px 16px;}
+    .status{
+      display:flex;
+      align-items:flex-end;
+      gap:14px;
+      min-width: 290px;
+      justify-content:flex-end;
+      text-align:right;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      white-space:nowrap;
+    }
+    .led{
+      width:8px;height:8px;border-radius:999px;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(247,201,72,.12);
+    }
+    .led.ok{background:var(--ok); box-shadow: 0 0 0 4px rgba(53,208,127,.12)}
+    .led.bad{background:var(--bad); box-shadow: 0 0 0 4px rgba(255,92,92,.12)}
+    .meta{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .meta .t{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .meta .v{
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing:.2px;
+    }
+
+    /* Layout */
+    .grid{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 16px;
+      align-items:start;
+    }
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      .status{min-width:auto}
+      .brand{min-width:auto}
+    }
 
     .card{
-      background: rgba(255,255,255,.03);
-      border:1px solid var(--border);
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      margin-bottom:14px;
+      backdrop-filter: blur(10px);
+      overflow:hidden;
     }
 
-    .cardhead{
-      padding:12px 14px;
-      border-bottom:1px solid var(--border);
+    .card .head{
+      padding: 14px 16px;
       display:flex;
+      align-items:center;
       justify-content:space-between;
-      align-items:flex-end;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      gap: 10px;
+    }
+    .card .head h2{
+      margin:0;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+    .card .head .hint{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      white-space:nowrap;
     }
 
-    .title{font-weight:700;font-size:14px}
-    .meta{font-size:12px;color:var(--muted)}
+    .card .body{padding: 14px 16px;}
 
-    .cardbody{padding:14px}
-
-    .statusgrid{
-      display:grid;
-      grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
-      gap:10px;
+    /* Chart */
+    .chartWrap{
+      height: 360px;
+      padding: 10px 8px 12px;
     }
+    canvas{display:block; width:100% !important; height:100% !important;}
 
-    .pill{
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:10px;
+    /* Vistosas etiquetas */
+    .tags{
       display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .tag{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      min-width: 240px;
+      flex: 1 1 240px;
+    }
+    .chip{
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.7), transparent 55%),
+        linear-gradient(135deg, rgba(124,92,255,.95), rgba(59,231,255,.85));
+      box-shadow: 0 10px 25px rgba(59,231,255,.10);
+      flex: 0 0 auto;
+    }
+    .tag .k{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .tag .k .name{
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing:.2px;
+    }
+    .tag .k .desc{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 520px;
+    }
+    .tag .vals{
+      margin-left:auto;
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .valBox{
+      padding: 7px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      min-width: 86px;
+      text-align:right;
+    }
+    .valBox .lab{
+      font-size: 10px;
+      color: var(--muted2);
+      font-weight: 800;
+      letter-spacing:.6px;
+      text-transform: uppercase;
+    }
+    .valBox .num{
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      margin-top: 2px;
+    }
+
+    /* Tabla compacta (fallback/extra) */
+    .mini{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 8px;
+    }
+    .mini td{
+      padding: 10px 12px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .mini td:first-child{
+      border-radius: 14px 0 0 14px;
+      font-weight: 900;
+    }
+    .mini td:last-child{
+      border-radius: 0 14px 14px 0;
+      text-align:right;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .foot{
+      margin-top: 14px;
+      color: var(--muted2);
+      font-size: 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
       justify-content:space-between;
       align-items:center;
     }
 
-    .tag{
-      font-size:12px;
-      padding:4px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
+    .spark{
+      width:10px;height:10px;border-radius:999px;
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+      display:inline-block;
+      margin-right: 8px;
+      vertical-align: -1px;
     }
-    .good{border-color:#22c55e;color:#22c55e}
-    .warn{border-color:#f59e0b;color:#f59e0b}
-    .bad{border-color:#ef4444;color:#ef4444}
-
-    .grid{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:14px;
-    }
-
-    @media (max-width:900px){
-      .grid{grid-template-columns:1fr}
-    }
-
-    .chartwrap{
-      position:relative;
-      width:100%;
-      height:280px;
-    }
-
-    canvas{width:100% !important;height:100% !important}
   </style>
 </head>
 
 <body>
-<header>
   <div class="wrap">
+
+    <!-- TOPBAR -->
     <div class="topbar">
-      <div>
-        <div class="brand"><span class="dot"></span> SALA DE CALDERAS</div>
-        <div class="sub">Dashboard</div>
-      </div>
-
-      <div class="btnrow">
-        <button class="btn" onclick="location.href='historicos_s.html'">Históricos S</button>
-        <button class="btn" onclick="location.href='historicos_d.html'">Históricos Driver</button>
-        <button class="btn" onclick="refreshAll()">Actualizar</button>
-      </div>
-    </div>
-  </div>
-</header>
-
-<main>
-  <div class="wrap">
-
-    <!-- ESTADO GENERAL -->
-    <div class="card">
-      <div class="cardhead">
+      <div class="brand">
+        <div class="logo"></div>
         <div>
-          <div class="title">Estado de bombas</div>
-          <div class="meta">Situación actual</div>
+          <h1>BMS · Sala de Calderas</h1>
+          <div class="sub">Index · Resumen y KPIs</div>
         </div>
-        <div class="meta" id="lastUpdate">—</div>
       </div>
 
-      <div class="cardbody">
-        <div class="statusgrid">
-          <div class="pill"><b>Bomba 1</b><span class="tag good">OK</span></div>
-          <div class="pill"><b>Bomba 2</b><span class="tag warn">Standby</span></div>
-          <div class="pill"><b>Bomba 3</b><span class="tag bad">Fallo</span></div>
-          <div class="pill"><b>Bomba 4</b><span class="tag good">OK</span></div>
-        </div>
+      <div class="nav">
+        <a class="btn" href="esquema.html"><span class="dot"></span> Esquema</a>
+        <a class="btn" href="visor.html"><span class="dot"></span> Visor</a>
+      </div>
 
-        <div class="meta" id="lastValues" style="margin-top:10px">
-          Últimos valores: S9 = — °C · S10 = — °C
+      <div class="status">
+        <span class="pill"><span id="led" class="led"></span><span id="connText">conectando…</span></span>
+        <div class="meta">
+          <div class="t">Última actualización</div>
+          <div class="v" id="lastUpdate">—</div>
         </div>
       </div>
     </div>
 
-    <!-- GRAFICAS -->
     <div class="grid">
 
+      <!-- IZQ: Gráfica S9 + etiquetas -->
       <div class="card">
-        <div class="cardhead">
-          <div class="title">Temperatura S9</div>
-          <div class="meta" id="s9meta">—</div>
+        <div class="head">
+          <h2>📈 Tendencia · S9</h2>
+          <div class="hint">últimas 24 h (o lo que haya disponible)</div>
         </div>
-        <div class="cardbody">
-          <div class="chartwrap">
+        <div class="body">
+          <div class="chartWrap">
             <canvas id="chartS9"></canvas>
           </div>
+
+          <div class="foot">
+            <div><span class="spark"></span>Debajo tienes las “etiquetas vistosas” con último / media / máx / mín.</div>
+            <div id="dataNote">Fuente: <b>data/latest.json</b> y <b>data/history_s9.json</b></div>
+          </div>
+
+          <div class="tags" id="tagsDrivers"></div>
+          <div class="tags" id="tagsSensors"></div>
         </div>
       </div>
 
+      <!-- DCHA: Resumen compacto -->
       <div class="card">
-        <div class="cardhead">
-          <div class="title">Temperatura S10</div>
-          <div class="meta" id="s10meta">—</div>
+        <div class="head">
+          <h2>🧾 Resumen rápido</h2>
+          <div class="hint">Drivers & S*</div>
         </div>
-        <div class="cardbody">
-          <div class="chartwrap">
-            <canvas id="chartS10"></canvas>
+        <div class="body">
+          <table class="mini" id="miniTable">
+            <tr><td>Cargando…</td><td>—</td></tr>
+          </table>
+          <div class="foot">
+            <div>Auto-refresh: <b>60 s</b></div>
+            <div>Si no existe la carpeta <b>data/</b>, se mostrará demo.</div>
           </div>
         </div>
       </div>
 
     </div>
-
   </div>
-</main>
 
-<script>
-  function demoSeries(base){
-    const labels=[], data=[];
-    const now=Date.now();
-    for(let i=60;i>=0;i--){
-      const t=new Date(now-i*60000);
-      labels.push(t.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
-      data.push(base + Math.sin(i/6)*2 + (Math.random()-0.5));
+  <script>
+    /**
+     * Estructura esperada (recomendada) en /data/latest.json:
+     * {
+     *   "ts": "2026-01-12T11:10:00+01:00",
+     *   "drivers": { "driver1": 12.3, "driver2": 0, "burner": 1 },
+     *   "sensors": { "S1": 45.2, "S2": 38.0, "S9": 52.7, "S10": 51.9 }
+     * }
+     *
+     * Y /data/history_s9.json:
+     * {
+     *   "series": [
+     *     {"ts":"2026-01-12T00:00:00+01:00","v":50.1},
+     *     ...
+     *   ]
+     * }
+     */
+
+    const REFRESH_MS = 60_000;
+
+    // --- Utilidades
+    const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 100) / 100).toFixed(2) : "—");
+    const safeObj = (x) => (x && typeof x === "object") ? x : {};
+    const toDate = (s) => {
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    function computeStats(values){
+      const arr = values.filter(v => Number.isFinite(v));
+      if (!arr.length) return { last: NaN, avg: NaN, min: NaN, max: NaN };
+      const min = Math.min(...arr);
+      const max = Math.max(...arr);
+      const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
+      const last = arr[arr.length - 1];
+      return { last, avg, min, max };
     }
-    return {labels,data};
-  }
 
-  function createChart(id,base){
-    const s=demoSeries(base);
-    return new Chart(document.getElementById(id),{
-      type:'line',
-      data:{
-        labels:s.labels,
-        datasets:[{
-          data:s.data,
-          borderWidth:2,
-          tension:.3,
-          pointRadius:0
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false,
-        plugins:{legend:{display:false}},
-        scales:{
-          x:{grid:{color:'rgba(255,255,255,.05)'}},
-          y:{grid:{color:'rgba(255,255,255,.05)'}}
+    function buildTag(container, name, stats, unit=""){
+      const el = document.createElement("div");
+      el.className = "tag";
+      el.innerHTML = `
+        <div class="chip"></div>
+        <div class="k">
+          <div class="name">${name}</div>
+          <div class="desc">Último / Media / Máx / Mín</div>
+        </div>
+        <div class="vals">
+          <div class="valBox"><div class="lab">Últ</div><div class="num">${fmt(stats.last)}${unit}</div></div>
+          <div class="valBox"><div class="lab">Media</div><div class="num">${fmt(stats.avg)}${unit}</div></div>
+          <div class="valBox"><div class="lab">Máx</div><div class="num">${fmt(stats.max)}${unit}</div></div>
+          <div class="valBox"><div class="lab">Mín</div><div class="num">${fmt(stats.min)}${unit}</div></div>
+        </div>
+      `;
+      container.appendChild(el);
+    }
+
+    function setConnection(ok, text){
+      const led = document.getElementById("led");
+      const connText = document.getElementById("connText");
+      led.classList.remove("ok","bad");
+      led.classList.add(ok ? "ok" : "bad");
+      connText.textContent = text;
+    }
+
+    // --- Chart S9
+    let chart;
+    function initChart(){
+      const ctx = document.getElementById("chartS9");
+      chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [{
+            label: "S9",
+            data: [],
+            tension: 0.25,
+            borderWidth: 2,
+            pointRadius: 0,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` S9: ${fmt(ctx.parsed.y)}`
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { maxTicksLimit: 8, color: "rgba(234,240,255,.55)" },
+              grid: { color: "rgba(255,255,255,.06)" }
+            },
+            y: {
+              ticks: { color: "rgba(234,240,255,.55)" },
+              grid: { color: "rgba(255,255,255,.06)" }
+            }
+          }
         }
+      });
+    }
+
+    function updateChart(series){
+      const labels = series.map(p => {
+        const d = toDate(p.ts);
+        if (!d) return "";
+        return d.toLocaleString("es-ES", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"2-digit" });
+      });
+      const values = series.map(p => Number(p.v));
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+      chart.update();
+    }
+
+    // --- Carga de datos
+    async function fetchJson(url){
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return await res.json();
+    }
+
+    function demoData(){
+      // Demo elegante si no tienes /data/
+      const now = new Date();
+      const ts = now.toISOString();
+      const drivers = { "pump_pri": 1, "pump_sec": 0, "burner": 1, "valve_mix": 42 };
+      const sensors = { "S1": 43.2, "S2": 39.1, "S3": 55.0, "S9": 51.7, "S10": 50.9 };
+      const series = Array.from({length: 96}, (_,i)=>{
+        const d = new Date(now.getTime() - (95-i)*15*60*1000);
+        const base = 51.5 + Math.sin(i/9)*1.2;
+        const noise = (Math.random()-.5)*0.6;
+        return { ts: d.toISOString(), v: base + noise };
+      });
+      return { latest: { ts, drivers, sensors }, historyS9: { series } };
+    }
+
+    function renderAll(latest, historyS9){
+      const lastUpdate = document.getElementById("lastUpdate");
+      const miniTable = document.getElementById("miniTable");
+      const tagsDrivers = document.getElementById("tagsDrivers");
+      const tagsSensors = document.getElementById("tagsSensors");
+
+      tagsDrivers.innerHTML = "";
+      tagsSensors.innerHTML = "";
+
+      // Timestamp
+      const d = toDate(latest.ts);
+      lastUpdate.textContent = d
+        ? d.toLocaleString("es-ES", { weekday:"short", year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" })
+        : "—";
+
+      // Chart S9
+      const series = (safeObj(historyS9).series || []).slice(-300); // cap
+      updateChart(series);
+
+      // Para stats: usamos los valores de history (si hay), y para el resto fallback a último valor
+      const s9Values = series.map(p => Number(p.v)).filter(Number.isFinite);
+      const s9Stats = computeStats(s9Values.length ? s9Values : [Number(latest?.sensors?.S9)]);
+
+      // Drivers: stats (si no hay histórico por driver, hacemos min=max=avg=last)
+      const drivers = safeObj(latest.drivers);
+      const sensors = safeObj(latest.sensors);
+
+      // Tag especial S9 (con histórico)
+      buildTag(tagsSensors, "S9", s9Stats);
+
+      // Resto de sensores (S*)
+      Object.keys(sensors)
+        .filter(k => k !== "S9")
+        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
+        .forEach(k=>{
+          const v = Number(sensors[k]);
+          const st = { last:v, avg:v, min:v, max:v };
+          buildTag(tagsSensors, k, st);
+        });
+
+      // Drivers
+      Object.keys(drivers)
+        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
+        .forEach(k=>{
+          const v = Number(drivers[k]);
+          const st = { last:v, avg:v, min:v, max:v };
+          buildTag(tagsDrivers, `Driver · ${k}`, st);
+        });
+
+      // Mini tabla resumen
+      const rows = [];
+
+      // 1) S9 con stats reales
+      rows.push(["S9 (últ/media/máx/mín)", `${fmt(s9Stats.last)} / ${fmt(s9Stats.avg)} / ${fmt(s9Stats.max)} / ${fmt(s9Stats.min)}`]);
+
+      // 2) Unas cuantas métricas más (para no hacerla eterna)
+      const topSensors = Object.keys(sensors)
+        .filter(k => k !== "S9")
+        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
+        .slice(0, 8);
+
+      topSensors.forEach(k=>{
+        const v = Number(sensors[k]);
+        rows.push([k, fmt(v)]);
+      });
+
+      const topDrivers = Object.keys(drivers).slice(0, 8);
+      topDrivers.forEach(k=>{
+        const v = Number(drivers[k]);
+        rows.push([`Driver ${k}`, fmt(v)]);
+      });
+
+      miniTable.innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+    }
+
+    async function loadAndRender(){
+      try{
+        setConnection(false, "conectando…");
+        const [latest, historyS9] = await Promise.all([
+          fetchJson("data/latest.json"),
+          fetchJson("data/history_s9.json")
+        ]);
+        setConnection(true, "online");
+        renderAll(latest, historyS9);
+      }catch(e){
+        // Demo / fallback (muy útil cuando todavía no existe /data/)
+        setConnection(false, "demo (sin data/)");
+        const demo = demoData();
+        renderAll(demo.latest, demo.historyS9);
       }
-    });
-  }
+    }
 
-  let c9,c10;
-
-  function refreshAll(){
-    c9.destroy(); c10.destroy();
-    c9=createChart('chartS9',48);
-    c10=createChart('chartS10',52);
-    updateValues();
-  }
-
-  function updateValues(){
-    const v9=c9.data.datasets[0].data.at(-1);
-    const v10=c10.data.datasets[0].data.at(-1);
-    document.getElementById('lastValues').textContent=
-      `Últimos valores: S9 = ${v9.toFixed(1)} °C · S10 = ${v10.toFixed(1)} °C`;
-    document.getElementById('s9meta').textContent=`Último: ${v9.toFixed(1)} °C`;
-    document.getElementById('s10meta').textContent=`Último: ${v10.toFixed(1)} °C`;
-    document.getElementById('lastUpdate').textContent=
-      'Actualizado: ' + new Date().toLocaleString('es-ES');
-  }
-
-  window.onload=()=>{
-    c9=createChart('chartS9',48);
-    c10=createChart('chartS10',52);
-    updateValues();
-  };
-</script>
+    // Init
+    initChart();
+    loadAndRender();
+    setInterval(loadAndRender, REFRESH_MS);
+  </script>
 </body>
 </html>
