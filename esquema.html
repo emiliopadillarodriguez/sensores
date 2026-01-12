@@ -12,9 +12,10 @@
   --line:#1e293b;
   --ok:#22c55e;
   --bad:#ef4444;
+  --accent:#38bdf8;
 }
 
-/* ======== FONDO SEGÚN DISPOSITIVO ======== */
+/* ===== FONDO SEGÚN DISPOSITIVO ===== */
 
 /* MÓVIL / TABLET */
 @media (max-width: 900px){
@@ -63,7 +64,7 @@ button{
   color:#64748b;
 }
 
-/* ======== LAYOUT ======== */
+/* ===== LAYOUT ===== */
 #viewer{
   width:100vw;
   height: calc(100vh - 48px);
@@ -75,13 +76,13 @@ button{
   transform-origin: top left;
 }
 
-/* ======== PANEL ESTADO ======== */
+/* ===== PANEL ESTADO ===== */
 #panel{
   position:fixed;
   right:10px;
   bottom:10px;
-  width:320px;
-  max-height:60vh;
+  width:360px;
+  max-height:65vh;
   overflow:auto;
   border:1px solid var(--line);
   border-radius:12px;
@@ -92,29 +93,44 @@ button{
 }
 
 #panel h4{
-  margin:6px 0 4px;
+  margin:8px 0 6px;
   font-size:12px;
-  color:#38bdf8;
+  color:var(--accent);
+  font-weight:800;
 }
-
-.row{
-  display:flex;
-  justify-content:space-between;
-  gap:8px;
-  padding:4px 0;
-  border-bottom:1px dashed #1e293b;
-}
-.row:last-child{ border-bottom:none; }
-
-.k{ color:#94a3b8; font-weight:700; }
-.on{ color:var(--ok); font-weight:700; }
-.off{ color:var(--bad); font-weight:700; }
 
 .time{
   font-size:11px;
   color:#cbd5f5;
   margin-bottom:6px;
 }
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  padding:5px 0;
+  border-bottom:1px dashed #1e293b;
+}
+.row:last-child{ border-bottom:none; }
+
+.left{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.item{
+  font-size:11px;
+  color:#94a3b8;
+  font-weight:700;
+}
+.label{
+  font-size:12px;
+  color:#e5e7eb;
+}
+
+.on{ color:var(--ok); font-weight:800; }
+.off{ color:var(--bad); font-weight:800; }
 </style>
 </head>
 
@@ -146,7 +162,7 @@ button{
 </div>
 
 <script>
-/* ======== ZOOM ======== */
+/* ===== ZOOM ===== */
 const obj = document.getElementById("svgObj");
 const viewer = document.getElementById("viewer");
 const statusEl = document.getElementById("status");
@@ -173,7 +189,7 @@ function fit(){
   viewer.scrollTop = viewer.scrollLeft = 0;
 }
 
-/* ======== RECOLOR SOLO NEGRO ======== */
+/* ===== RECOLOR SOLO NEGRO ===== */
 function recolorSVG(){
   const svg = obj.contentDocument;
   if(!svg) return;
@@ -185,7 +201,7 @@ function recolorSVG(){
   });
 }
 
-/* ======== ESTADO DESDE latest_all.json ======== */
+/* ===== ESTADO DESDE latest_all.json (CON LABELS) ===== */
 const JSONS=[
   "sensores/data/latest_all.json",
   "data/latest_all.json"
@@ -208,25 +224,33 @@ async function loadJSON(){
   const dBox=document.getElementById("panelD");
   sBox.innerHTML=""; dBox.innerHTML="";
 
+  /* SENSORES */
   data.sensors?.forEach(s=>{
     sBox.innerHTML+=`
       <div class="row">
-        <span class="k">${s.item}</span>
-        <span>${s.value} ${s.units||""}</span>
+        <div class="left">
+          <div class="label">${s.label || s.item}</div>
+          <div class="item">${s.item}</div>
+        </div>
+        <div>${s.value} ${s.units||""}</div>
       </div>`;
   });
 
+  /* DRIVERS */
   data.drivers?.forEach(d=>{
-    const on=String(d.value).toLowerCase()==="on"||d.value==1;
+    const on = String(d.value).toLowerCase()==="on" || d.value==1;
     dBox.innerHTML+=`
       <div class="row">
-        <span class="k">${d.item}</span>
-        <span class="${on?"on":"off"}">${on?"ON":"OFF"}</span>
+        <div class="left">
+          <div class="label">${d.label || d.item}</div>
+          <div class="item">${d.item}</div>
+        </div>
+        <div class="${on?"on":"off"}">${on?"ON":"OFF"}</div>
       </div>`;
   });
 }
 
-/* ======== INIT ======== */
+/* ===== INIT ===== */
 obj.onload=()=>{
   statusEl.textContent="SVG cargado";
   recolorSVG();
