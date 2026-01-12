@@ -1,613 +1,647 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Sensores ACS</title>
-  <!-- BOTÓN ESQUEMA -->
-<a href="esquema.html"
-   style="
-     display:inline-block;
-     margin: 12px 0;
-     padding: 12px 20px;
-     background: #d90000;
-     color: white;
-     font-size: 18px;
-     font-weight: bold;
-     text-decoration: none;
-     border-radius: 10px;
-     box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-   ">
-  🔥 Ver esquema sala de calderas
-<a href="visor.html" style="
-  display:inline-block;
-  background:#ff0000;
-  color:#fff;
-  padding:10px 14px;
-  border-radius:10px;
-  font-weight:800;
-  text-decoration:none;
-">
-  VISOR Sensores + Bombas
-</a>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BMS - Panel</title>
 
-
-
-  <!-- Chart.js v4 -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
-  <!-- Adaptador fechas -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
-  <!-- Zoom/Pan -->
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2"></script>
+  <!-- Chart.js (CDN) -->
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
-    body { font-family: Arial, Helvetica, sans-serif; margin: 20px; background:#fafafa; }
-    #container { max-width: 1200px; }
-    h1 { margin: 0 0 6px; }
-    .info { color:#555; font-size: 14px; margin-bottom: 12px; }
-
-    .topbar {
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
-      background:#fff; border:1px solid #e6e6e6; border-radius:10px;
-      padding:12px; margin-bottom:14px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    }
-    .topbar label { font-size: 13px; color:#333; }
-    select, input[type="checkbox"] { cursor:pointer; }
-    .small { font-size: 12px; color:#666; }
-    .spacer { flex: 1; }
-
-    .grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
-
-    .card {
-      background:#fff; border:1px solid #e6e6e6; border-radius:10px;
-      padding: 14px 14px 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-    }
-    .card h2 { margin:0 0 8px; font-size:16px; }
-
-    .meta {
-      display:flex; flex-wrap:wrap; gap:10px; align-items:center;
-      margin: 6px 0 10px;
-      font-size: 12px; color:#333;
-    }
-    .pill {
-      border:1px solid #e6e6e6; border-radius:999px;
-      padding:4px 8px; background:#fafafa;
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1a2e;
+      --panel2:#101f38;
+      --stroke:rgba(255,255,255,.10);
+      --text:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.68);
+      --ok:#00c853;
+      --warn:#ffb300;
+      --bad:#ff5252;
+      --chip:#15264a;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --radius:18px;
     }
 
-    .toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:10px; }
-    .toolbar button { padding: 6px 10px; cursor:pointer; }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 600px at 20% 0%, #15264a 0%, var(--bg) 55%) fixed;
+      color:var(--text);
+    }
 
-    .canvas-wrap { height: 320px; }
-    canvas { width:100% !important; height:100% !important; }
+    a{color:inherit; text-decoration:none}
+    .wrap{max-width:1280px; margin:0 auto; padding:18px;}
 
-    .error { color:#b00020; font-size:12px; margin-top:8px; white-space:pre-wrap; }
-    .linkbtn { padding: 6px 10px; border:1px solid #e6e6e6; border-radius:8px; text-decoration:none; color:#333; background:#fff; }
+    /* Topbar */
+    .topbar{
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      padding:14px 16px;
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: sticky; top: 10px; z-index: 20;
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      min-width: 240px;
+    }
+    .dot{
+      width:12px; height:12px; border-radius:999px;
+      background: var(--ok);
+      box-shadow: 0 0 18px rgba(0,200,83,.55);
+    }
+    .brand h1{
+      font-size:14px; margin:0; letter-spacing:.2px;
+    }
+    .brand small{display:block; color:var(--muted); margin-top:2px}
+
+    .nav{
+      display:flex; gap:8px; flex-wrap:wrap; justify-content:center;
+    }
+    .btn{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      color: var(--text);
+      padding:8px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      cursor:pointer;
+      display:inline-flex; align-items:center; gap:8px;
+    }
+    .btn:hover{background: rgba(255,255,255,.08)}
+    .btn.primary{
+      background: rgba(0,200,83,.14);
+      border-color: rgba(0,200,83,.28);
+    }
+
+    .right{
+      display:flex; align-items:center; gap:10px; justify-content:flex-end;
+      min-width: 260px;
+      flex-wrap:wrap;
+    }
+    .pill{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    /* Grid */
+    .grid{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns: 1.35fr .65fr;
+      gap:14px;
+    }
+
+    .card{
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .hd{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:12px 14px;
+      border-bottom:1px solid var(--stroke);
+      background: rgba(255,255,255,.02);
+    }
+    .card .hd h2{
+      margin:0; font-size:13px; letter-spacing:.2px;
+      color: rgba(255,255,255,.88);
+    }
+    .card .bd{padding:14px}
+
+    /* KPI chips */
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap:10px;
+    }
+    .kpi{
+      background: rgba(255,255,255,.04);
+      border:1px solid var(--stroke);
+      border-radius: 16px;
+      padding:10px 12px;
+      min-height:72px;
+    }
+    .kpi .t{font-size:12px; color:var(--muted)}
+    .kpi .v{font-size:20px; font-weight:650; margin-top:6px; letter-spacing:.2px}
+    .kpi .s{font-size:12px; color:var(--muted); margin-top:2px}
+
+    /* Chart area */
+    .chartWrap{
+      height: 320px;
+    }
+    canvas{display:block; width:100% !important; height:100% !important;}
+
+    /* Lists */
+    .chips{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    .chip{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    /* Drivers status */
+    .statusGrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap:10px;
+    }
+    .item{
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.04);
+      border-radius: 16px;
+      padding:10px 12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+    }
+    .item .name{
+      font-size:12px;
+      color: rgba(255,255,255,.86);
+      line-height: 1.2;
+    }
+    .badge{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.03);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .badge.on{
+      background: rgba(0,200,83,.16);
+      border-color: rgba(0,200,83,.30);
+      color: rgba(255,255,255,.92);
+    }
+    .badge.off{
+      background: rgba(255,255,255,.03);
+      color: rgba(255,255,255,.65);
+    }
+
+    /* Table */
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size:12px;
+      overflow:hidden;
+      border:1px solid var(--stroke);
+      border-radius: 14px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px 10px;
+      border-bottom:1px solid rgba(255,255,255,.07);
+      vertical-align: top;
+    }
+    th{
+      color: rgba(255,255,255,.78);
+      background: rgba(255,255,255,.03);
+      font-weight:600;
+      position: sticky;
+      top: 0;
+    }
+    tr:hover td{background: rgba(255,255,255,.03)}
+
+    .muted{color:var(--muted)}
+    .error{
+      border:1px solid rgba(255,82,82,.35);
+      background: rgba(255,82,82,.10);
+      color: rgba(255,255,255,.92);
+      padding:10px 12px;
+      border-radius: 14px;
+      font-size:12px;
+    }
+
+    /* Responsive */
+    @media (max-width: 1100px){
+      .grid{grid-template-columns: 1fr;}
+      .right{min-width:auto}
+      .brand{min-width:auto}
+      .kpis{grid-template-columns: repeat(2, minmax(0,1fr));}
+      .statusGrid{grid-template-columns: 1fr;}
+      .chartWrap{height: 280px;}
+    }
   </style>
 </head>
 
 <body>
-  <div id="container">
-    <h1>Sensores ACS</h1>
-    <div class="info">
-      Cada sensor en su gráfica. Solo <b>S9</b> + <b>S10</b> van juntos.
-      Incluye: filtro/orden, último valor + mín/máx 24h + Δ1h, export CSV, y carga rápida por rango.
-    </div>
+  <div class="wrap">
 
     <div class="topbar">
-      <label>
-        Rango:
-        <select id="range">
-          <option value="24h" selected>Últimas 24h</option>
-          <option value="7d">Últimos 7 días</option>
-          <option value="all">Todo</option>
-        </select>
-      </label>
+      <div class="brand">
+        <span class="dot" id="liveDot" title="Estado"></span>
+        <div>
+          <h1>Panel BMS</h1>
+          <small id="subtitle">Cargando datos…</small>
+        </div>
+      </div>
 
-      <label>
-        Rendimiento:
-        <select id="density">
-          <option value="auto" selected>Auto (recomendado)</option>
-          <option value="max">Máxima resolución</option>
-          <option value="low">Ligero</option>
-        </select>
-      </label>
+      <div class="nav">
+        <!-- Ajusta estos enlaces a tus páginas reales -->
+        <a class="btn primary" href="index.html">🏠 Panel</a>
+        <a class="btn" href="esquema.html">🗺️ Esquema</a>
+        <a class="btn" href="visor.html">📈 Visor</a>
+      </div>
 
-      <span class="small" id="lastUpdate">Última actualización (UTC): -</span>
-
-      <span class="spacer"></span>
-
-      <a class="linkbtn" href="./status.html">Abrir panel de estado</a>
+      <div class="right">
+        <button class="btn" id="btnReload">🔄 Recargar</button>
+        <span class="pill" id="lastUpdate">—</span>
+      </div>
     </div>
 
-    <div class="topbar" id="filtersBar">
-      <strong style="font-size:13px;">Mostrar:</strong>
-      <!-- checkboxes dinámicos -->
-      <span class="spacer"></span>
-      <button id="btnShowAll">Mostrar todos</button>
-      <button id="btnHideAll">Ocultar todos</button>
+    <div class="grid">
+      <!-- LEFT COLUMN -->
+      <div class="card">
+        <div class="hd">
+          <h2>Temperaturas — S9 (Depósito ACS) y S10 (Consumo ACS)</h2>
+          <div class="chips">
+            <span class="chip" id="chipS9">S9: —</span>
+            <span class="chip" id="chipS10">S10: —</span>
+          </div>
+        </div>
+        <div class="bd">
+          <div class="kpis">
+            <div class="kpi">
+              <div class="t">S9 — Depósito ACS</div>
+              <div class="v" id="kpiS9">—</div>
+              <div class="s muted" id="kpiS9u">—</div>
+            </div>
+            <div class="kpi">
+              <div class="t">S10 — Consumo ACS</div>
+              <div class="v" id="kpiS10">—</div>
+              <div class="s muted" id="kpiS10u">—</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Bombas ON</div>
+              <div class="v" id="kpiOn">—</div>
+              <div class="s muted">drivers en estado ON</div>
+            </div>
+            <div class="kpi">
+              <div class="t">Sondas leídas</div>
+              <div class="v" id="kpiSCount">—</div>
+              <div class="s muted">sensores disponibles</div>
+            </div>
+          </div>
+
+          <div style="height:12px"></div>
+
+          <div class="chartWrap">
+            <canvas id="chartS9S10"></canvas>
+          </div>
+
+          <div style="height:10px"></div>
+          <div id="chartHint" class="muted" style="font-size:12px;">
+            Consejo: si no ves la gráfica en Chrome, prueba Ctrl+F5. Si tu red bloquea CDNs, el panel seguirá funcionando pero sin Chart.js.
+          </div>
+          <div id="chartErr" style="margin-top:10px; display:none;"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <div class="card">
+        <div class="hd">
+          <h2>Estado bombas / equipos (Drivers)</h2>
+          <span class="chip" id="driversCount">—</span>
+        </div>
+        <div class="bd">
+          <div class="statusGrid" id="driversGrid"></div>
+        </div>
+      </div>
     </div>
 
-    <div class="grid" id="charts"></div>
+    <div style="height:14px"></div>
+
+    <!-- SENSORS TABLE -->
+    <div class="card">
+      <div class="hd">
+        <h2>Último valor de todas las sondas (Sensors)</h2>
+        <span class="chip" id="sensorsCount">—</span>
+      </div>
+      <div class="bd" style="max-height:420px; overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:90px;">Item</th>
+              <th>Etiqueta</th>
+              <th style="width:160px;">Valor</th>
+              <th style="width:100px;">Unidades</th>
+            </tr>
+          </thead>
+          <tbody id="sensorsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 
 <script>
-  // ---- CONFIG ----
-  const GROUP_KEY = "S9_S10";
-  const GROUP_ITEMS = new Set(["S9", "S10"]);
-
-  // Orden fijo (lo que pediste)
-  const ORDER = ["S2","S4","S8",GROUP_KEY,"S13","S15"];
-
-  const REFRESH_MS = 30000;
-
-  // Charts creados
-  const chartsMap = new Map(); // key -> Chart
-  const blocksCache = new Map(); // key -> { sensors, datasetsRaw, lastStats }
-
-  function $(id){ return document.getElementById(id); }
-
-  function toUpperItem(s){ return ((s.item||"").trim()).toUpperCase(); }
-
-  function parseLine(line){
-    // "2025-12-15T22:20:43+00:00;53.19"
-    const parts = line.split(";");
-    if (parts.length < 2) return null;
-    const ts = parts[0].trim();
-    let val = parts[1].trim();
-    if (!ts) return null;
-    if (!val || val === "NOT_FOUND") return null;
-    val = val.replace(",", ".");
-    const y = Number(val);
-    if (Number.isNaN(y)) return null;
-    const x = new Date(ts);
-    if (isNaN(x.getTime())) return null;
-    return { x, y };
+/* =========================
+   Helpers de carga robusta
+========================= */
+async function fetchJsonWithFallback(paths) {
+  let lastErr = null;
+  for (const p of paths) {
+    try {
+      const res = await fetch(p + (p.includes("?") ? "" : ("?t=" + Date.now())), { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} en ${p}`);
+      return await res.json();
+    } catch (e) {
+      lastErr = e;
+    }
   }
+  throw lastErr || new Error("No se pudo cargar JSON");
+}
 
-  async function fetchJson(url){
-    const res = await fetch(url + "?t=" + Date.now());
-    if (!res.ok) throw new Error(`No se puede leer ${url} (HTTP ${res.status})`);
-    return await res.json();
+function safeStr(x){ return (x === null || x === undefined) ? "" : String(x).trim(); }
+
+function normalizeOnOff(val){
+  const v = safeStr(val).toLowerCase();
+  if (["on","1","true","yes","encendida","encendido"].includes(v)) return "on";
+  if (["off","0","false","no","apagada","apagado"].includes(v)) return "off";
+  return v;
+}
+
+function parseHistory(any){
+  // Soporta:
+  // - Array directo: [{timestamp:.., value:..}, ...]
+  // - Object con "history": [...]
+  const arr = Array.isArray(any) ? any : (any && Array.isArray(any.history) ? any.history : []);
+  return arr.map(r => {
+    const ts = r.timestamp || r.ts || r.time || r.datetime || r.date;
+    const v  = r.value ?? r.val ?? r.v;
+    return { t: ts, v: v };
+  }).filter(x => x.t !== undefined && x.v !== undefined);
+}
+
+function toNumber(x){
+  const n = Number(String(x).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+}
+
+function prettyTime(iso){
+  try{
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString();
+  }catch{ return iso; }
+}
+
+/* =========================
+   UI refs
+========================= */
+const subtitle = document.getElementById("subtitle");
+const lastUpdate = document.getElementById("lastUpdate");
+const liveDot = document.getElementById("liveDot");
+
+const kpiS9  = document.getElementById("kpiS9");
+const kpiS10 = document.getElementById("kpiS10");
+const kpiS9u = document.getElementById("kpiS9u");
+const kpiS10u= document.getElementById("kpiS10u");
+const chipS9 = document.getElementById("chipS9");
+const chipS10= document.getElementById("chipS10");
+
+const kpiOn = document.getElementById("kpiOn");
+const kpiSCount = document.getElementById("kpiSCount");
+
+const sensorsTbody = document.getElementById("sensorsTbody");
+const sensorsCount = document.getElementById("sensorsCount");
+const driversGrid  = document.getElementById("driversGrid");
+const driversCount = document.getElementById("driversCount");
+
+const chartErr = document.getElementById("chartErr");
+
+/* =========================
+   Chart
+========================= */
+let chart = null;
+
+function buildChart(labels, s9, s10){
+  if (!window.Chart){
+    chartErr.style.display = "block";
+    chartErr.className = "error";
+    chartErr.textContent = "Chart.js no está disponible (bloqueado por red o no cargó). El resto del panel funciona.";
+    return;
   }
+  const ctx = document.getElementById("chartS9S10").getContext("2d");
 
-  async function fetchText(url){
-    const res = await fetch(url + "?t=" + Date.now());
-    if (!res.ok) throw new Error(`No se puede leer ${url} (HTTP ${res.status})`);
-    return await res.text();
-  }
+  const data = {
+    labels,
+    datasets: [
+      {
+        label: "S9 — Depósito ACS (°C)",
+        data: s9,
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.25
+      },
+      {
+        label: "S10 — Consumo ACS (°C)",
+        data: s10,
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.25
+      }
+    ]
+  };
 
-  function datasetLabel(sensor){
-    const units = sensor.units ? ` (${sensor.units})` : "";
-    return `${sensor.item} – ${sensor.label}${units}`;
-  }
-
-  function filterByRange(points, range){
-    if (range === "all") return points;
-    const now = Date.now();
-    let ms = 24*3600*1000;
-    if (range === "7d") ms = 7*24*3600*1000;
-    const minT = now - ms;
-    return points.filter(p => p.x.getTime() >= minT);
-  }
-
-  function downsample(points, mode){
-    // mode: "max" (no) | "low" (agresivo) | "auto"
-    if (mode === "max") return points;
-
-    const n = points.length;
-    if (n <= 600) return points; // pequeño, no tocamos
-
-    // Objetivo de puntos (aprox)
-    let target = 800;
-    if (mode === "low") target = 300;
-    if (mode === "auto") target = 700;
-
-    const step = Math.ceil(n / target);
-    if (step <= 1) return points;
-
-    const out = [];
-    for (let i = 0; i < n; i += step) out.push(points[i]);
-    // asegurar último punto
-    if (out[out.length-1] !== points[n-1]) out.push(points[n-1]);
-    return out;
-  }
-
-  function computeStats(points){
-    // Último, min/max 24h, delta 1h
-    if (!points.length) return null;
-
-    const last = points[points.length-1];
-    const nowT = last.x.getTime();
-
-    const lastVal = last.y;
-    const lastTs = last.x;
-
-    // min/max 24h desde el último punto
-    const minT = nowT - 24*3600*1000;
-    let min = Infinity, max = -Infinity;
-    for (const p of points){
-      const t = p.x.getTime();
-      if (t >= minT){
-        if (p.y < min) min = p.y;
-        if (p.y > max) max = p.y;
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: "index", intersect: false },
+    plugins: {
+      legend: { labels: { color: "rgba(255,255,255,.85)" } },
+      tooltip: { enabled: true }
+    },
+    scales: {
+      x: {
+        ticks: { color: "rgba(255,255,255,.70)", maxRotation: 0, autoSkip: true },
+        grid: { color: "rgba(255,255,255,.08)" }
+      },
+      y: {
+        ticks: { color: "rgba(255,255,255,.70)" },
+        grid: { color: "rgba(255,255,255,.08)" }
       }
     }
-    if (min === Infinity) { min = lastVal; max = lastVal; }
+  };
 
-    // delta 1h: comparar con el punto más cercano a (último - 1h)
-    const targetT = nowT - 3600*1000;
-    let nearest = null;
-    for (const p of points){
-      if (!nearest) { nearest = p; continue; }
-      if (Math.abs(p.x.getTime() - targetT) < Math.abs(nearest.x.getTime() - targetT)){
-        nearest = p;
-      }
-    }
-    const delta1h = nearest ? (lastVal - nearest.y) : null;
+  if (chart) chart.destroy();
+  chart = new Chart(ctx, { type: "line", data, options });
+}
 
-    return { lastVal, lastTs, min24: min, max24: max, delta1h };
-  }
-
-  function formatNum(n){
-    if (n === null || n === undefined || Number.isNaN(n)) return "-";
-    return n.toFixed(2);
-  }
-
-  function formatAgeMinutes(date){
-    const mins = Math.round((Date.now() - date.getTime())/60000);
-    if (mins < 1) return "hace <1 min";
-    if (mins === 1) return "hace 1 min";
-    return `hace ${mins} min`;
-  }
-
-  function makeChart(canvas, datasets){
-    return new Chart(canvas.getContext("2d"), {
-      type: "line",
-      data: { datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        parsing: false,
-        interaction: { mode: "nearest", intersect: false },
-        scales: {
-          x: { type: "time", title: { display:true, text:"Fecha y hora" } },
-          y: { title: { display:true, text:"Valor" } }
-        },
-        plugins: {
-          zoom: {
-            pan: { enabled:true, mode:"x" },
-            zoom: { wheel:{ enabled:true }, pinch:{ enabled:true }, mode:"x" }
-          },
-          tooltip: { enabled:true }
-        }
-      }
-    });
-  }
-
-  function createCard(key, title){
-    const el = document.createElement("div");
-    el.className = "card";
-    el.dataset.key = key;
-
-    el.innerHTML = `
-      <h2>${title}</h2>
-      <div class="meta">
-        <span class="pill" data-k="last">Último: -</span>
-        <span class="pill" data-k="minmax">24h min/max: -</span>
-        <span class="pill" data-k="delta">Δ 1h: -</span>
-        <span class="pill" data-k="time">Actualización: -</span>
-      </div>
-
-      <div class="toolbar">
-        <button class="btnReset">Reset zoom</button>
-        <button class="btnCSV">Descargar CSV</button>
-        <span class="small status">Cargando…</span>
-      </div>
-
-      <div class="canvas-wrap"><canvas></canvas></div>
-      <div class="error"></div>
+/* =========================
+   Render: sensores y drivers
+========================= */
+function renderSensorsTable(sensors){
+  sensorsTbody.innerHTML = "";
+  for (const s of sensors){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td><b>${safeStr(s.item)}</b></td>
+      <td class="muted">${safeStr(s.label)}</td>
+      <td>${safeStr(s.value)}</td>
+      <td class="muted">${safeStr(s.units)}</td>
     `;
+    sensorsTbody.appendChild(tr);
+  }
+  sensorsCount.textContent = `${sensors.length} sensores`;
+  kpiSCount.textContent = sensors.length;
+}
 
-    el.querySelector(".btnReset").addEventListener("click", () => {
-      const ch = chartsMap.get(key);
-      if (ch) ch.resetZoom();
-    });
+function renderDrivers(drivers){
+  driversGrid.innerHTML = "";
+  let onCount = 0;
 
-    el.querySelector(".btnCSV").addEventListener("click", () => {
-      downloadCSVForBlock(key);
-    });
+  for (const d of drivers){
+    const state = normalizeOnOff(d.value);
+    const isOn = state === "on";
+    if (isOn) onCount++;
 
-    return el;
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      <div>
+        <div class="name"><b>${safeStr(d.item)}</b> — ${safeStr(d.label)}</div>
+        <div class="muted" style="font-size:12px; margin-top:3px;">Valor: ${safeStr(d.value)}</div>
+      </div>
+      <span class="badge ${isOn ? "on" : "off"}">${isOn ? "ON" : "OFF"}</span>
+    `;
+    driversGrid.appendChild(div);
   }
 
-  function setStatus(cardEl, txt){
-    const el = cardEl.querySelector(".status");
-    if (el) el.textContent = txt || "";
+  driversCount.textContent = `${drivers.length} drivers`;
+  kpiOn.textContent = onCount;
+
+  // puntito de “live” en verde si hay datos
+  liveDot.style.background = (drivers.length || onCount || true) ? "var(--ok)" : "var(--bad)";
+}
+
+/* =========================
+   Carga principal
+========================= */
+async function loadDashboard(){
+  subtitle.textContent = "Cargando datos…";
+  chartErr.style.display = "none";
+
+  // 1) latest_all
+  const latestAll = await fetchJsonWithFallback([
+    "data/latest_all.json",
+    "latest_all.json"
+  ]);
+
+  const ts = latestAll.timestamp_utc || latestAll.timestamp || latestAll.time || "";
+  lastUpdate.textContent = ts ? ("Última lectura: " + prettyTime(ts)) : "Última lectura: —";
+  subtitle.textContent = "Resumen rápido + gráficas clave";
+
+  const sensors = Array.isArray(latestAll.sensors) ? latestAll.sensors : [];
+  const drivers = Array.isArray(latestAll.drivers) ? latestAll.drivers : [];
+
+  // KPIs S9/S10
+  const s9 = sensors.find(x => safeStr(x.item) === "S9");
+  const s10 = sensors.find(x => safeStr(x.item) === "S10");
+
+  if (s9){
+    kpiS9.textContent = `${safeStr(s9.value)}`;
+    kpiS9u.textContent = `${safeStr(s9.units) || ""}`;
+    chipS9.textContent = `S9: ${safeStr(s9.value)} ${safeStr(s9.units)}`;
+  } else {
+    chipS9.textContent = "S9: —";
+  }
+  if (s10){
+    kpiS10.textContent = `${safeStr(s10.value)}`;
+    kpiS10u.textContent = `${safeStr(s10.units) || ""}`;
+    chipS10.textContent = `S10: ${safeStr(s10.value)} ${safeStr(s10.units)}`;
+  } else {
+    chipS10.textContent = "S10: —";
   }
 
-  function setError(cardEl, txt){
-    const el = cardEl.querySelector(".error");
-    if (el) el.textContent = txt || "";
+  // Render tablas/estado
+  renderSensorsTable(sensors);
+  renderDrivers(drivers);
+
+  // 2) Históricos S9 y S10 (para la gráfica)
+  // Intentamos "data/S9.json" y "S9.json" (según tu repo)
+  let h9 = [], h10 = [];
+  try{
+    const raw9 = await fetchJsonWithFallback(["data/S9.json", "S9.json"]);
+    h9 = parseHistory(raw9);
+  }catch(e){
+    console.warn("No se pudo cargar histórico S9:", e);
+  }
+  try{
+    const raw10 = await fetchJsonWithFallback(["data/S10.json", "S10.json"]);
+    h10 = parseHistory(raw10);
+  }catch(e){
+    console.warn("No se pudo cargar histórico S10:", e);
   }
 
-  function setMeta(cardEl, stats){
-    const lastEl = cardEl.querySelector('[data-k="last"]');
-    const mmEl = cardEl.querySelector('[data-k="minmax"]');
-    const dEl = cardEl.querySelector('[data-k="delta"]');
-    const tEl = cardEl.querySelector('[data-k="time"]');
+  // Unificamos por índice (simple y robusto)
+  const len = Math.max(h9.length, h10.length);
+  const labels = [];
+  const s9Vals = [];
+  const s10Vals = [];
 
-    if (!stats){
-      lastEl.textContent = "Último: -";
-      mmEl.textContent = "24h min/max: -";
-      dEl.textContent = "Δ 1h: -";
-      tEl.textContent = "Actualización: -";
-      return;
-    }
-
-    lastEl.textContent = `Último: ${formatNum(stats.lastVal)}`;
-    mmEl.textContent = `24h min/max: ${formatNum(stats.min24)} / ${formatNum(stats.max24)}`;
-
-    if (stats.delta1h === null) dEl.textContent = "Δ 1h: -";
-    else dEl.textContent = `Δ 1h: ${formatNum(stats.delta1h)}`;
-
-    tEl.textContent = `Actualización: ${formatAgeMinutes(stats.lastTs)}`;
+  for (let i=0; i<len; i++){
+    const t = (h9[i]?.t || h10[i]?.t || "");
+    labels.push(t ? prettyTime(t) : "");
+    s9Vals.push(toNumber(h9[i]?.v));
+    s10Vals.push(toNumber(h10[i]?.v));
   }
 
-  function buildBlocksFromManifest(manifest){
-    const sensors = (manifest.acs || []).map(s => ({
-      ...s,
-      item: toUpperItem(s)
-    })).filter(s => !!s.item);
-
-    const group = sensors.filter(s => GROUP_ITEMS.has(s.item));
-    const singles = sensors.filter(s => !GROUP_ITEMS.has(s.item));
-
-    const blocks = [];
-    if (group.length){
-      blocks.push({ key: GROUP_KEY, title: "ACS – S9 + S10 (juntos)", sensors: group });
-    }
-    for (const s of singles){
-      blocks.push({ key: s.item, title: datasetLabel(s), sensors: [s] });
-    }
-
-    // Orden fijo
-    blocks.sort((a,b) => ORDER.indexOf(a.key) - ORDER.indexOf(b.key));
-    return blocks;
+  // Si no hay históricos, al menos pintamos 1 punto con los últimos valores
+  if (len === 0){
+    labels.push(ts ? prettyTime(ts) : "Ahora");
+    s9Vals.push(toNumber(s9?.value));
+    s10Vals.push(toNumber(s10?.value));
   }
 
-  function renderFilters(blocks){
-    const bar = $("filtersBar");
-    // limpiar checkboxes anteriores
-    const old = [...bar.querySelectorAll(".flt")];
-    old.forEach(x => x.remove());
+  buildChart(labels, s9Vals, s10Vals);
+}
 
-    for (const b of blocks){
-      const wrap = document.createElement("label");
-      wrap.className = "flt";
-      wrap.style.display = "inline-flex";
-      wrap.style.alignItems = "center";
-      wrap.style.gap = "6px";
-      wrap.style.marginRight = "10px";
-      wrap.style.fontSize = "13px";
+/* =========================
+   Arranque + refresco
+========================= */
+document.getElementById("btnReload").addEventListener("click", () => {
+  loadDashboard().catch(err => {
+    console.error(err);
+    subtitle.textContent = "Error cargando datos";
+    chartErr.style.display = "block";
+    chartErr.className = "error";
+    chartErr.textContent = "Error: no se pudo cargar latest_all.json o históricos. Revisa rutas/nombres de archivo.";
+  });
+});
 
-      wrap.innerHTML = `<input type="checkbox" checked data-key="${b.key}"> ${b.key}`;
-      const cb = wrap.querySelector("input");
-      cb.addEventListener("change", () => {
-        const card = document.querySelector(`.card[data-key="${b.key}"]`);
-        if (card) card.style.display = cb.checked ? "" : "none";
-      });
+// Auto-refresh cada 60s
+setInterval(() => {
+  loadDashboard().catch(console.warn);
+}, 60000);
 
-      bar.insertBefore(wrap, bar.querySelector(".spacer"));
-    }
-
-    $("btnShowAll").onclick = () => {
-      bar.querySelectorAll('input[type="checkbox"][data-key]').forEach(cb => {
-        cb.checked = true;
-        const card = document.querySelector(`.card[data-key="${cb.dataset.key}"]`);
-        if (card) card.style.display = "";
-      });
-    };
-    $("btnHideAll").onclick = () => {
-      bar.querySelectorAll('input[type="checkbox"][data-key]').forEach(cb => {
-        cb.checked = false;
-        const card = document.querySelector(`.card[data-key="${cb.dataset.key}"]`);
-        if (card) card.style.display = "none";
-      });
-    };
-  }
-
-  async function loadBlockData(block, range, density){
-    // Devuelve datasets listos para pintar y estadísticas por dataset
-    const datasets = [];
-    const statsList = [];
-
-    for (const s of block.sensors){
-      const txt = await fetchText("data/" + s.file);
-      const lines = txt.split("\n").map(l => l.trim()).filter(Boolean);
-      const rawPoints = [];
-      for (const line of lines){
-        const p = parseLine(line);
-        if (p) rawPoints.push(p);
-      }
-
-      const ranged = filterByRange(rawPoints, range);
-      const sampled = downsample(ranged, density);
-
-      if (!sampled.length) continue;
-
-      datasets.push({
-        label: datasetLabel(s),
-        data: sampled,
-        tension: 0.2,
-        pointRadius: 2,
-        borderWidth: 2
-      });
-
-      statsList.push(computeStats(ranged)); // stats con datos reales (sin downsample)
-    }
-
-    return { datasets, statsList };
-  }
-
-  function mergeStats(statsList){
-    // Para tarjetas con 1 serie: usa esa.
-    // Para S9+S10: mostramos stats del “más reciente” (el que tenga lastTs más nuevo)
-    const valid = statsList.filter(Boolean);
-    if (!valid.length) return null;
-    valid.sort((a,b) => b.lastTs.getTime() - a.lastTs.getTime());
-    return valid[0];
-  }
-
-  function ensureCard(block){
-    const root = $("charts");
-    let card = root.querySelector(`.card[data-key="${block.key}"]`);
-    if (!card){
-      card = createCard(block.key, block.title);
-      root.appendChild(card);
-    } else {
-      card.querySelector("h2").textContent = block.title;
-    }
-    return card;
-  }
-
-  async function buildOrUpdateAll(){
-    const range = $("range").value;
-    const density = $("density").value;
-
-    const manifest = await fetchJson("data/acs_manifest.json");
-    $("lastUpdate").textContent = "Última actualización (UTC): " + (manifest.timestamp_utc || "-");
-
-    const blocks = buildBlocksFromManifest(manifest);
-
-    // filtros (solo la primera vez o si cambia el número de bloques)
-    if (!window.__filtersReady || window.__filtersCount !== blocks.length){
-      renderFilters(blocks);
-      window.__filtersReady = true;
-      window.__filtersCount = blocks.length;
-    }
-
-    // actualizar/crear cards y charts
-    for (const block of blocks){
-      const card = ensureCard(block);
-      setError(card, "");
-      setStatus(card, "Cargando…");
-
-      try{
-        const { datasets, statsList } = await loadBlockData(block, range, density);
-
-        if (!datasets.length){
-          setStatus(card, "Sin datos numéricos");
-          setMeta(card, null);
-          const ch = chartsMap.get(block.key);
-          if (ch){
-            ch.data.datasets = [];
-            ch.update();
-          }
-          blocksCache.set(block.key, { sensors: block.sensors, datasetsRaw: null, stats: null });
-          continue;
-        }
-
-        const canvas = card.querySelector("canvas");
-        const existing = chartsMap.get(block.key);
-        if (!existing){
-          const ch = makeChart(canvas, datasets);
-          chartsMap.set(block.key, ch);
-        } else {
-          existing.data.datasets = datasets;
-          existing.update();
-        }
-
-        // stats
-        const merged = mergeStats(statsList);
-        setMeta(card, merged);
-        setStatus(card, "OK");
-
-        // cache para CSV (guardamos el rango filtrado SIN downsample para exportar mejor)
-        // Re-leemos en export con el rango actual (más simple y fiable), pero guardamos sensors.
-        blocksCache.set(block.key, { sensors: block.sensors });
-
-      } catch(e){
-        setStatus(card, "Error");
-        setError(card, String(e));
-      }
-    }
-
-    // borrar cards que sobran si el manifest cambia
-    const root = $("charts");
-    const needed = new Set(blocks.map(b => b.key));
-    [...root.querySelectorAll(".card")].forEach(el => {
-      const key = el.dataset.key;
-      if (!needed.has(key)){
-        const ch = chartsMap.get(key);
-        if (ch) ch.destroy();
-        chartsMap.delete(key);
-        el.remove();
-      }
-    });
-  }
-
-  async function downloadCSVForBlock(blockKey){
-    // Exporta el rango actual SIN downsample, con columnas por sensor en el bloque
-    const cache = blocksCache.get(blockKey);
-    if (!cache || !cache.sensors || !cache.sensors.length) return;
-
-    const range = $("range").value;
-
-    // leer todos los sensores del bloque y montar un CSV por timestamp
-    const series = [];
-    for (const s of cache.sensors){
-      const txt = await fetchText("data/" + s.file);
-      const lines = txt.split("\n").map(l => l.trim()).filter(Boolean);
-      const pts = [];
-      for (const line of lines){
-        const p = parseLine(line);
-        if (p) pts.push(p);
-      }
-      const ranged = filterByRange(pts, range);
-      series.push({ sensor: s, points: ranged });
-    }
-
-    // Construir índice de timestamps (ISO) => valores
-    const map = new Map(); // tsISO -> { colName: value }
-    const cols = series.map(s => `${toUpperItem(s.sensor)}_${(s.sensor.label||"").replaceAll(";", ",")}`);
-
-    for (let i=0;i<series.length;i++){
-      const col = cols[i];
-      for (const p of series[i].points){
-        const iso = p.x.toISOString();
-        if (!map.has(iso)) map.set(iso, {});
-        map.get(iso)[col] = p.y;
-      }
-    }
-
-    // Ordenar timestamps
-    const timestamps = [...map.keys()].sort();
-
-    // CSV
-    let csv = "timestamp_utc;" + cols.join(";") + "\n";
-    for (const ts of timestamps){
-      const row = map.get(ts);
-      const vals = cols.map(c => (row[c] === undefined ? "" : String(row[c]).replace(".", ",")));
-      csv += ts + ";" + vals.join(";") + "\n";
-    }
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `ACS_${blockKey}_${range}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-
-  // Eventos UI
-  $("range").addEventListener("change", () => buildOrUpdateAll());
-  $("density").addEventListener("change", () => buildOrUpdateAll());
-
-  // Inicio + refresco
-  buildOrUpdateAll();
-  setInterval(buildOrUpdateAll, REFRESH_MS);
+// Primer arranque
+loadDashboard().catch(err => {
+  console.error(err);
+  subtitle.textContent = "Error cargando datos";
+  chartErr.style.display = "block";
+  chartErr.className = "error";
+  chartErr.textContent = "Error: no se pudo cargar latest_all.json o históricos. Revisa rutas/nombres de archivo.";
+});
 </script>
+
 </body>
 </html>
