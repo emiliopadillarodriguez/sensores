@@ -76,7 +76,7 @@
     .head .hint{font-size:12px;color:var(--muted);font-weight:900}
     .body{padding:14px 16px}
 
-    .section{margin-top:14px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.2px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .section{margin-top:14px;color:var(--muted);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.2px}
     .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
     .tag{
       display:flex;align-items:center;gap:10px;
@@ -123,7 +123,7 @@
         <div class="logo"></div>
         <div>
           <h1>BMS · Sala de Calderas</h1>
-          <div class="sub">Index · Últimos valores desde latest_all.json / latest.json</div>
+          <div class="sub">Index · sin manifests (S*.txt + drv_D*.txt + latest_all/latest)</div>
         </div>
       </div>
 
@@ -152,16 +152,16 @@
             <svg id="s9svg" viewBox="0 0 1000 340" preserveAspectRatio="none"></svg>
           </div>
 
-          <div class="section"><span>Drivers</span><span id="driversCount" class="hint">—</span></div>
+          <div class="section">Drivers (drv_D*.txt)</div>
           <div class="tags" id="driversTags"></div>
 
-          <div class="section"><span>Sondas</span><span id="sensorsCount" class="hint">—</span></div>
+          <div class="section">Sondas (S*.txt)</div>
           <div class="tags" id="sensorsTags"></div>
 
           <div class="note">
-            ✅ Últimos valores: <b>latest_all.json</b> (preferido) o <b>latest.json</b> (fallback).<br>
-            ✅ Nombres: <b>drivers_manifest.json</b> y <b>sensors_manifest.json</b>.<br>
-            ✅ Media/máx/mín: desde cada <b>.txt</b>.
+            ✅ Último valor: desde <b>latest_all.json</b> (preferido) o <b>latest.json</b> (fallback).<br>
+            ✅ Media/máx/mín: desde cada <b>.txt</b>.<br>
+            ✅ IDs detectados leyendo las claves del JSON (no manifests).
           </div>
         </div>
       </div>
@@ -170,13 +170,13 @@
       <div class="card">
         <div class="head">
           <h2>🧾 Diagnóstico</h2>
-          <div class="hint">qué está cargando</div>
+          <div class="hint">simple</div>
         </div>
         <div class="body">
           <table class="mini" id="mini">
             <tr><td>Estado</td><td>—</td></tr>
           </table>
-          <div class="note">Si algo falla, el “Diagnóstico” te dirá exactamente qué fichero no se pudo leer.</div>
+          <div class="note">Si algo falla, aquí saldrá el fichero exacto que no se pudo leer.</div>
         </div>
       </div>
     </div>
@@ -215,60 +215,36 @@
     return r.text();
   }
 
-  function normalizeManifest(raw){
-    const o = safeObj(raw);
-    let arr = [];
-    if (Array.isArray(o)) arr = o;
-    else if (Array.isArray(o.items)) arr = o.items;
-    else if (Array.isArray(o.sensors)) arr = o.sensors;
-    else if (Array.isArray(o.drivers)) arr = o.drivers;
-    else {
-      for (const [id, v] of Object.entries(o)){
-        if (v && typeof v === "object") arr.push({ id, ...v });
-      }
-    }
-    return arr
-      .map(it => ({
-        id: (it.id || it.code || it.key || "").toString().trim(),
-        name: (it.name || it.title || it.label || "").toString().trim()
-      }))
-      .filter(it => it.id);
-  }
-
   // TXT: saca valores (último número por línea)
   function parseValuesFromTxt(txt){
     const lines = txt.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
     const values = [];
-    const tss = [];
     for (const line of lines){
       const m = line.match(/(-?\d+(?:[.,]\d+)?)(?!.*-?\d)/);
       if(!m) continue;
       const v = Number(m[1].replace(",", "."));
       if(!Number.isFinite(v)) continue;
-      const left = line.slice(0, m.index).trim().replace(/[;,]$/, "").trim();
-      tss.push(left);
       values.push(v);
     }
-    return { tss, values };
+    return values;
   }
 
   function statsFromValues(values){
     const arr = values.filter(Number.isFinite);
-    if(!arr.length) return { last: NaN, avg: NaN, min: NaN, max: NaN };
+    if(!arr.length) return { avg: NaN, min: NaN, max: NaN };
     const min = Math.min(...arr);
     const max = Math.max(...arr);
     const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
-    const last = arr[arr.length-1];
-    return { last, avg, min, max };
+    return { avg, min, max };
   }
 
-  function addTag(container, title, lastValue, stats){
+  function addTag(container, id, lastValue, stats){
     const el = document.createElement("div");
     el.className = "tag";
     el.innerHTML = `
       <div class="chip"></div>
       <div class="k">
-        <div class="name">${title}</div>
+        <div class="name">${id}</div>
         <div class="desc">Último (JSON) + Media/Máx/Mín (TXT)</div>
       </div>
       <div class="vals">
@@ -281,7 +257,7 @@
     container.appendChild(el);
   }
 
-  // Concurrencia limitada (para que no se "cuelgue")
+  // Concurrencia limitada
   async function mapLimit(items, limit, fn){
     const out = new Array(items.length);
     let i = 0;
@@ -296,31 +272,65 @@
     return out;
   }
 
-  // ============================
   // Latest JSON (prefer latest_all)
-  // ============================
   async function loadLatest(){
     try { return await fetchJson("latest_all.json"); }
     catch { return await fetchJson("latest.json"); }
   }
 
-  function getLastFromLatest(latest, id){
-    // Soporta varias formas:
-    // 1) latest[id] = number
-    // 2) latest.sensors[id] / latest.drivers[id]
-    // 3) latest.sensors[id].value / latest.drivers[id].value
+  function setLastUpdate(latest){
+    const ts = latest.ts || latest.timestamp || latest.updated_at || latest.last_update || "";
+    const d = new Date(ts);
+    $("lastUpdate").textContent = (!ts || isNaN(d.getTime())) ? "—" : d.toLocaleString("es-ES");
+  }
+
+  function extractIdsFromLatest(latest){
+    // Detecta sensores S* y drivers D* leyendo claves del JSON (SIN manifests)
+    // Soporta estructuras:
+    // - latest.S1, latest.S9, latest.D1...
+    // - latest.sensors.S9 / latest.drivers.D1
     const L = safeObj(latest);
 
-    const tryPaths = [
+    const sensorIds = new Set();
+    const driverIds = new Set();
+
+    // claves directas
+    for (const k of Object.keys(L)){
+      if (/^S\d+$/i.test(k)) sensorIds.add(k.toUpperCase());
+      if (/^D\d+$/i.test(k)) driverIds.add(k.toUpperCase());
+    }
+
+    // dentro de buckets típicos
+    const sensorsBucket = safeObj(L.sensors || L.S);
+    const driversBucket = safeObj(L.drivers || L.D);
+
+    for (const k of Object.keys(sensorsBucket)){
+      if (/^S\d+$/i.test(k)) sensorIds.add(k.toUpperCase());
+    }
+    for (const k of Object.keys(driversBucket)){
+      if (/^D\d+$/i.test(k)) driverIds.add(k.toUpperCase());
+    }
+
+    return {
+      sensors: Array.from(sensorIds).sort((a,b)=>a.localeCompare(b,"es",{numeric:true})),
+      drivers: Array.from(driverIds).sort((a,b)=>a.localeCompare(b,"es",{numeric:true}))
+    };
+  }
+
+  function getLastValue(latest, id){
+    // Busca id en varias rutas
+    const L = safeObj(latest);
+
+    const candidates = [
       () => L[id],
-      () => L.sensors && L.sensors[id],
-      () => L.drivers && L.drivers[id],
-      () => L.S && L.S[id],
-      () => L.D && L.D[id],
+      () => (L.sensors && L.sensors[id]),
+      () => (L.drivers && L.drivers[id]),
+      () => (L.S && L.S[id]),
+      () => (L.D && L.D[id]),
     ];
 
     let v;
-    for (const f of tryPaths){
+    for (const f of candidates){
       const x = f();
       if (x == null) continue;
       v = (x && typeof x === "object") ? (x.value ?? x.v ?? x.last ?? x.val) : x;
@@ -328,12 +338,6 @@
     }
     const n = Number(String(v).replace(",", "."));
     return Number.isFinite(n) ? n : NaN;
-  }
-
-  function setLastUpdate(latest){
-    const ts = latest.ts || latest.timestamp || latest.updated_at || latest.last_update || "";
-    const d = new Date(ts);
-    $("lastUpdate").textContent = (!ts || isNaN(d.getTime())) ? "—" : d.toLocaleString("es-ES");
   }
 
   // ============================
@@ -413,53 +417,42 @@
     setStatus(false, "cargando…");
 
     try{
-      // 1) Manifests (nombres)
-      const [sensManRaw, drvManRaw] = await Promise.all([
-        fetchJson("sensors_manifest.json"),
-        fetchJson("drivers_manifest.json")
-      ]);
-      const sensors = normalizeManifest(sensManRaw);
-      const drivers = normalizeManifest(drvManRaw);
-
-      $("sensorsCount").textContent = sensors.length.toString();
-      $("driversCount").textContent = drivers.length.toString();
-
-      // 2) Latest (últimos valores)
+      // 1) latest (para IDs y últimos valores)
       const latest = await loadLatest();
       setLastUpdate(latest);
 
-      // 3) S9 chart (puntos reales)
+      const ids = extractIdsFromLatest(latest);
+      const sensorIds = ids.sensors;
+      const driverIds = ids.drivers;
+
+      // 2) S9 chart real
       const s9txt = await fetchText("S9.txt");
-      const s9vals = parseValuesFromTxt(s9txt).values;
+      const s9vals = parseValuesFromTxt(s9txt);
       drawS9(s9vals);
 
-      // 4) Tags: last desde JSON + stats desde TXT
-      // Sondas
-      const sensorsSorted = sensors.slice().sort((a,b)=>a.id.localeCompare(b.id,"es",{numeric:true}));
-      await mapLimit(sensorsSorted, FETCH_CONCURRENCY, async (s) => {
-        const txt = await fetchText(SENSOR_TXT(s.id));
-        const { values } = parseValuesFromTxt(txt);
+      // 3) Tags sensores: S*.txt + last JSON
+      await mapLimit(sensorIds, FETCH_CONCURRENCY, async (sid) => {
+        const txt = await fetchText(SENSOR_TXT(sid));
+        const values = parseValuesFromTxt(txt);
         const st = statsFromValues(values);
-        const last = getLastFromLatest(latest, s.id);
-        addTag(sensorsTags, `${s.name || s.id} (${s.id})`, last, st);
+        const last = getLastValue(latest, sid);
+        addTag(sensorsTags, sid, last, st);
       });
 
-      // Drivers
-      const driversSorted = drivers.slice().sort((a,b)=>a.id.localeCompare(b.id,"es",{numeric:true}));
-      await mapLimit(driversSorted, FETCH_CONCURRENCY, async (d) => {
-        const txt = await fetchText(DRIVER_TXT(d.id));
-        const { values } = parseValuesFromTxt(txt);
+      // 4) Tags drivers: drv_D*.txt + last JSON
+      await mapLimit(driverIds, FETCH_CONCURRENCY, async (did) => {
+        const txt = await fetchText(DRIVER_TXT(did));
+        const values = parseValuesFromTxt(txt);
         const st = statsFromValues(values);
-        const last = getLastFromLatest(latest, d.id);
-        addTag(driversTags, `${d.name || d.id} (${d.id})`, last, st);
+        const last = getLastValue(latest, did);
+        addTag(driversTags, did, last, st);
       });
 
-      // 5) Diagnóstico OK
       mini.innerHTML = `
-        <tr><td>latest usado</td><td>${latest && (latest.ts || latest.timestamp || latest.updated_at || latest.last_update) ? "OK" : "OK (sin ts)"}</td></tr>
-        <tr><td>S9.txt</td><td>${s9vals.length} puntos</td></tr>
-        <tr><td>Sondas</td><td>${sensors.length}</td></tr>
-        <tr><td>Drivers</td><td>${drivers.length}</td></tr>
+        <tr><td>latest</td><td>${(latest_all_used = !!latest && !!latest.ts) ? "OK" : "OK"}</td></tr>
+        <tr><td>Sensores detectados</td><td>${sensorIds.length}</td></tr>
+        <tr><td>Drivers detectados</td><td>${driverIds.length}</td></tr>
+        <tr><td>S9 puntos</td><td>${s9vals.length}</td></tr>
       `;
 
       setStatus(true, "online");
