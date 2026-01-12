@@ -3,74 +3,95 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Visor S + D (selección por checkbox)</title>
+  <title>BMS Trends · S (Analog) + D (Digital)</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3"></script>
+  <!-- ECharts (muy usado para dashboards “serios” en industria por su flexibilidad) -->
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 
   <style>
-    :root { --bg:#fff; --fg:#111; --muted:#666; --line:#ddd; --chip:#f3f4f6; --bad:#b00020; }
-    body { font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif; margin:16px; color:var(--fg); background:var(--bg); }
-    h1 { margin:0 0 6px 0; font-size:20px; }
-    .sub { color:var(--muted); font-size:13px; margin-bottom:12px; }
-    .panel { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin: 10px 0 12px; }
-    .chip { background:var(--chip); border:1px solid var(--line); padding:8px 10px; border-radius:10px; font-size:13px; }
-    .chip b { font-weight:700; }
-    .chip.bad { border-color: #f3b3bd; background:#fff6f7; color: var(--bad); }
+    :root{
+      --bg:#ffffff; --fg:#0f172a; --muted:#64748b; --line:#e2e8f0;
+      --card:#ffffff; --chip:#f1f5f9; --accent:#2563eb;
+      --ok:#16a34a; --off:#94a3b8;
+    }
+    body{
+      margin:16px; background:var(--bg); color:var(--fg);
+      font-family: system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    }
+    h1{ margin:0 0 6px 0; font-size:20px; }
+    .sub{ color:var(--muted); font-size:13px; margin-bottom:12px; }
 
-    .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
-    @media (max-width: 980px){ .grid2{ grid-template-columns: 1fr; } }
+    .topbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin:10px 0 12px; }
+    .chip{
+      background:var(--chip); border:1px solid var(--line);
+      padding:8px 10px; border-radius:12px; font-size:13px; display:flex; gap:8px; align-items:center;
+    }
+    .chip b{ font-weight:700; }
+    input[type="number"]{ width:92px; padding:6px 8px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+    button{
+      padding:8px 10px; border:1px solid var(--line); border-radius:12px; background:#fff; cursor:pointer;
+    }
+    button:hover{ background:#f8fafc; }
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    @media (max-width: 980px){ .grid2{ grid-template-columns:1fr; } }
+    .card{
+      background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px;
+      box-shadow: 0 1px 0 rgba(15,23,42,.03);
+    }
+    .card h2{
+      margin:0 0 8px 0; font-size:14px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    }
+    .muted{ color:var(--muted); font-size:12px; }
+    .controls{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 
-    .card { border:1px solid var(--line); border-radius:12px; padding:12px; }
-    .card h2 { margin: 0 0 8px 0; font-size: 15px; display:flex; align-items:center; justify-content:space-between; gap:10px; }
-    .muted { color: var(--muted); font-size: 12px; }
-    .controls { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    button { padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:#fff; cursor:pointer; font-size:12px; }
-    button:hover { background:#f7f7f7; }
-
-    .list { border:1px solid var(--line); border-radius:10px; padding:8px; max-height:210px; overflow:auto; }
-    .item { display:flex; align-items:center; gap:8px; padding:6px 6px; border-bottom:1px dashed #eee; }
+    .list{
+      border:1px solid var(--line); border-radius:12px; padding:8px; max-height:230px; overflow:auto;
+      background:#fff;
+    }
+    .item{ display:flex; align-items:center; gap:8px; padding:7px 6px; border-bottom:1px dashed #eef2f7; }
     .item:last-child{ border-bottom:none; }
-    .item label{ display:flex; gap:8px; align-items:center; cursor:pointer; width:100%; }
-    .tag { font-size:11px; color:var(--muted); margin-left:auto; }
-    canvas { width:100%; height:420px; }
+    .item label{ display:flex; align-items:center; gap:10px; width:100%; cursor:pointer; }
+    .tag{ margin-left:auto; color:var(--muted); font-size:11px; }
 
-    input[type="number"]{ width:88px; padding:6px 8px; border:1px solid var(--line); border-radius:8px; }
-    code { background:#f6f6f6; padding:1px 6px; border-radius:6px; border:1px solid #eee; }
+    .chart{
+      width:100%; height:520px;
+      border:1px solid var(--line); border-radius:14px;
+      background:#fff;
+    }
+    .chart.small{ height:420px; }
+
+    code{ background:#f8fafc; border:1px solid #eef2f7; padding:1px 6px; border-radius:8px; }
   </style>
 </head>
 
 <body>
-  <h1>Visor S + D</h1>
+  <h1>BMS Trends · Analógicas (S) + Digitales (D)</h1>
   <div class="sub">
-    S: <code>S1.txt</code>… · D: <code>drv_D1.txt</code>… · En <code>sensores/data/</code> (según tu repo) · Selecciona con checkbox qué graficar
+    Estilo SCADA/BMS: S en “bandas” (small multiples) + D como “digital trend” con bloques ON. Zoom temporal sincronizado.
   </div>
 
-  <div class="panel">
-    <div class="chip">Ruta detectada: <b id="dataDirLabel">—</b></div>
-
+  <div class="topbar">
+    <div class="chip">Ruta: <b id="dataDirLabel">—</b></div>
     <div class="chip">S con datos: <b id="loadedS">0</b></div>
     <div class="chip">D con datos: <b id="loadedD">0</b></div>
-    <div class="chip">Último dato: <b id="lastTs">—</b></div>
+    <div class="chip">Rango: <b id="rangeLabel">—</b></div>
 
-    <span class="chip">MAX_S <input id="maxS" type="number" min="1" max="300" value="40"></span>
-    <span class="chip">MAX_D <input id="maxD" type="number" min="1" max="300" value="40"></span>
-    <span class="chip">Paso ON (D) <input id="onStep" type="number" min="0.01" max="0.20" step="0.01" value="0.05"></span>
+    <div class="chip">MAX_S <input id="maxS" type="number" min="1" max="300" value="40"></div>
+    <div class="chip">MAX_D <input id="maxD" type="number" min="1" max="300" value="40"></div>
 
-    <button id="reloadBtn">Recargar datos</button>
-    <div class="chip" id="diagChip">Diag: <b id="diagText">—</b></div>
+    <button id="reloadBtn">Recargar</button>
   </div>
 
   <div class="grid2">
     <div class="card">
       <h2>
-        <span>Temperaturas (S)</span>
+        <span>Temperaturas / Analógicas (S)</span>
         <span class="controls">
           <button id="showAllS">Mostrar todas</button>
           <button id="hideAllS">Ocultar todas</button>
         </span>
       </h2>
-      <div class="muted">Marca los sensores que quieres ver en la gráfica.</div>
+      <div class="muted">Cada sensor seleccionado se dibuja como una banda (autoajustada) con el mismo eje X.</div>
       <div class="list" id="listS"></div>
     </div>
 
@@ -82,365 +103,497 @@
           <button id="hideAllD">Ocultar todas</button>
         </span>
       </h2>
-      <div class="muted">OFF=0 · ON escalonado para distinguir varios ON a la vez.</div>
+      <div class="muted">Estilo SCADA: carriles por driver y bloques ON; OFF queda vacío/tenue.</div>
       <div class="list" id="listD"></div>
     </div>
   </div>
 
   <div class="card" style="margin-top:12px;">
-    <h2>Gráfica S (Temperaturas superpuestas)</h2>
-    <canvas id="chartS"></canvas>
+    <h2>Trends S (bandas)</h2>
+    <div id="chartS" class="chart"></div>
   </div>
 
   <div class="card" style="margin-top:12px;">
-    <h2>Gráfica D (Drivers 0/1)</h2>
-    <canvas id="chartD"></canvas>
+    <h2>Trends D (digital timeline)</h2>
+    <div id="chartD" class="chart small"></div>
   </div>
 
 <script>
-/** =========================
- *  AUTODETECCIÓN DE RUTA
- *  ========================= */
+/* ==========================
+   Autodetección de ruta
+   ========================== */
 const CANDIDATE_DIRS = ["sensores/data", "data", "./sensores/data", "./data"];
 let DATA_DIR = null;
 
-function setDiag(text, bad=false) {
-  const chip = document.getElementById("diagChip");
-  chip.classList.toggle("bad", !!bad);
-  document.getElementById("diagText").textContent = text;
-}
-
-async function tryFetchText(url) {
-  try {
-    const r = await fetch(url, { cache: "no-store" });
-    if (!r.ok) return null;
+async function tryFetchText(url){
+  try{
+    const r = await fetch(url, { cache:"no-store" });
+    if(!r.ok) return null;
     return await r.text();
-  } catch {
-    return null;
-  }
+  }catch{ return null; }
 }
 
-async function detectDataDir() {
-  for (const dir of CANDIDATE_DIRS) {
-    const testS = await tryFetchText(`${dir}/S1.txt`);
-    if (testS && testS.trim().length) return dir;
-
-    const testD = await tryFetchText(`${dir}/drv_D1.txt`);
-    if (testD && testD.trim().length) return dir;
+async function detectDataDir(){
+  for(const dir of CANDIDATE_DIRS){
+    const s1 = await tryFetchText(`${dir}/S1.txt`);
+    if(s1 && s1.trim().length) return dir;
+    const d1 = await tryFetchText(`${dir}/drv_D1.txt`);
+    if(d1 && d1.trim().length) return dir;
   }
   return null;
 }
 
-/** =========================
- *  PARSERS
- *  ========================= */
-function parseSensorText(text) {
-  const rows = [];
-  const lines = String(text).split(/\r?\n/);
-  for (const line of lines) {
-    const ln = line.trim();
-    if (!ln) continue;
-    const parts = ln.split(";");
-    if (parts.length < 2) continue;
-    const ts = parts[0].trim();
-    const valRaw = parts[1].trim().replace(",", ".");
-    const d = new Date(ts);
-    const v = Number(valRaw);
-    if (Number.isNaN(d.getTime()) || Number.isNaN(v)) continue;
-    rows.push({ x: d, y: v });
-  }
-  rows.sort((a,b)=>a.x - b.x);
-  return rows;
-}
-
-function stateTo01(raw) {
-  const s = String(raw ?? "").trim().toLowerCase();
-  if (s === "on" || s === "1" || s === "true" || s === "encendido") return 1;
-  if (s === "off" || s === "0" || s === "false" || s === "apagado") return 0;
-  return (s && s !== "off") ? 1 : 0;
-}
-
-function parseDrvText(text) {
-  const rows = [];
-  const lines = String(text).split(/\r?\n/);
-  for (const line of lines) {
-    const ln = line.trim();
-    if (!ln) continue;
-    const parts = ln.split(";");
-    if (parts.length < 2) continue;
-    const ts = parts[0].trim();
-    const st = parts[1].trim();
-    const d = new Date(ts);
-    if (Number.isNaN(d.getTime())) continue;
-    rows.push({ t: d, s: stateTo01(st) });
-  }
-  rows.sort((a,b)=>a.t - b.t);
-  return rows;
-}
-
-function toSteppedSeries(events, onLevel) {
-  if (!events.length) return [];
+/* ==========================
+   Parseadores
+   ========================== */
+function parseS(text){
+  // ISO;valor
   const pts = [];
-  for (let i = 0; i < events.length; i++) {
-    const cur = events[i];
-    const yCur = cur.s === 1 ? onLevel : 0;
-    pts.push({ x: cur.t, y: yCur });
-    if (i < events.length - 1) {
-      const nextT = events[i+1].t;
-      pts.push({ x: nextT, y: yCur });
-    }
+  for(const line of String(text).split(/\r?\n/)){
+    const ln = line.trim();
+    if(!ln) continue;
+    const parts = ln.split(";");
+    if(parts.length < 2) continue;
+    const t = new Date(parts[0].trim()).getTime();
+    const v = Number(parts[1].trim().replace(",", "."));
+    if(Number.isNaN(t) || Number.isNaN(v)) continue;
+    pts.push([t, v]);
   }
+  pts.sort((a,b)=>a[0]-b[0]);
   return pts;
 }
 
-/** =========================
- *  ESTADO EN MEMORIA
- *  ========================= */
+function stateTo01(raw){
+  const s = String(raw ?? "").trim().toLowerCase();
+  if(s==="on"||s==="1"||s==="true"||s==="encendido") return 1;
+  if(s==="off"||s==="0"||s==="false"||s==="apagado") return 0;
+  return (s && s!=="off") ? 1 : 0;
+}
+
+function parseD(text){
+  // ISO;On/Off
+  const ev = [];
+  for(const line of String(text).split(/\r?\n/)){
+    const ln = line.trim();
+    if(!ln) continue;
+    const parts = ln.split(";");
+    if(parts.length < 2) continue;
+    const t = new Date(parts[0].trim()).getTime();
+    if(Number.isNaN(t)) continue;
+    ev.push([t, stateTo01(parts[1].trim())]);
+  }
+  ev.sort((a,b)=>a[0]-b[0]);
+  return ev;
+}
+
+/* ==========================
+   Store + UI
+   ========================== */
 const store = {
-  S: new Map(), // key: "S1" -> { points, selected }
-  D: new Map(), // key: "D1" -> { events, selected, onLevel }
-  meta: { lastTs: null }
+  S: new Map(), // "S1" -> { pts, selected }
+  D: new Map(), // "D1" -> { ev, selected }
+  range: { minT:null, maxT:null }
 };
 
-/** =========================
- *  UI CHECKBOX LIST
- *  ========================= */
-function buildList(containerId, keys, group) {
+function buildList(containerId, keys, group){
   const el = document.getElementById(containerId);
   el.innerHTML = "";
-  for (const key of keys) {
+  for(const key of keys){
     const entry = store[group].get(key);
     const row = document.createElement("div");
     row.className = "item";
 
     const cb = document.createElement("input");
-    cb.type = "checkbox";
+    cb.type="checkbox";
     cb.checked = !!entry.selected;
-    cb.addEventListener("change", () => {
+    cb.addEventListener("change", ()=>{
       entry.selected = cb.checked;
-      renderCharts(); // update inmediato
+      renderAll();
     });
 
     const label = document.createElement("label");
     label.appendChild(cb);
 
-    const spanName = document.createElement("span");
-    spanName.textContent = key;
-    label.appendChild(spanName);
+    const name = document.createElement("span");
+    name.textContent = key;
+    label.appendChild(name);
 
-    const spanTag = document.createElement("span");
-    spanTag.className = "tag";
-    spanTag.textContent = group === "S"
-      ? `${entry.points.length} pts`
-      : `${entry.events.length} evt`;
-    label.appendChild(spanTag);
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = (group==="S") ? `${entry.pts.length} pts` : `${entry.ev.length} evt`;
+    label.appendChild(tag);
 
     row.appendChild(label);
     el.appendChild(row);
   }
 }
 
-function setAll(group, value) {
-  for (const [k, v] of store[group]) v.selected = value;
-  // reflejar en UI
-  const listId = group === "S" ? "listS" : "listD";
-  const list = document.getElementById(listId);
-  list.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = value);
-  renderCharts();
+function setAll(group, value){
+  for(const [,v] of store[group]) v.selected = value;
+  const listId = (group==="S") ? "listS" : "listD";
+  document.getElementById(listId).querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=value);
+  renderAll();
 }
 
-/** =========================
- *  CHARTS
- *  ========================= */
+/* ==========================
+   Charts (ECharts)
+   ========================== */
 let chartS = null;
 let chartD = null;
 
-function makeSensorChart(ctx, datasets) {
-  return new Chart(ctx, {
-    type: "line",
-    data: { datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      parsing: false,
-      animation: false,
-      interaction: { mode: "nearest", intersect: false },
-      plugins: { legend: { display: true, position: "top" } },
-      scales: {
-        x: { type: "time", time: { tooltipFormat: "yyyy-MM-dd HH:mm:ssXXX" }, grid: { color: "#eee" }, title: { display: true, text: "Fecha y hora" } },
-        y: { grid: { color: "#eee" }, title: { display: true, text: "Temperatura / valor" } }
-      },
-      elements: { point: { radius: 0 }, line: { tension: 0, borderWidth: 2 } }
-    }
+function initCharts(){
+  if(!chartS) chartS = echarts.init(document.getElementById("chartS"));
+  if(!chartD) chartD = echarts.init(document.getElementById("chartD"));
+  window.addEventListener("resize", ()=>{
+    chartS && chartS.resize();
+    chartD && chartD.resize();
   });
 }
 
-function makeDriverChart(ctx, datasets, yLevelsMap) {
-  return new Chart(ctx, {
-    type: "line",
-    data: { datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      parsing: false,
-      animation: false,
-      interaction: { mode: "nearest", intersect: false },
-      plugins: {
-        legend: { display: true, position: "top" },
-        tooltip: {
-          callbacks: {
-            label: (item) => {
-              const name = item.dataset.label || "";
-              const y = item.parsed.y;
-              const state = (y === 0) ? "OFF" : "ON";
-              return `${name}: ${state}`;
-            }
-          }
-        }
-      },
-      scales: {
-        x: { type: "time", time: { tooltipFormat: "yyyy-MM-dd HH:mm:ssXXX" }, grid: { color: "#eee" }, title: { display: true, text: "Fecha y hora" } },
-        y: {
-          min: 0, max: 1.02,
-          ticks: {
-            callback: (val) => {
-              const v = Number(val);
-              if (Math.abs(v - 0) < 1e-6) return "0 (OFF)";
-              const key = v.toFixed(2);
-              if (yLevelsMap.has(key)) return `${key} (ON ${yLevelsMap.get(key)})`;
-              return v.toFixed(2);
-            }
-          },
-          grid: { color: "#eee" },
-          title: { display: true, text: "Estado (OFF=0, ON escalonado)" }
-        }
-      },
-      elements: { point: { radius: 0 }, line: { tension: 0, borderWidth: 2 } }
-    }
-  });
-}
+/* ----- Render S: small multiples (bandas) ----- */
+function renderS(){
+  const selected = Array.from(store.S.entries()).filter(([,v])=>v.selected);
+  const minT = store.range.minT;
+  const maxT = store.range.maxT;
 
-function renderCharts() {
-  // S datasets (solo seleccionados)
-  const datasetsS = [];
-  for (const [k, v] of store.S) {
-    if (!v.selected) continue;
-    datasetsS.push({ label: k, data: v.points, spanGaps: true });
-  }
-
-  // D datasets (solo seleccionados) + y map para ticks
-  const datasetsD = [];
-  const yLevelsMap = new Map();
-  for (const [k, v] of store.D) {
-    if (!v.selected) continue;
-    yLevelsMap.set(v.onLevel.toFixed(2), k);
-    datasetsD.push({
-      label: k,
-      data: toSteppedSeries(v.events, v.onLevel),
-      stepped: true,
-      spanGaps: true
-    });
-  }
-
-  const ctxS = document.getElementById("chartS").getContext("2d");
-  if (chartS) chartS.destroy();
-  chartS = makeSensorChart(ctxS, datasetsS);
-
-  const ctxD = document.getElementById("chartD").getContext("2d");
-  if (chartD) chartD.destroy();
-  chartD = makeDriverChart(ctxD, datasetsD, yLevelsMap);
-}
-
-/** =========================
- *  CARGA DE DATOS
- *  ========================= */
-async function loadAll() {
-  setDiag("Detectando ruta...");
-  DATA_DIR = await detectDataDir();
-
-  if (!DATA_DIR) {
-    document.getElementById("dataDirLabel").textContent = "NO ENCONTRADA";
-    setDiag("No leo S1.txt ni drv_D1.txt (ruta mal o Pages bloquea .txt)", true);
+  // Si no hay nada seleccionado, limpiamos con un mensaje
+  if(selected.length === 0){
+    chartS.setOption({
+      title: { text:"Selecciona uno o varios sensores (S) arriba", left:"center", top:"middle",
+               textStyle:{ color:"#64748b", fontSize:14, fontWeight:500 } },
+      xAxis: [], yAxis: [], grid: [], series: []
+    }, true);
     return;
   }
 
-  document.getElementById("dataDirLabel").textContent = DATA_DIR + "/";
-  setDiag(`OK (${DATA_DIR}/)`);
+  // Layout SCADA: una “banda” por sensor, compartiendo zoom/cursor temporal
+  const n = Math.min(selected.length, 16); // límite visual razonable; si marcas más, sigue pero será estrecho
+  const grids = [];
+  const xAxes = [];
+  const yAxes = [];
+  const series = [];
+
+  const topPad = 24;
+  const bottomPad = 38;
+  const gap = 10;
+  const usableH = 100 - topPad - bottomPad;
+  const bandH = (usableH - gap * (n-1)) / n;
+
+  for(let i=0; i<n; i++){
+    const [key, v] = selected[i];
+
+    const top = topPad + i*(bandH + gap);
+    grids.push({
+      left: 60, right: 18,
+      top: `${top}%`,
+      height: `${bandH}%`,
+      containLabel: false
+    });
+
+    xAxes.push({
+      type: "time",
+      gridIndex: i,
+      min: minT, max: maxT,
+      axisLabel: { show: i===n-1, color:"#64748b" },
+      axisTick: { show: i===n-1 },
+      axisLine: { lineStyle:{ color:"#cbd5e1" } },
+      splitLine: { show:true, lineStyle:{ color:"#eef2f7" } }
+    });
+
+    // Auto-escala por banda (como trend de BMS): el eje Y se ajusta a ese sensor, con margen
+    let localMin = Infinity, localMax = -Infinity;
+    for(const p of v.pts){ if(p[1]<localMin) localMin=p[1]; if(p[1]>localMax) localMax=p[1]; }
+    if(!isFinite(localMin) || !isFinite(localMax)) { localMin=0; localMax=1; }
+    const span = (localMax-localMin) || 1;
+    const pad = span*0.08;
+
+    yAxes.push({
+      type:"value",
+      gridIndex:i,
+      min: localMin - pad,
+      max: localMax + pad,
+      axisLabel:{ color:"#64748b" },
+      axisLine:{ lineStyle:{ color:"#cbd5e1" } },
+      splitLine:{ show:false }
+    });
+
+    series.push({
+      name: key,
+      type: "line",
+      xAxisIndex: i,
+      yAxisIndex: i,
+      data: v.pts,
+      showSymbol: false,
+      lineStyle: { width: 2 },
+      emphasis: { focus: "series" }
+    });
+
+    // Etiqueta “de carril” (muy SCADA)
+    series.push({
+      name: key + "_label",
+      type: "custom",
+      xAxisIndex: i,
+      yAxisIndex: i,
+      data: [[minT, (localMin+localMax)/2]],
+      silent: true,
+      renderItem: function(params, api){
+        const y = api.coord([minT, api.value(1)])[1];
+        return {
+          type: "text",
+          style: {
+            text: key,
+            x: 8,
+            y: y,
+            fill: "#0f172a",
+            font: "12px system-ui",
+            verticalAlign: "middle"
+          }
+        };
+      }
+    });
+  }
+
+  chartS.setOption({
+    animation: false,
+    tooltip: {
+      trigger: "axis",
+      axisPointer: { type:"cross" },
+      backgroundColor: "rgba(15,23,42,.92)",
+      borderColor: "rgba(255,255,255,.12)",
+      textStyle: { color:"#fff" }
+    },
+    axisPointer: {
+      link: [{ xAxisIndex: "all" }]
+    },
+    dataZoom: [
+      { type:"inside", xAxisIndex: xAxes.map((_,i)=>i), filterMode:"none" },
+      { type:"slider", xAxisIndex: xAxes.map((_,i)=>i), height: 22, bottom: 8 }
+    ],
+    grid: grids,
+    xAxis: xAxes,
+    yAxis: yAxes,
+    series: series
+  }, true);
+}
+
+/* ----- Render D: digital trend con bloques ON por intervalos ----- */
+function buildDigitalIntervals(events, minT, maxT){
+  // events: [[t, state], ...] estado en el instante t
+  // devolvemos intervalos ON: [start, end]
+  if(!events || events.length === 0) return [];
+  const segs = [];
+  for(let i=0; i<events.length; i++){
+    const [t, s] = events[i];
+    const t2 = (i < events.length-1) ? events[i+1][0] : maxT;
+    if(s === 1){
+      segs.push([Math.max(t, minT), Math.min(t2, maxT)]);
+    }
+  }
+  return segs.filter(a=>a[1] > a[0]);
+}
+
+function renderD(){
+  const selected = Array.from(store.D.entries()).filter(([,v])=>v.selected);
+  const minT = store.range.minT;
+  const maxT = store.range.maxT;
+
+  if(selected.length === 0){
+    chartD.setOption({
+      title: { text:"Selecciona uno o varios drivers (D) arriba", left:"center", top:"middle",
+               textStyle:{ color:"#64748b", fontSize:14, fontWeight:500 } },
+      xAxis: [], yAxis: [], series: []
+    }, true);
+    return;
+  }
+
+  // Categorías (carriles)
+  const cats = selected.map(([k])=>k);
+
+  // Data para custom series: cada ON es un rectángulo en un carril
+  // item: [start, end, laneIndex]
+  const blocks = [];
+  selected.forEach(([k, v], idx)=>{
+    const intervals = buildDigitalIntervals(v.ev, minT, maxT);
+    for(const [a,b] of intervals){
+      blocks.push([a, b, idx]);
+    }
+  });
+
+  const option = {
+    animation: false,
+    grid: { left: 70, right: 18, top: 12, bottom: 38 },
+    tooltip: {
+      trigger: "item",
+      backgroundColor: "rgba(15,23,42,.92)",
+      borderColor: "rgba(255,255,255,.12)",
+      textStyle: { color:"#fff" },
+      formatter: (p)=>{
+        const a = new Date(p.value[0]).toISOString();
+        const b = new Date(p.value[1]).toISOString();
+        const name = cats[p.value[2]];
+        return `<b>${name}</b><br/>ON<br/>${a}<br/>→ ${b}`;
+      }
+    },
+    xAxis: {
+      type: "time",
+      min: minT,
+      max: maxT,
+      axisLine: { lineStyle:{ color:"#cbd5e1" } },
+      splitLine: { show:true, lineStyle:{ color:"#eef2f7" } }
+    },
+    yAxis: {
+      type: "category",
+      data: cats,
+      axisLine: { lineStyle:{ color:"#cbd5e1" } },
+      axisTick: { show:false },
+      axisLabel: { color:"#0f172a" },
+      splitLine: { show:true, lineStyle:{ color:"#f1f5f9" } }
+    },
+    dataZoom: [
+      { type:"inside", xAxisIndex: 0, filterMode:"none" },
+      { type:"slider", xAxisIndex: 0, height: 22, bottom: 8 }
+    ],
+    series: [
+      // fondo OFF tenue por carril (opcional): usando markArea sería pesado; lo hacemos con custom “silent”
+      {
+        type: "custom",
+        silent: true,
+        renderItem: function(params, api){
+          const idx = api.value(2);
+          const y = api.coord([store.range.minT, idx])[1];
+          const h = api.size([0, 1])[1] * 0.65;
+          const x0 = api.coord([store.range.minT, idx])[0];
+          const x1 = api.coord([store.range.maxT, idx])[0];
+          return {
+            type: "rect",
+            shape: { x: x0, y: y - h/2, width: (x1-x0), height: h },
+            style: { fill: "rgba(148,163,184,0.10)" }
+          };
+        },
+        data: cats.map((_,i)=>[store.range.minT, store.range.maxT, i])
+      },
+      // bloques ON (lo que se ve en SCADA)
+      {
+        name: "ON",
+        type: "custom",
+        data: blocks,
+        renderItem: function(params, api){
+          const start = api.value(0);
+          const end = api.value(1);
+          const lane = api.value(2);
+
+          const y = api.coord([start, lane])[1];
+          const x0 = api.coord([start, lane])[0];
+          const x1 = api.coord([end, lane])[0];
+          const h = api.size([0, 1])[1] * 0.65;
+
+          return {
+            type: "rect",
+            shape: { x: x0, y: y - h/2, width: Math.max(1, x1-x0), height: h },
+            style: {
+              fill: "rgba(22,163,74,0.85)",
+              stroke: "rgba(22,163,74,1)",
+              lineWidth: 1
+            }
+          };
+        }
+      }
+    ]
+  };
+
+  chartD.setOption(option, true);
+}
+
+/* ==========================
+   Render global
+   ========================== */
+function renderAll(){
+  renderS();
+  renderD();
+}
+
+/* ==========================
+   Carga de datos
+   ========================== */
+async function loadAll(){
+  initCharts();
+
+  DATA_DIR = await detectDataDir();
+  document.getElementById("dataDirLabel").textContent = DATA_DIR ? (DATA_DIR + "/") : "NO ENCONTRADA";
+
+  if(!DATA_DIR){
+    document.getElementById("loadedS").textContent = "0";
+    document.getElementById("loadedD").textContent = "0";
+    document.getElementById("rangeLabel").textContent = "—";
+    chartS.clear(); chartD.clear();
+    return;
+  }
 
   const maxS = Math.max(1, Math.min(300, Number(document.getElementById("maxS").value) || 40));
   const maxD = Math.max(1, Math.min(300, Number(document.getElementById("maxD").value) || 40));
-  const onStep = Math.max(0.01, Math.min(0.20, Number(document.getElementById("onStep").value) || 0.05));
 
   store.S.clear();
   store.D.clear();
-  store.meta.lastTs = null;
+  store.range.minT = null;
+  store.range.maxT = null;
 
-  let loadedS = 0;
-  let loadedD = 0;
+  let loadedS = 0, loadedD = 0;
 
-  // --- S ---
-  for (let i = 1; i <= maxS; i++) {
+  // S
+  for(let i=1; i<=maxS; i++){
     const txt = await tryFetchText(`${DATA_DIR}/S${i}.txt`);
-    if (txt == null) continue;
-
-    const points = parseSensorText(txt);
-    if (!points.length) continue;
-
+    if(txt == null) continue;
+    const pts = parseS(txt);
+    if(!pts.length) continue;
     loadedS++;
-    const key = `S${i}`;
-    store.S.set(key, { points, selected: false });
+    store.S.set(`S${i}`, { pts, selected:false });
 
-    const last = points[points.length - 1]?.x ?? null;
-    if (last && (!store.meta.lastTs || last > store.meta.lastTs)) store.meta.lastTs = last;
+    const t0 = pts[0][0];
+    const t1 = pts[pts.length-1][0];
+    if(store.range.minT == null || t0 < store.range.minT) store.range.minT = t0;
+    if(store.range.maxT == null || t1 > store.range.maxT) store.range.maxT = t1;
   }
 
-  // --- D ---
-  // ON escalonado por ORDEN REAL D1..Dn (no por “cargados”), para que sea consistente
-  for (let i = 1; i <= maxD; i++) {
+  // D
+  for(let i=1; i<=maxD; i++){
     const txt = await tryFetchText(`${DATA_DIR}/drv_D${i}.txt`);
-    if (txt == null) continue;
-
-    const events = parseDrvText(txt);
-    if (!events.length) continue;
-
+    if(txt == null) continue;
+    const ev = parseD(txt);
+    if(!ev.length) continue;
     loadedD++;
-    const key = `D${i}`;
-    const onLevelRaw = 1 - (i - 1) * onStep;
-    const onLevel = Math.max(0.05, Math.round(onLevelRaw * 100) / 100);
+    store.D.set(`D${i}`, { ev, selected:false });
 
-    store.D.set(key, { events, selected: false, onLevel });
-
-    const lastEvt = events[events.length - 1]?.t ?? null;
-    if (lastEvt && (!store.meta.lastTs || lastEvt > store.meta.lastTs)) store.meta.lastTs = lastEvt;
+    const t0 = ev[0][0];
+    const t1 = ev[ev.length-1][0];
+    if(store.range.minT == null || t0 < store.range.minT) store.range.minT = t0;
+    if(store.range.maxT == null || t1 > store.range.maxT) store.range.maxT = t1;
   }
 
   document.getElementById("loadedS").textContent = String(loadedS);
   document.getElementById("loadedD").textContent = String(loadedD);
-  document.getElementById("lastTs").textContent = store.meta.lastTs ? store.meta.lastTs.toISOString() : "—";
 
-  if (loadedS === 0 && loadedD === 0) {
-    setDiag("Ruta OK pero 0 archivos con datos (revisa nombres / MAX)", true);
-  } else {
-    setDiag(`OK · S:${loadedS} D:${loadedD}`);
+  if(store.range.minT != null && store.range.maxT != null){
+    const a = new Date(store.range.minT).toISOString().slice(0,19).replace("T"," ");
+    const b = new Date(store.range.maxT).toISOString().slice(0,19).replace("T"," ");
+    document.getElementById("rangeLabel").textContent = `${a} → ${b}`;
+  }else{
+    document.getElementById("rangeLabel").textContent = "—";
   }
 
-  // construir listas
   buildList("listS", Array.from(store.S.keys()), "S");
   buildList("listD", Array.from(store.D.keys()), "D");
 
-  // por defecto: no mostrar nada hasta que elijas (para que no se sature)
-  renderCharts();
+  renderAll();
 }
 
-/** =========================
- *  EVENTS
- *  ========================= */
+/* ==========================
+   Eventos UI
+   ========================== */
 document.getElementById("reloadBtn").addEventListener("click", loadAll);
-
-document.getElementById("showAllS").addEventListener("click", () => setAll("S", true));
-document.getElementById("hideAllS").addEventListener("click", () => setAll("S", false));
-document.getElementById("showAllD").addEventListener("click", () => setAll("D", true));
-document.getElementById("hideAllD").addEventListener("click", () => setAll("D", false));
+document.getElementById("showAllS").addEventListener("click", ()=>setAll("S", true));
+document.getElementById("hideAllS").addEventListener("click", ()=>setAll("S", false));
+document.getElementById("showAllD").addEventListener("click", ()=>setAll("D", true));
+document.getElementById("hideAllD").addEventListener("click", ()=>setAll("D", false));
 
 loadAll();
 </script>
