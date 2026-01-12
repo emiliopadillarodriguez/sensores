@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Chart.js (gráfica) -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
@@ -243,73 +243,82 @@
       vertical-align: -1px;
     }
 
-    /* Resumen (tablas) */
-    .tables{
+    /* Resumen: dos tablas */
+    .summaryGrid{
       display:grid;
       grid-template-columns: 1fr;
       gap: 12px;
     }
 
-    .sectionTitle{
+    .subcard{
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.16);
+      border-radius: 16px;
+      overflow:hidden;
+    }
+    .subhead{
+      padding: 10px 12px;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:10px;
-      margin: 4px 0 6px;
-      color: var(--muted);
-      font-weight: 800;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      gap: 10px;
+      background: rgba(255,255,255,.04);
+    }
+    .subhead .ttl{
+      font-weight: 900;
       font-size: 12px;
-      letter-spacing: .4px;
+      letter-spacing: .3px;
       text-transform: uppercase;
+      color: rgba(234,240,255,.9);
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .subhead .ttl .dot2{
+      width:10px;height:10px;border-radius:999px;
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+    }
+    .subhead .miniHint{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      white-space:nowrap;
     }
 
     .tableWrap{
       max-height: 250px;
       overflow:auto;
-      padding-right: 6px;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      background: rgba(0,0,0,.12);
+      padding: 10px 10px 12px;
     }
+    .tableWrap.big{ max-height: 320px; }
+
     .tableWrap::-webkit-scrollbar{ width: 10px; }
     .tableWrap::-webkit-scrollbar-thumb{ background: rgba(255,255,255,.12); border-radius: 999px; }
     .tableWrap::-webkit-scrollbar-track{ background: rgba(255,255,255,.04); border-radius: 999px; }
 
-    table.mini{
+    .mini{
       width:100%;
       border-collapse:separate;
       border-spacing:0 8px;
-      padding: 8px;
     }
-    table.mini th{
-      text-align:left;
-      color: rgba(234,240,255,.75);
-      font-size: 11px;
-      font-weight: 900;
-      letter-spacing:.3px;
-      padding: 8px 10px 4px;
-    }
-    table.mini td{
+    .mini td{
       padding: 10px 12px;
       background: rgba(255,255,255,.05);
       border: 1px solid rgba(255,255,255,.10);
       vertical-align: middle;
-      font-size: 13px;
     }
-    table.mini td:first-child{
+    .mini td:first-child{
       border-radius: 14px 0 0 14px;
       font-weight: 900;
     }
-    table.mini td:last-child{
+    .mini td:last-child{
       border-radius: 0 14px 14px 0;
       text-align:right;
-      color: rgba(234,240,255,.82);
-      font-weight: 900;
+      color: var(--muted);
+      font-weight: 800;
       white-space: nowrap;
-    }
-    .mutedCell{
-      color: rgba(234,240,255,.62) !important;
-      font-weight: 800 !important;
     }
 
     .badge{
@@ -354,18 +363,7 @@
       filter: drop-shadow(0 0 8px rgba(59,231,255,.25));
       border-color: rgba(59,231,255,.45);
     }
-    @keyframes spin{
-      from{ transform: rotate(0deg); }
-      to{ transform: rotate(360deg); }
-    }
-
-    .deltaPos{ color: rgba(53,208,127,.95); }
-    .deltaNeg{ color: rgba(255,92,92,.95); }
-    .deltaZero{ color: rgba(234,240,255,.75); }
-
-    @media (max-width: 980px){
-      .tableWrap{ max-height: 260px; }
-    }
+    @keyframes spin{ from{ transform: rotate(0deg); } to{ transform: rotate(360deg); } }
   </style>
 </head>
 
@@ -378,7 +376,7 @@
         <div class="logo"></div>
         <div>
           <h1>ACS y Calefaccion de Arribes del duero</h1>
-          <div class="sub">Index · S9 + Resumen (S y D)</div>
+          <div class="sub">Index · S9 + Resumen (2 tablas)</div>
         </div>
       </div>
 
@@ -416,53 +414,38 @@
         </div>
       </div>
 
-      <!-- DCHA: Resumen -->
+      <!-- DCHA: Resumen con 2 tablas -->
       <div class="card">
         <div class="head">
-          <h2>🧾 Resumen</h2>
-          <div class="hint">Sensores (stats 24h) + Drivers (ON/OFF)</div>
+          <h2>🧾 Resumen rápido</h2>
+          <div class="hint">Sensores | Drivers</div>
         </div>
-        <div class="body">
-          <div class="tables">
 
-            <div>
-              <div class="sectionTitle">
-                <span>Sensores (S) · Último / Media 24h / Δ</span>
-                <span class="mutedCell" id="sCount">—</span>
+        <div class="body">
+          <div class="summaryGrid">
+
+            <!-- Tabla Sensores -->
+            <div class="subcard">
+              <div class="subhead">
+                <div class="ttl"><span class="dot2"></span> Sensores (S)</div>
+                <div class="miniHint">valor + unidad</div>
               </div>
-              <div class="tableWrap">
+              <div class="tableWrap big">
                 <table class="mini" id="tableSensors">
-                  <thead>
-                    <tr>
-                      <th>Sensor</th>
-                      <th style="text-align:right">Último</th>
-                      <th style="text-align:right">Media 24h</th>
-                      <th style="text-align:right">Δ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td colspan="4" class="mutedCell">Cargando…</td></tr>
-                  </tbody>
+                  <tr><td>Cargando…</td><td>—</td></tr>
                 </table>
               </div>
             </div>
 
-            <div>
-              <div class="sectionTitle">
-                <span>Drivers (D) · Bombas ON/OFF</span>
-                <span class="mutedCell" id="dCount">—</span>
+            <!-- Tabla Drivers -->
+            <div class="subcard">
+              <div class="subhead">
+                <div class="ttl"><span class="dot2"></span> Drivers (Bombas / Equipos)</div>
+                <div class="miniHint">ON/OFF + icono</div>
               </div>
               <div class="tableWrap">
                 <table class="mini" id="tableDrivers">
-                  <thead>
-                    <tr>
-                      <th>Driver</th>
-                      <th style="text-align:right">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td colspan="2" class="mutedCell">Cargando…</td></tr>
-                  </tbody>
+                  <tr><td>Cargando…</td><td>—</td></tr>
                 </table>
               </div>
             </div>
@@ -470,8 +453,8 @@
           </div>
 
           <div class="foot">
-            <div>Δ = último − anterior (en las últimas 24h)</div>
-            <div>Fuente real: <b>data/Sx.txt</b> y <b>data/latest_all.json</b></div>
+            <div>ON = bomba girando</div>
+            <div>Fuente: <b>data/latest_all.json</b></div>
           </div>
         </div>
       </div>
@@ -482,7 +465,6 @@
   <script>
     const REFRESH_MS = 60_000;
 
-    // --- Utilidades
     const toDate = (s) => {
       const d = new Date(s);
       return isNaN(d.getTime()) ? null : d;
@@ -496,4 +478,189 @@
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
 
-    func
+    function setConnection(ok, text){
+      const led = document.getElementById("led");
+      const connText = document.getElementById("connText");
+      led.classList.remove("ok","bad");
+      led.classList.add(ok ? "ok" : "bad");
+      connText.textContent = text;
+    }
+
+    // --- Chart S9
+    let chart;
+    function initChart(){
+      const ctx = document.getElementById("chartS9");
+      chart = new Chart(ctx, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "S9", data: [], tension: 0.25, borderWidth: 2, pointRadius: 0, fill: true }]},
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => ` S9: ${fmtNum(ctx.parsed.y)}` } }
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 8, color: "rgba(234,240,255,.55)" }, grid: { color: "rgba(255,255,255,.06)" } },
+            y: { ticks: { color: "rgba(234,240,255,.55)" }, grid: { color: "rgba(255,255,255,.06)" } }
+          }
+        }
+      });
+    }
+
+    function updateChart(series){
+      const labels = series.map(p => {
+        const d = toDate(p.ts);
+        if (!d) return "";
+        return d.toLocaleString("es-ES", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"2-digit" });
+      });
+      const values = series.map(p => Number(p.v));
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+      chart.update();
+    }
+
+    async function fetchJson(url){
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} en ${url}`);
+      return await res.json();
+    }
+
+    async function fetchText(url){
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} en ${url}`);
+      return await res.text();
+    }
+
+    function parseHistoryText(text) {
+      const out = [];
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+      for (const line of lines) {
+        let parts = line.split(",");
+        if (parts.length < 2) parts = line.split(";");
+        if (parts.length < 2) parts = line.split(/\s+/);
+        if (parts.length < 2) continue;
+
+        const ts = parts[0].trim();
+        const raw = parts.slice(1).join(" ").trim();
+
+        const t = new Date(ts);
+        if (Number.isNaN(t.getTime())) continue;
+
+        const v = Number(String(raw).replace(",", "."));
+        if (Number.isNaN(v)) continue;
+
+        out.push({ ts: t.toISOString(), v });
+      }
+
+      out.sort((a,b) => new Date(a.ts) - new Date(b.ts));
+      return out;
+    }
+
+    function normalizeDriverState(raw){
+      const v = String(raw ?? "").trim().toLowerCase();
+      if (v === "on" || v === "1" || v === "true" || v === "yes") return "on";
+      if (v === "off" || v === "0" || v === "false" || v === "no") return "off";
+      return ""; // numérico u otro
+    }
+
+    function renderLastUpdate(meta){
+      const lastUpdate = document.getElementById("lastUpdate");
+      const d = toDate(meta.timestamp_utc);
+      lastUpdate.textContent = d
+        ? d.toLocaleString("es-ES", { weekday:"short", year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" })
+        : "—";
+    }
+
+    function renderSensorsTable(meta){
+      const t = document.getElementById("tableSensors");
+
+      const sensors = (meta.sensors || [])
+        .filter(x => /^S\\d+$/.test(String(x.item||"").trim()))
+        .slice()
+        .sort((a,b)=> String(a.item).localeCompare(String(b.item), "es", { numeric:true }));
+
+      const rows = sensors.map(s => {
+        const id = String(s.item).trim();
+        const label = s.label ? ` · ${s.label}` : "";
+        const units = s.units ? ` ${s.units}` : "";
+
+        const num = Number(String(s.value ?? "").replace(",", "."));
+        const val = Number.isFinite(num) ? fmtNum(num) : String(s.value ?? "—");
+
+        return `<tr><td>${escapeHtml(id + label)}</td><td>${escapeHtml(val)}${escapeHtml(units)}</td></tr>`;
+      });
+
+      t.innerHTML = rows.length ? rows.join("") : `<tr><td>Sin sensores</td><td>—</td></tr>`;
+    }
+
+    function renderDriversTable(meta){
+      const t = document.getElementById("tableDrivers");
+
+      const drivers = (meta.drivers || [])
+        .filter(x => /^D\\d+$/.test(String(x.item||"").trim()))
+        .slice()
+        .sort((a,b)=> String(a.item).localeCompare(String(b.item), "es", { numeric:true }));
+
+      const rows = drivers.map(d => {
+        const id = String(d.item).trim();
+        const label = d.label ? ` · ${d.label}` : "";
+
+        const st = normalizeDriverState(d.value);
+        let stateHtml = "";
+
+        if (st === "on"){
+          stateHtml = `<span class="badge on"><span class="pump spin"></span> ON</span>`;
+        } else if (st === "off"){
+          stateHtml = `<span class="badge off">OFF</span>`;
+        } else {
+          // válvulas u otros: 0.00 / 100.00 / etc
+          const num = Number(String(d.value ?? "").replace(",", "."));
+          const v = Number.isFinite(num) ? fmtNum(num) : escapeHtml(String(d.value ?? "—"));
+          stateHtml = `<span class="badge">${v}</span>`;
+        }
+
+        return `<tr><td>${escapeHtml(id + label)}</td><td>${stateHtml}</td></tr>`;
+      });
+
+      t.innerHTML = rows.length ? rows.join("") : `<tr><td>Sin drivers</td><td>—</td></tr>`;
+    }
+
+    async function loadAndRender(){
+      try{
+        setConnection(false, "conectando…");
+
+        const meta = await fetchJson("data/latest_all.json");
+        renderLastUpdate(meta);
+
+        const txt = await fetchText("data/S9.txt");
+        const seriesAll = parseHistoryText(txt);
+
+        const ms24h = 24 * 60 * 60 * 1000;
+        const lastT = seriesAll.length ? new Date(seriesAll[seriesAll.length - 1].ts).getTime() : Date.now();
+        const minT = lastT - ms24h;
+        const series24 = seriesAll.filter(p => new Date(p.ts).getTime() >= minT).slice(-300);
+
+        updateChart(series24);
+
+        renderSensorsTable(meta);
+        renderDriversTable(meta);
+
+        setConnection(true, "online");
+      }catch(e){
+        console.error(e);
+        setConnection(false, "error (mira consola)");
+        document.getElementById("tableSensors").innerHTML =
+          `<tr><td>Error</td><td>${escapeHtml(String(e?.message || e))}</td></tr>`;
+        document.getElementById("tableDrivers").innerHTML =
+          `<tr><td>Error</td><td>${escapeHtml(String(e?.message || e))}</td></tr>`;
+      }
+    }
+
+    initChart();
+    loadAndRender();
+    setInterval(loadAndRender, REFRESH_MS);
+  </script>
+</body>
+</html>
