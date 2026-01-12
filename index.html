@@ -5,107 +5,679 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ACS y Calefaccion de Arribes del duero</title>
 
+  <!-- Tipografía -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js (gráfica) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     :root{
-      --bg:#0b1220;
-      --text:#e7eefc;
-      --muted:#a9b8d6;
-      --line:rgba(255,255,255,.10);
-      --shadow: 0 12px 40px rgba(0,0,0,.35);
+      --bg0:#070A12;
+      --bg1:#0B1020;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.09);
+      --stroke: rgba(255,255,255,.10);
+      --stroke2: rgba(255,255,255,.14);
+      --txt:#EAF0FF;
+      --muted: rgba(234,240,255,.68);
+      --muted2: rgba(234,240,255,.45);
+      --ok:#35D07F;
+      --warn:#F7C948;
+      --bad:#FF5C5C;
+      --accent:#7C5CFF;
+      --accent2:#3BE7FF;
+      --shadow: 0 18px 45px rgba(0,0,0,.45);
       --radius: 18px;
-      --ok:#3ddc97;
-      --warn:#ffcc66;
-      --bad:#ff6b6b;
-      --accent:#7aa7ff;
-      --accent2:#7cffa6;
     }
+
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
-      font-family: system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial,sans-serif;
-      background: radial-gradient(1200px 800px at 20% 0%, rgba(122,167,255,.25), transparent 55%),
-                  radial-gradient(1000px 800px at 80% 10%, rgba(124,255,166,.18), transparent 60%),
-                  var(--bg);
-      color:var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--txt);
+      background:
+        radial-gradient(1200px 700px at 15% 0%, rgba(124,92,255,.25), transparent 55%),
+        radial-gradient(900px 600px at 85% 10%, rgba(59,231,255,.18), transparent 60%),
+        radial-gradient(700px 700px at 55% 90%, rgba(53,208,127,.10), transparent 62%),
+        linear-gradient(180deg, var(--bg0), var(--bg1));
+      overflow-x:hidden;
     }
-    header{
-      padding: 22px 18px 10px;
-      max-width: 1280px;
-      margin: 0 auto;
-    }
-    h1{
-      margin:0 0 10px;
-      font-size: clamp(22px, 3vw, 34px);
-      letter-spacing:.2px;
-    }
-    .sub{
-      color:var(--muted);
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px 16px;
-      align-items:center;
-      font-size: 14px;
-    }
-    .pill{
-      padding: 6px 10px;
-      border:1px solid var(--line);
-      border-radius: 999px;
-      background: rgba(255,255,255,.04);
-    }
-    .mono{font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;}
 
     .wrap{
       max-width: 1280px;
       margin: 0 auto;
-      padding: 12px 18px 32px;
-      display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap: 16px;
+      padding: 26px 18px 70px;
     }
-    @media (max-width: 980px){ .wrap{grid-template-columns: 1fr} }
 
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
-      border:1px solid var(--line);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-    }
-    .hd{
-      padding: 14px 14px 10px;
-      border-bottom:1px solid var(--line);
+    /* Topbar */
+    .topbar{
       display:flex;
+      gap:14px;
       align-items:center;
       justify-content:space-between;
-      gap: 10px;
-      background: rgba(0,0,0,.18);
+      padding: 14px 16px;
+      border: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
     }
-    .hd h2{
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+
+    .logo{
+      width:38px;height:38px;border-radius:12px;
+      background:
+        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.8), transparent 55%),
+        linear-gradient(135deg, rgba(124,92,255,1), rgba(59,231,255,1));
+      box-shadow: 0 10px 25px rgba(124,92,255,.25);
+      border: 1px solid rgba(255,255,255,.16);
+    }
+
+    .brand h1{
+      font-size: 14px;
+      line-height: 1.1;
       margin:0;
-      font-size: 16px;
       letter-spacing:.2px;
     }
-    .actions{
-      display:flex;
-      gap: 10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
+    .brand .sub{
+      font-size:12px;
+      color: var(--muted);
+      margin-top:2px;
     }
+
+    .nav{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+
     .btn{
-      appearance:none;
-      border:1px solid var(--line);
-      color: var(--text);
-      background: rgba(255,255,255,.06);
-      padding: 10px 12px;
-      border-radius: 14px;
-      text-decoration:none;
-      font-weight: 750;
-      font-size: 14px;
       display:inline-flex;
       align-items:center;
       gap:10px;
-      cursor:pointer;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke2);
+      background: rgba(255,255,255,.06);
+      color: var(--txt);
+      text-decoration:none;
+      font-weight: 600;
+      font-size: 13px;
       transition: transform .12s ease, background .12s ease, border-color .12s ease;
-      user-select
+      user-select:none;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.22);
+    }
+    .btn .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      box-shadow: 0 0 0 4px rgba(124,92,255,.14);
+    }
+
+    .status{
+      display:flex;
+      align-items:flex-end;
+      gap:14px;
+      min-width: 290px;
+      justify-content:flex-end;
+      text-align:right;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      white-space:nowrap;
+    }
+    .led{
+      width:8px;height:8px;border-radius:999px;
+      background: var(--warn);
+      box-shadow: 0 0 0 4px rgba(247,201,72,.12);
+    }
+    .led.ok{background:var(--ok); box-shadow: 0 0 0 4px rgba(53,208,127,.12)}
+    .led.bad{background:var(--bad); box-shadow: 0 0 0 4px rgba(255,92,92,.12)}
+    .meta{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .meta .t{
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+    .meta .v{
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing:.2px;
+    }
+
+    /* Layout */
+    .grid{
+      margin-top: 16px;
+      display:grid;
+      grid-template-columns: 1.4fr .9fr;
+      gap: 16px;
+      align-items:start;
+    }
+
+    @media (max-width: 980px){
+      .grid{grid-template-columns:1fr}
+      .status{min-width:auto}
+      .brand{min-width:auto}
+    }
+
+    .card{
+      border:1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .card .head{
+      padding: 14px 16px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      gap: 10px;
+    }
+    .card .head h2{
+      margin:0;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+    .card .head .hint{
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      white-space:nowrap;
+    }
+
+    .card .body{padding: 14px 16px;}
+
+    /* Chart */
+    .chartWrap{
+      height: 360px;
+      padding: 10px 8px 12px;
+    }
+    canvas{display:block; width:100% !important; height:100% !important;}
+
+    /* Vistosas etiquetas */
+    .tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .tag{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      min-width: 240px;
+      flex: 1 1 240px;
+    }
+    .chip{
+      width: 36px; height: 36px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(10px 10px at 30% 35%, rgba(255,255,255,.7), transparent 55%),
+        linear-gradient(135deg, rgba(124,92,255,.95), rgba(59,231,255,.85));
+      box-shadow: 0 10px 25px rgba(59,231,255,.10);
+      flex: 0 0 auto;
+    }
+    .tag .k{
+      display:flex;
+      flex-direction:column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .tag .k .name{
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing:.2px;
+    }
+    .tag .k .desc{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 520px;
+    }
+    .tag .vals{
+      margin-left:auto;
+      display:flex;
+      gap:10px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .valBox{
+      padding: 7px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.20);
+      min-width: 86px;
+      text-align:right;
+    }
+    .valBox .lab{
+      font-size: 10px;
+      color: var(--muted2);
+      font-weight: 800;
+      letter-spacing:.6px;
+      text-transform: uppercase;
+    }
+    .valBox .num{
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing:.2px;
+      margin-top: 2px;
+    }
+
+    /* Tabla compacta (fallback/extra) */
+    .mini{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0 8px;
+    }
+    .mini td{
+      padding: 10px 12px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .mini td:first-child{
+      border-radius: 14px 0 0 14px;
+      font-weight: 900;
+    }
+    .mini td:last-child{
+      border-radius: 0 14px 14px 0;
+      text-align:right;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    .foot{
+      margin-top: 14px;
+      color: var(--muted2);
+      font-size: 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .spark{
+      width:10px;height:10px;border-radius:999px;
+      background: rgba(255,255,255,.25);
+      box-shadow: 0 0 0 4px rgba(255,255,255,.06);
+      display:inline-block;
+      margin-right: 8px;
+      vertical-align: -1px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <h1>ACS y Calefaccion de Arribes del duero</h1>
+          <div class="sub">Index · Resumen y KPIs</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <a class="btn" href="esquema.html"><span class="dot"></span> Esquema</a>
+        <a class="btn" href="visor.html"><span class="dot"></span> Visor</a>
+      </div>
+
+      <div class="status">
+        <span class="pill"><span id="led" class="led"></span><span id="connText">conectando…</span></span>
+        <div class="meta">
+          <div class="t">Última actualización</div>
+          <div class="v" id="lastUpdate">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- IZQ: Gráfica S9 + etiquetas -->
+      <div class="card">
+        <div class="head">
+          <h2>📈 Tendencia · S9</h2>
+          <div class="hint">últimas 24 h (o lo que haya disponible)</div>
+        </div>
+        <div class="body">
+          <div class="chartWrap">
+            <canvas id="chartS9"></canvas>
+          </div>
+
+          <div class="foot">
+            <div><span class="spark"></span>Debajo tienes las “etiquetas vistosas” con último / media / máx / mín.</div>
+            <div id="dataNote">Fuente: <b>data/latest_all.json</b> y <b>data/S9.txt</b></div>
+          </div>
+
+          <div class="tags" id="tagsDrivers"></div>
+          <div class="tags" id="tagsSensors"></div>
+        </div>
+      </div>
+
+      <!-- DCHA: Resumen compacto -->
+      <div class="card">
+        <div class="head">
+          <h2>🧾 Resumen rápido</h2>
+          <div class="hint">Drivers & S*</div>
+        </div>
+        <div class="body">
+          <table class="mini" id="miniTable">
+            <tr><td>Cargando…</td><td>—</td></tr>
+          </table>
+          <div class="foot">
+            <div>Auto-refresh: <b>60 s</b></div>
+            <div>Fuente real: <b>data/latest_all.json</b></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const REFRESH_MS = 60_000;
+
+    // --- Utilidades
+    const fmt = (n) => (Number.isFinite(n) ? (Math.round(n * 100) / 100).toFixed(2) : "—");
+    const safeObj = (x) => (x && typeof x === "object") ? x : {};
+    const toDate = (s) => {
+      const d = new Date(s);
+      return isNaN(d.getTime()) ? null : d;
+    };
+
+    function computeStats(values){
+      const arr = values.filter(v => Number.isFinite(v));
+      if (!arr.length) return { last: NaN, avg: NaN, min: NaN, max: NaN };
+      const min = Math.min(...arr);
+      const max = Math.max(...arr);
+      const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
+      const last = arr[arr.length - 1];
+      return { last, avg, min, max };
+    }
+
+    function buildTag(container, name, stats, unit=""){
+      const el = document.createElement("div");
+      el.className = "tag";
+      el.innerHTML = `
+        <div class="chip"></div>
+        <div class="k">
+          <div class="name">${name}</div>
+          <div class="desc">Último / Media / Máx / Mín</div>
+        </div>
+        <div class="vals">
+          <div class="valBox"><div class="lab">Últ</div><div class="num">${fmt(stats.last)}${unit}</div></div>
+          <div class="valBox"><div class="lab">Media</div><div class="num">${fmt(stats.avg)}${unit}</div></div>
+          <div class="valBox"><div class="lab">Máx</div><div class="num">${fmt(stats.max)}${unit}</div></div>
+          <div class="valBox"><div class="lab">Mín</div><div class="num">${fmt(stats.min)}${unit}</div></div>
+        </div>
+      `;
+      container.appendChild(el);
+    }
+
+    function setConnection(ok, text){
+      const led = document.getElementById("led");
+      const connText = document.getElementById("connText");
+      led.classList.remove("ok","bad");
+      led.classList.add(ok ? "ok" : "bad");
+      connText.textContent = text;
+    }
+
+    // --- Chart S9
+    let chart;
+    function initChart(){
+      const ctx = document.getElementById("chartS9");
+      chart = new Chart(ctx, {
+        type: "line",
+        data: { labels: [], datasets: [{ label: "S9", data: [], tension: 0.25, borderWidth: 2, pointRadius: 0, fill: true }]},
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: (ctx) => ` S9: ${fmt(ctx.parsed.y)}` } }
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 8, color: "rgba(234,240,255,.55)" }, grid: { color: "rgba(255,255,255,.06)" } },
+            y: { ticks: { color: "rgba(234,240,255,.55)" }, grid: { color: "rgba(255,255,255,.06)" } }
+          }
+        }
+      });
+    }
+
+    function updateChart(series){
+      const labels = series.map(p => {
+        const d = toDate(p.ts);
+        if (!d) return "";
+        return d.toLocaleString("es-ES", { hour:"2-digit", minute:"2-digit", day:"2-digit", month:"2-digit" });
+      });
+      const values = series.map(p => Number(p.v));
+      chart.data.labels = labels;
+      chart.data.datasets[0].data = values;
+      chart.update();
+    }
+
+    // --- Carga de datos (ADAPTADA A TU ESTRUCTURA REAL)
+    async function fetchJson(url){
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} en ${url}`);
+      return await res.json();
+    }
+
+    async function fetchText(url){
+      const res = await fetch(url, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status} en ${url}`);
+      return await res.text();
+    }
+
+    // Parser robusto (igual filosofía que visor)
+    function parseHistoryText(text) {
+      const out = [];
+      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+      for (const line of lines) {
+        let parts = line.split(",");
+        if (parts.length < 2) parts = line.split(";");
+        if (parts.length < 2) parts = line.split(/\s+/);
+        if (parts.length < 2) continue;
+
+        const ts = parts[0].trim();
+        const raw = parts.slice(1).join(" ").trim();
+
+        const t = new Date(ts);
+        if (Number.isNaN(t.getTime())) continue;
+
+        const v = Number(String(raw).replace(",", "."));
+        if (Number.isNaN(v)) continue;
+
+        out.push({ ts: t.toISOString(), v });
+      }
+
+      out.sort((a,b) => new Date(a.ts) - new Date(b.ts));
+      return out;
+    }
+
+    // Convierte latest_all.json -> { ts, drivers:{...}, sensors:{...} } como el antiguo latest.json
+    function latestAllToLatest(meta){
+      const out = { ts: meta.timestamp_utc || "", drivers: {}, sensors: {} };
+      const sensors = Array.isArray(meta.sensors) ? meta.sensors : [];
+      const drivers = Array.isArray(meta.drivers) ? meta.drivers : [];
+
+      for (const s of sensors){
+        const k = String(s.item || "").trim();
+        const v = Number(String(s.value ?? "").replace(",", "."));
+        out.sensors[k] = Number.isFinite(v) ? v : (s.value ?? null);
+      }
+
+      // drivers: On/Off -> 1/0 (para que puedas hacer stats)
+      for (const d of drivers){
+        const k = String(d.item || "").trim();
+        const raw = String(d.value ?? "").trim().toLowerCase();
+        let v = Number(String(d.value ?? "").replace(",", "."));
+        if (raw === "on") v = 1;
+        else if (raw === "off") v = 0;
+        out.drivers[k] = Number.isFinite(v) ? v : (d.value ?? null);
+      }
+
+      return out;
+    }
+
+    function renderAll(latest, historyS9, metaFull){
+      const lastUpdate = document.getElementById("lastUpdate");
+      const miniTable = document.getElementById("miniTable");
+      const tagsDrivers = document.getElementById("tagsDrivers");
+      const tagsSensors = document.getElementById("tagsSensors");
+
+      tagsDrivers.innerHTML = "";
+      tagsSensors.innerHTML = "";
+
+      // Timestamp
+      const d = toDate(latest.ts);
+      lastUpdate.textContent = d
+        ? d.toLocaleString("es-ES", { weekday:"short", year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit" })
+        : "—";
+
+      // Chart S9 (cap para que vaya fluido)
+      const series = (safeObj(historyS9).series || []).slice(-300);
+      updateChart(series);
+
+      // Stats S9 desde histórico
+      const s9Values = series.map(p => Number(p.v)).filter(Number.isFinite);
+      const s9Fallback = Number(latest?.sensors?.S9);
+      const s9Stats = computeStats(s9Values.length ? s9Values : (Number.isFinite(s9Fallback) ? [s9Fallback] : []));
+
+      // Tags: usamos labels/unidades desde metaFull (latest_all.json)
+      const sensorMeta = new Map((metaFull.sensors || []).map(x => [String(x.item).trim(), x]));
+      const driverMeta = new Map((metaFull.drivers || []).map(x => [String(x.item).trim(), x]));
+
+      // Tag especial S9 (histórico real)
+      const s9Unit = sensorMeta.get("S9")?.units ? ` ${sensorMeta.get("S9").units}` : "";
+      buildTag(tagsSensors, "S9", s9Stats, s9Unit);
+
+      // Resto de sensores S*
+      Object.keys(safeObj(latest.sensors))
+        .filter(k => k !== "S9")
+        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
+        .forEach(k=>{
+          const v = Number(latest.sensors[k]);
+          const st = { last:v, avg:v, min:v, max:v };
+          const unit = sensorMeta.get(k)?.units ? ` ${sensorMeta.get(k).units}` : "";
+          const label = sensorMeta.get(k)?.label ? ` · ${sensorMeta.get(k).label}` : "";
+          buildTag(tagsSensors, `${k}${label}`, st, unit);
+        });
+
+      // Drivers
+      Object.keys(safeObj(latest.drivers))
+        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
+        .forEach(k=>{
+          const v = Number(latest.drivers[k]);
+          const st = { last:v, avg:v, min:v, max:v };
+          const label = driverMeta.get(k)?.label ? ` · ${driverMeta.get(k).label}` : "";
+          buildTag(tagsDrivers, `${k}${label}`, st, "");
+        });
+
+      // Mini tabla resumen
+      const rows = [];
+      rows.push(["S9 (últ/media/máx/mín)", `${fmt(s9Stats.last)} / ${fmt(s9Stats.avg)} / ${fmt(s9Stats.max)} / ${fmt(s9Stats.min)}`]);
+
+      const sensors = safeObj(latest.sensors);
+      const drivers = safeObj(latest.drivers);
+
+      const topSensors = Object.keys(sensors)
+        .filter(k => k !== "S9")
+        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
+        .slice(0, 10);
+
+      topSensors.forEach(k=>{
+        rows.push([k, fmt(Number(sensors[k]))]);
+      });
+
+      const topDrivers = Object.keys(drivers)
+        .sort((a,b)=> a.localeCompare(b, "es", { numeric:true }))
+        .slice(0, 10);
+
+      topDrivers.forEach(k=>{
+        rows.push([k, fmt(Number(drivers[k]))]);
+      });
+
+      miniTable.innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join("");
+    }
+
+    async function loadAndRender(){
+      try{
+        setConnection(false, "conectando…");
+
+        // 1) latest_all.json (tu formato real)
+        const meta = await fetchJson("data/latest_all.json");
+        const latest = latestAllToLatest(meta);
+
+        // 2) S9.txt (histórico real) -> lo convertimos a {series:[{ts,v}]}
+        const txt = await fetchText("data/S9.txt");
+        const series = parseHistoryText(txt);
+
+        // “últimas 24h (o lo que haya)” -> aquí recortamos a 24h desde el final
+        const ms24h = 24 * 60 * 60 * 1000;
+        const lastT = series.length ? new Date(series[series.length - 1].ts).getTime() : Date.now();
+        const minT = lastT - ms24h;
+        const series24 = series.filter(p => new Date(p.ts).getTime() >= minT);
+
+        setConnection(true, "online");
+        renderAll(latest, { series: series24 }, meta);
+      }catch(e){
+        console.error(e);
+        setConnection(false, "error (mira consola)");
+        // mensaje visible en tabla
+        document.getElementById("miniTable").innerHTML =
+          `<tr><td>Error</td><td>${String(e?.message || e)}</td></tr>`;
+      }
+    }
+
+    // Init
+    initChart();
+    loadAndRender();
+    setInterval(loadAndRender, REFRESH_MS);
+  </script>
+</body>
+</html>
