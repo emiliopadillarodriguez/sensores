@@ -5,14 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Sala de Calderas - Dashboard</title>
 
-  <!-- Chart.js (muy compatible con Chrome) -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <style>
     :root{
       --bg:#0b1220;
       --panel:#0f1a2d;
-      --panel2:#0c1628;
       --border:rgba(255,255,255,.08);
       --muted:rgba(255,255,255,.65);
       --text:rgba(255,255,255,.92);
@@ -27,16 +26,13 @@
     body{
       margin:0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 600px at 20% -10%, rgba(34,197,94,.12), transparent 60%),
-                  radial-gradient(900px 500px at 110% 10%, rgba(59,130,246,.12), transparent 55%),
-                  var(--bg);
+      background: var(--bg);
       color:var(--text);
     }
 
     header{
       position:sticky; top:0; z-index:10;
-      backdrop-filter: blur(10px);
-      background: rgba(11,18,32,.7);
+      background: rgba(11,18,32,.9);
       border-bottom:1px solid var(--border);
     }
 
@@ -49,355 +45,233 @@
 
     .brand{
       display:flex; align-items:center; gap:10px;
-      font-weight:700; letter-spacing:.2px;
+      font-weight:700;
     }
     .dot{
-      width:10px;height:10px;border-radius:999px;background:var(--good);
-      box-shadow:0 0 0 6px rgba(34,197,94,.12);
+      width:10px;height:10px;border-radius:50%;
+      background:var(--good);
     }
-    .sub{
-      font-size:12px; color:var(--muted); font-weight:500;
-    }
+    .sub{font-size:12px;color:var(--muted)}
 
     .btnrow{display:flex; gap:10px; flex-wrap:wrap;}
     .btn{
       border:1px solid var(--border);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      background: rgba(255,255,255,.05);
       color:var(--text);
       padding:10px 12px;
       border-radius:12px;
       cursor:pointer;
       font-weight:600;
       font-size:13px;
-      transition: transform .06s ease, border-color .2s ease, background .2s ease;
-      user-select:none;
-    }
-    .btn:hover{transform: translateY(-1px); border-color: rgba(255,255,255,.18);}
-    .btn:active{transform: translateY(0px);}
-
-    main .wrap{padding:18px 16px 28px;}
-
-    .grid{
-      display:grid;
-      grid-template-columns: 1.15fr .85fr;
-      gap:14px;
-      align-items:stretch;
     }
 
-    /* En móvil: todo a una columna */
-    @media (max-width: 980px){
-      .grid{grid-template-columns: 1fr;}
-    }
+    main .wrap{padding:18px 16px;}
 
     .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      background: rgba(255,255,255,.03);
       border:1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      overflow:hidden;
-      min-height: 360px; /* para igualar visualmente las tarjetas */
-      display:flex;
-      flex-direction:column;
+      margin-bottom:14px;
     }
 
     .cardhead{
       padding:12px 14px;
-      display:flex; align-items:flex-end; justify-content:space-between;
-      gap:10px;
       border-bottom:1px solid var(--border);
-      background: rgba(15,26,45,.55);
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
     }
-    .title{font-weight:800; font-size:14px;}
-    .meta{font-size:12px; color:var(--muted);}
 
-    .cardbody{padding:12px 14px; flex:1; display:flex; flex-direction:column; gap:10px;}
+    .title{font-weight:700;font-size:14px}
+    .meta{font-size:12px;color:var(--muted)}
 
-    /* Bloque de estado bombas */
+    .cardbody{padding:14px}
+
     .statusgrid{
       display:grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(auto-fit,minmax(160px,1fr));
       gap:10px;
-    }
-    @media (max-width: 980px){
-      .statusgrid{grid-template-columns: repeat(2, 1fr);}
-    }
-    @media (max-width: 520px){
-      .statusgrid{grid-template-columns: 1fr;}
     }
 
     .pill{
       border:1px solid var(--border);
-      background: rgba(255,255,255,.03);
-      border-radius: 14px;
-      padding:10px 10px;
-      display:flex; align-items:center; justify-content:space-between;
-      gap:10px;
+      border-radius:14px;
+      padding:10px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
     }
-    .pill b{font-size:13px}
+
     .tag{
       font-size:12px;
-      padding:5px 9px;
+      padding:4px 10px;
       border-radius:999px;
       border:1px solid var(--border);
-      background: rgba(0,0,0,.2);
-      color:var(--text);
-      white-space:nowrap;
     }
-    .tag.good{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.10);}
-    .tag.warn{border-color: rgba(245,158,11,.40); background: rgba(245,158,11,.10);}
-    .tag.bad{border-color: rgba(239,68,68,.40); background: rgba(239,68,68,.10);}
+    .good{border-color:#22c55e;color:#22c55e}
+    .warn{border-color:#f59e0b;color:#f59e0b}
+    .bad{border-color:#ef4444;color:#ef4444}
 
-    /* Charts */
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:14px;
+    }
+
+    @media (max-width:900px){
+      .grid{grid-template-columns:1fr}
+    }
+
     .chartwrap{
       position:relative;
       width:100%;
-      flex:1;
-      min-height: 260px;
-    }
-    canvas{max-width:100% !important; width:100% !important; height:100% !important;}
-
-    /* Esquema (iframe) */
-    .iframewrap{
-      position:relative;
-      width:100%;
-      flex:1;
-      min-height: 260px;
-      border:1px solid var(--border);
-      border-radius: 14px;
-      overflow:hidden;
-      background: rgba(0,0,0,.18);
-    }
-    iframe{
-      position:absolute; inset:0;
-      width:100%; height:100%;
-      border:0;
-      background: transparent;
+      height:280px;
     }
 
-    .footerline{
-      margin-top:14px;
-      color:var(--muted);
-      font-size:12px;
-      text-align:center;
-    }
+    canvas{width:100% !important;height:100% !important}
   </style>
 </head>
 
 <body>
-  <header>
-    <div class="wrap">
-      <div class="topbar">
+<header>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <div class="brand"><span class="dot"></span> SALA DE CALDERAS</div>
+        <div class="sub">Dashboard</div>
+      </div>
+
+      <div class="btnrow">
+        <button class="btn" onclick="location.href='historicos_s.html'">Históricos S</button>
+        <button class="btn" onclick="location.href='historicos_d.html'">Históricos Driver</button>
+        <button class="btn" onclick="refreshAll()">Actualizar</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+
+    <!-- ESTADO GENERAL -->
+    <div class="card">
+      <div class="cardhead">
         <div>
-          <div class="brand"><span class="dot"></span> SALA DE CALDERAS</div>
-          <div class="sub">Dashboard · Sondas y estado de bombas</div>
+          <div class="title">Estado de bombas</div>
+          <div class="meta">Situación actual</div>
+        </div>
+        <div class="meta" id="lastUpdate">—</div>
+      </div>
+
+      <div class="cardbody">
+        <div class="statusgrid">
+          <div class="pill"><b>Bomba 1</b><span class="tag good">OK</span></div>
+          <div class="pill"><b>Bomba 2</b><span class="tag warn">Standby</span></div>
+          <div class="pill"><b>Bomba 3</b><span class="tag bad">Fallo</span></div>
+          <div class="pill"><b>Bomba 4</b><span class="tag good">OK</span></div>
         </div>
 
-        <div class="btnrow">
-          <button class="btn" onclick="location.href='esquema.html'">Abrir Esquema</button>
-          <button class="btn" onclick="location.href='historicos_s.html'">Históricos S</button>
-          <button class="btn" onclick="location.href='historicos_d.html'">Históricos Driver</button>
-          <button class="btn" onclick="refreshAll()">Actualizar</button>
+        <div class="meta" id="lastValues" style="margin-top:10px">
+          Últimos valores: S9 = — °C · S10 = — °C
         </div>
       </div>
     </div>
-  </header>
 
-  <main>
-    <div class="wrap">
+    <!-- GRAFICAS -->
+    <div class="grid">
 
-      <!-- Estado de bombas + último valor sondas (placeholder) -->
-      <section class="card" style="min-height:auto;">
+      <div class="card">
         <div class="cardhead">
-          <div>
-            <div class="title">Estado general</div>
-            <div class="meta">Bombas · Últimos valores de sondas</div>
-          </div>
-          <div class="meta" id="lastUpdate">—</div>
+          <div class="title">Temperatura S9</div>
+          <div class="meta" id="s9meta">—</div>
         </div>
-
         <div class="cardbody">
-          <div class="statusgrid" id="pumpGrid">
-            <!-- Ejemplo (cámbialo a tus señales reales) -->
-            <div class="pill"><b>Bomba 1</b><span class="tag good" id="p1">OK</span></div>
-            <div class="pill"><b>Bomba 2</b><span class="tag warn" id="p2">Standby</span></div>
-            <div class="pill"><b>Bomba 3</b><span class="tag bad" id="p3">Fallo</span></div>
-            <div class="pill"><b>Bomba 4</b><span class="tag good" id="p4">OK</span></div>
-            <div class="pill"><b>Bomba 5</b><span class="tag good" id="p5">OK</span></div>
-            <div class="pill"><b>Bomba 6</b><span class="tag warn" id="p6">Standby</span></div>
-          </div>
-
-          <div class="meta" id="lastValues">
-            Últimos valores: S9 = — °C · S10 = — °C
+          <div class="chartwrap">
+            <canvas id="chartS9"></canvas>
           </div>
         </div>
-      </section>
+      </div>
 
-      <div style="height:14px"></div>
-
-      <!-- 2 columnas: izquierda gráficos S9/S10; derecha Esquema del mismo tamaño -->
-      <section class="grid">
-
-        <div class="card">
-          <div class="cardhead">
-            <div>
-              <div class="title">Temperatura S9</div>
-              <div class="meta">Gráfica en tiempo</div>
-            </div>
-            <div class="meta" id="s9meta">—</div>
-          </div>
-          <div class="cardbody">
-            <div class="chartwrap">
-              <canvas id="chartS9"></canvas>
-            </div>
+      <div class="card">
+        <div class="cardhead">
+          <div class="title">Temperatura S10</div>
+          <div class="meta" id="s10meta">—</div>
+        </div>
+        <div class="cardbody">
+          <div class="chartwrap">
+            <canvas id="chartS10"></canvas>
           </div>
         </div>
+      </div>
 
-        <div class="card">
-          <div class="cardhead">
-            <div>
-              <div class="title">Esquema</div>
-              <div class="meta">Vista integrada (mismo tamaño que las gráficas)</div>
-            </div>
-            <div class="meta">iframe</div>
-          </div>
-          <div class="cardbody">
-            <div class="iframewrap">
-              <!-- Ajusta la ruta si tu esquema está en otra carpeta -->
-              <iframe src="esquema.html" title="Esquema Sala de Calderas"></iframe>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="cardhead">
-            <div>
-              <div class="title">Temperatura S10</div>
-              <div class="meta">Gráfica en tiempo</div>
-            </div>
-            <div class="meta" id="s10meta">—</div>
-          </div>
-          <div class="cardbody">
-            <div class="chartwrap">
-              <canvas id="chartS10"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="cardhead">
-            <div>
-              <div class="title">Notas</div>
-              <div class="meta">Personaliza aquí avisos / umbrales</div>
-            </div>
-            <div class="meta">info</div>
-          </div>
-          <div class="cardbody">
-            <div class="meta">
-              - Si S9 o S10 supera umbral, puedes cambiar el color del tag.<br/>
-              - Si tus datos vienen de JSON/CSV, conecta la función <code>loadSeries()</code>.
-            </div>
-          </div>
-        </div>
-
-      </section>
-
-      <div class="footerline">© Sala de Calderas · Vista local (HTML)</div>
     </div>
-  </main>
 
-  <script>
-    // === DEMO DATA (cámbialo por tu carga real) ===
-    function demoSeries(name){
-      const now = Date.now();
-      const labels = [];
-      const data = [];
-      for(let i=60;i>=0;i--){
-        const t = new Date(now - i*60*1000);
-        labels.push(t.toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}));
-        const base = (name === 'S9') ? 48 : 52;
-        data.push(base + Math.sin(i/7)*2 + (Math.random()-0.5)*0.8);
-      }
-      return {labels, data};
+  </div>
+</main>
+
+<script>
+  function demoSeries(base){
+    const labels=[], data=[];
+    const now=Date.now();
+    for(let i=60;i>=0;i--){
+      const t=new Date(now-i*60000);
+      labels.push(t.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));
+      data.push(base + Math.sin(i/6)*2 + (Math.random()-0.5));
     }
+    return {labels,data};
+  }
 
-    function makeChart(canvasId, seriesName){
-      const ctx = document.getElementById(canvasId);
-      const s = demoSeries(seriesName);
-
-      return new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: s.labels,
-          datasets: [{
-            label: seriesName + ' (°C)',
-            data: s.data,
-            tension: 0.25,
-            pointRadius: 0,
-            borderWidth: 2,
-            fill: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: false,
-          plugins: {
-            legend: { display: false },
-            tooltip: { mode: 'index', intersect: false }
-          },
-          scales: {
-            x: {
-              ticks: { maxTicksLimit: 6, color: 'rgba(255,255,255,.65)' },
-              grid: { color: 'rgba(255,255,255,.06)' }
-            },
-            y: {
-              ticks: { color: 'rgba(255,255,255,.65)' },
-              grid: { color: 'rgba(255,255,255,.06)' }
-            }
-          }
+  function createChart(id,base){
+    const s=demoSeries(base);
+    return new Chart(document.getElementById(id),{
+      type:'line',
+      data:{
+        labels:s.labels,
+        datasets:[{
+          data:s.data,
+          borderWidth:2,
+          tension:.3,
+          pointRadius:0
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{legend:{display:false}},
+        scales:{
+          x:{grid:{color:'rgba(255,255,255,.05)'}},
+          y:{grid:{color:'rgba(255,255,255,.05)'}}
         }
-      });
-    }
-
-    let chart9, chart10;
-
-    function setUpdateStamp(){
-      const d = new Date();
-      document.getElementById('lastUpdate').textContent =
-        'Actualizado: ' + d.toLocaleString('es-ES');
-    }
-
-    function updateLastValues(){
-      // Aquí deberías poner tus últimos valores reales
-      // (demo: tomo el último punto de cada serie)
-      const s9 = chart9.data.datasets[0].data.at(-1);
-      const s10 = chart10.data.datasets[0].data.at(-1);
-
-      document.getElementById('lastValues').textContent =
-        `Últimos valores: S9 = ${s9.toFixed(1)} °C · S10 = ${s10.toFixed(1)} °C`;
-
-      document.getElementById('s9meta').textContent = `Último: ${s9.toFixed(1)} °C`;
-      document.getElementById('s10meta').textContent = `Último: ${s10.toFixed(1)} °C`;
-    }
-
-    function refreshAll(){
-      // Si cargas datos reales: aquí llamarías a fetch(...) y actualizarías datasets.
-      // Demo: recreo datos
-      chart9.destroy();
-      chart10.destroy();
-      chart9 = makeChart('chartS9','S9');
-      chart10 = makeChart('chartS10','S10');
-      setUpdateStamp();
-      updateLastValues();
-    }
-
-    // Init
-    window.addEventListener('load', () => {
-      chart9 = makeChart('chartS9','S9');
-      chart10 = makeChart('chartS10','S10');
-      setUpdateStamp();
-      updateLastValues();
+      }
     });
-  </script>
+  }
+
+  let c9,c10;
+
+  function refreshAll(){
+    c9.destroy(); c10.destroy();
+    c9=createChart('chartS9',48);
+    c10=createChart('chartS10',52);
+    updateValues();
+  }
+
+  function updateValues(){
+    const v9=c9.data.datasets[0].data.at(-1);
+    const v10=c10.data.datasets[0].data.at(-1);
+    document.getElementById('lastValues').textContent=
+      `Últimos valores: S9 = ${v9.toFixed(1)} °C · S10 = ${v10.toFixed(1)} °C`;
+    document.getElementById('s9meta').textContent=`Último: ${v9.toFixed(1)} °C`;
+    document.getElementById('s10meta').textContent=`Último: ${v10.toFixed(1)} °C`;
+    document.getElementById('lastUpdate').textContent=
+      'Actualizado: ' + new Date().toLocaleString('es-ES');
+  }
+
+  window.onload=()=>{
+    c9=createChart('chartS9',48);
+    c10=createChart('chartS10',52);
+    updateValues();
+  };
+</script>
 </body>
 </html>
