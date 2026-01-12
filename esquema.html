@@ -1,192 +1,78 @@
 <!doctype html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8">
   <title>Esquema sala de calderas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <style>
     :root{
-      --bg:#0b0f14;
-      --panel:#0f172a;
-      --card:#020617;
+      --bg:#020617;
+      --panel:#020617;
       --fg:#e5e7eb;
-      --muted:#94a3b8;
       --line:#1e293b;
-      --chip:#020617;
-      --ok:#22c55e;
-      --bad:#ef4444;
-      --warn:#f59e0b;
     }
 
     body{
       margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:var(--bg);
-      color:var(--fg);
+      font-family: system-ui, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
     }
 
     header{
       position: sticky;
-      top:0;
-      z-index: 20;
+      top: 0;
+      z-index: 10;
       background: #020617;
       border-bottom: 1px solid var(--line);
       padding: 8px 12px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-      flex-wrap:wrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    header b{ font-size:14px; }
+    header b{
+      font-size: 14px;
+    }
 
     button{
       padding: 6px 10px;
       font-size: 13px;
       border: 1px solid var(--line);
-      border-radius: 10px;
+      border-radius: 8px;
       background: #020617;
       color: var(--fg);
-      cursor:pointer;
+      cursor: pointer;
     }
-    button:hover{ background:#020617; }
 
-    .pill{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      padding: 6px 10px;
-      border:1px solid var(--line);
-      border-radius: 999px;
-      background: var(--chip);
-      font-size:12px;
-      color: var(--muted);
-      white-space:nowrap;
+    button:hover{
+      background: #0b1220;
     }
-    .pill b{ color: var(--fg); font-weight:700; }
 
     #status{
-      margin-left:auto;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
+      margin-left: auto;
+      font-size: 12px;
+      color: #94a3b8;
     }
 
-    .layout{
-      display:grid;
-      grid-template-columns: 1fr 380px;
-      gap: 10px;
-      padding: 10px;
-      height: calc(100vh - 56px);
-      box-sizing: border-box;
-    }
-
-    @media (max-width: 980px){
-      .layout{ grid-template-columns: 1fr; height:auto; }
-    }
-
+    /* CONTENEDOR CON SCROLL */
     #viewer{
-      background: #000;
-      border: 1px solid var(--line);
-      border-radius: 14px;
+      width: 100vw;
+      height: calc(100vh - 48px);
       overflow: auto;
-      height: 100%;
+      background: #000;
     }
 
+    /* SVG */
     #viewer img{
-      display:block;
-      max-width:none;
+      display: block;
+      max-width: none;
+      height: auto;
       transform-origin: top left;
-      user-select:none;
-      -webkit-user-drag:none;
-    }
 
-    .rightPanel{
-      background: var(--panel);
-      border:1px solid var(--line);
-      border-radius:14px;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-    }
-
-    .rightHeader{
-      padding:10px 12px;
-      border-bottom:1px solid var(--line);
-    }
-    .title{ font-size:14px; font-weight:700; }
-    .sub{ font-size:12px; color: var(--muted); }
-
-    .tabs{
-      display:flex;
-      gap:8px;
-      padding:10px 12px;
-      border-bottom:1px solid var(--line);
-    }
-    .tab{
-      padding:6px 10px;
-      border:1px solid var(--line);
-      border-radius: 999px;
-      font-size:12px;
-      cursor:pointer;
-      background:#020617;
-      color: var(--fg);
-    }
-    .tab.active{
-      background:#020617;
-      font-weight:700;
-      border-color:#334155;
-    }
-
-    .panelBody{
-      padding: 10px 12px;
-      overflow:auto;
-      flex:1;
-    }
-
-    table{
-      width:100%;
-      border-collapse: collapse;
-      font-size:12px;
-    }
-    thead th{
-      text-align:left;
-      font-size:11px;
-      color: var(--muted);
-      font-weight:700;
-      padding:8px 6px;
-      border-bottom:1px solid var(--line);
-      background:#020617;
-      position: sticky;
-      top:0;
-    }
-    tbody td{
-      padding:8px 6px;
-      border-bottom:1px dashed #1e293b;
-    }
-
-    .k{ color:#38bdf8; font-weight:700; }
-    .lbl{ color: var(--fg); }
-    .val{ text-align:right; }
-
-    .badge{
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:11px;
-      font-weight:700;
-    }
-    .on{ background:rgba(34,197,94,.15); color:var(--ok); border:1px solid rgba(34,197,94,.5); }
-    .off{ background:rgba(239,68,68,.15); color:var(--bad); border:1px solid rgba(239,68,68,.5); }
-    .na{ background:rgba(245,158,11,.15); color:var(--warn); border:1px solid rgba(245,158,11,.5); }
-
-    .footerNote{
-      padding:10px 12px;
-      border-top:1px solid var(--line);
-      font-size:11px;
-      color: var(--muted);
-      background:#020617;
+      /* ⭐ CLAVE: invertir colores del SVG */
+      filter: invert(1) brightness(1.15) contrast(1.1);
     }
   </style>
 </head>
@@ -196,123 +82,66 @@
 <header>
   <b>Esquema BMS · Sala de Calderas</b>
 
-  <button id="btnZoomIn">Zoom +</button>
-  <button id="btnZoomOut">Zoom −</button>
-  <button id="btnFit">Ajustar</button>
-  <button id="btn100">100%</button>
+  <button onclick="zoomIn()">Zoom +</button>
+  <button onclick="zoomOut()">Zoom −</button>
+  <button onclick="resetZoom()">Ajustar</button>
 
-  <div id="status">
-    <span class="pill">Zoom <b id="zoomLabel">—</b></span>
-    <span class="pill">Última act. <b id="lastUpdate">—</b></span>
-    <span class="pill">Estado <b id="loadStatus">…</b></span>
-  </div>
+  <span id="status">Cargando…</span>
 </header>
 
-<div class="layout">
-  <div id="viewer">
-    <img id="svgImg" />
-  </div>
-
-  <aside class="rightPanel">
-    <div class="rightHeader">
-      <div class="title">Resumen rápido</div>
-      <div class="sub">Datos en tiempo real · latest_all.json</div>
-    </div>
-
-    <div class="tabs">
-      <div class="tab active" id="tabS">Sensores</div>
-      <div class="tab" id="tabD">Drivers</div>
-    </div>
-
-    <div class="panelBody" id="panelS"></div>
-    <div class="panelBody" id="panelD" style="display:none;"></div>
-
-    <div class="footerNote">
-      Estilo SCADA / BMS · Fondo oscuro para máxima legibilidad
-    </div>
-  </aside>
+<div id="viewer">
+  <img id="svgImg" alt="Esquema">
 </div>
 
 <script>
-/* === ESQUEMA === */
-const img = document.getElementById("svgImg");
-const viewer = document.getElementById("viewer");
-const zoomLabel = document.getElementById("zoomLabel");
-const loadStatus = document.getElementById("loadStatus");
+  const img = document.getElementById("svgImg");
+  const statusEl = document.getElementById("status");
 
-let scale = 1, fitScale = 1;
+  let scale = 1;
 
-function applyZoom(){
-  img.style.transform = `scale(${scale})`;
-  zoomLabel.textContent = Math.round(scale*100)+"%";
-}
-function fit(){
-  const iw = img.naturalWidth, ih = img.naturalHeight;
-  const vw = viewer.clientWidth, vh = viewer.clientHeight;
-  fitScale = Math.min(vw/iw, vh/ih)*0.97;
-  scale = fitScale;
-  applyZoom();
-}
-document.getElementById("btnZoomIn").onclick=()=>{scale*=1.15;applyZoom();}
-document.getElementById("btnZoomOut").onclick=()=>{scale/=1.15;applyZoom();}
-document.getElementById("btnFit").onclick=fit;
-document.getElementById("btn100").onclick=()=>{scale=1;applyZoom();}
-
-img.src="esquema_render.svg?t="+Date.now();
-img.onload=()=>{loadStatus.textContent="SVG OK";fit();}
-img.onerror=()=>{loadStatus.textContent="ERROR SVG";}
-
-/* === JSON === */
-const JSONS=[
-  "sensores/data/latest_all.json",
-  "data/latest_all.json"
-];
-const lastUpdate=document.getElementById("lastUpdate");
-const panelS=document.getElementById("panelS");
-const panelD=document.getElementById("panelD");
-
-document.getElementById("tabS").onclick=()=>{
-  panelS.style.display="block";panelD.style.display="none";
-};
-document.getElementById("tabD").onclick=()=>{
-  panelS.style.display="none";panelD.style.display="block";
-};
-
-async function loadJSON(){
-  let data=null;
-  for(const u of JSONS){
-    try{
-      const r=await fetch(u,{cache:"no-store"});
-      if(r.ok){data=await r.json();break;}
-    }catch{}
+  function applyZoom(){
+    img.style.transform = `scale(${scale})`;
+    statusEl.textContent = `Zoom ${Math.round(scale * 100)}%`;
   }
-  if(!data)return;
 
-  lastUpdate.textContent=new Date(data.timestamp_utc).toLocaleString();
+  function zoomIn(){
+    scale = Math.min(scale * 1.15, 6);
+    applyZoom();
+  }
 
-  panelS.innerHTML="<table><tbody>"+
-    data.sensors.map(s=>`
-      <tr>
-        <td class="k">${s.item}</td>
-        <td class="lbl">${s.label}</td>
-        <td class="val">${s.value} ${s.units||""}</td>
-      </tr>`).join("")+
-    "</tbody></table>";
+  function zoomOut(){
+    scale = Math.max(scale / 1.15, 0.15);
+    applyZoom();
+  }
 
-  panelD.innerHTML="<table><tbody>"+
-    data.drivers.map(d=>{
-      const on=String(d.value).toLowerCase()==="on"||d.value==1;
-      return `
-      <tr>
-        <td class="k">${d.item}</td>
-        <td class="lbl">${d.label}</td>
-        <td class="val"><span class="badge ${on?"on":"off"}">${on?"ON":"OFF"}</span></td>
-      </tr>`;
-    }).join("")+
-    "</tbody></table>";
-}
-loadJSON();
-setInterval(loadJSON,30000);
+  function resetZoom(){
+    // Ajuste automático para ver el esquema completo
+    const vw = viewer.clientWidth;
+    const vh = viewer.clientHeight;
+    const iw = img.naturalWidth;
+    const ih = img.naturalHeight;
+
+    if(iw && ih){
+      scale = Math.min(vw / iw, vh / ih) * 0.97;
+    }else{
+      scale = 1;
+    }
+    applyZoom();
+    viewer.scrollTop = 0;
+    viewer.scrollLeft = 0;
+  }
+
+  // Cargar SVG (cache-bust)
+  img.src = "esquema_render.svg?t=" + Date.now();
+
+  img.onload = () => {
+    statusEl.textContent = "SVG cargado";
+    resetZoom();
+  };
+
+  img.onerror = () => {
+    statusEl.textContent = "ERROR cargando esquema";
+  };
 </script>
 
 </body>
