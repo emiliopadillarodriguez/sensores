@@ -39,7 +39,7 @@
     }
     .panel h2 { font-size: 14px; margin: 0 0 8px 0; }
     .list {
-      max-height: 240px;
+      max-height: 260px;
       overflow: auto;
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -53,6 +53,19 @@
     }
     .row:last-child { border-bottom: none; }
     .row code { background:#f7f7f7; padding:2px 6px; border-radius:6px; font-size: 12px; }
+    .badge {
+      margin-left:auto;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border:1px solid var(--line);
+      color: var(--muted);
+      background:#fff;
+      white-space: nowrap;
+    }
+    .badge.on { color:#0a7a2f; border-color:#bfe3c7; background:#f2fbf5; }
+    .badge.off { color:#8a1f1f; border-color:#f0c1c1; background:#fff4f4; }
+
     .actions { display:flex; gap:8px; justify-content:flex-end; margin: 8px 0 0 0; }
 
     .plots {
@@ -93,9 +106,8 @@
 <body>
   <h1>Visor S (Temperaturas) + D (Bombas / Equipos)</h1>
   <div class="sub">
-    Ahora hay 2 gráficas: una para S (°C) y otra para D (0/1). Zoom con rueda y pan arrastrando.
-    <br>
-    <b>Importante:</b> si abres este archivo desde <code>github.com/.../blob/...</code>, GitHub no ejecuta scripts. Ábrelo desde GitHub Pages.
+    2 gráficas: S (°C) y D (0/1). Zoom con rueda y pan arrastrando.
+  
   </div>
 
   <div class="bar">
@@ -129,7 +141,7 @@
         <button id="dNone">Ocultar todas</button>
       </div>
       <div id="dList" class="list"></div>
-      <div class="note">Nota: los drivers se muestran como 0/1 (OFF/ON).</div>
+      <div class="note">Nota: los drivers se muestran como 0/1 (OFF/ON). Si el JSON trae <code>value</code>, verás ON/OFF al lado.</div>
     </div>
   </div>
 
@@ -148,12 +160,10 @@
 
 <script>
 /**
- * Estructura esperada:
+ * Esperado (pero ahora tolerante):
  *  - data/latest_all.json
- *  - data/S1.txt, data/S2.txt, ...
- *  - data/d_D1.txt, data/d_D2.txt, ...
+ *  - históricos: data/S1.txt... y drivers como data/d_D1.txt o data/D1.txt (y variantes)
  */
-
 const DATA_DIR = "data";
 const $ = (id) => document.getElementById(id);
 
@@ -162,14 +172,13 @@ function showError(msg) {
   box.style.display = "block";
   box.textContent = msg;
 }
-
 function clearError() {
   const box = $("err");
   box.style.display = "none";
   box.textContent = "";
 }
 
-// ---- Plotly loader con fallback (para Chrome/filters/CDN)
+// ---- Plotly loader con fallback
 async function loadPlotly() {
   if (window.Plotly) return true;
 
@@ -190,9 +199,7 @@ async function loadPlotly() {
         document.head.appendChild(s);
       });
       if (window.Plotly) return true;
-    } catch (e) {
-      // prueba siguiente CDN
-    }
+    } catch (e) {}
   }
   return false;
 }
@@ -204,12 +211,11 @@ const state = {
   selectedS: new Set(),
   selectedD: new Set(),
   cache: new Map(), // item -> [{t:Date, v:number}]
-  lastUpdated: null
+  lastUpdated: null,
+  latestValue: new Map() // item -> number|string
 };
 
-function setStatus(txt) {
-  $("status").textContent = txt;
-}
+function setStatus(txt) { $("status").textContent = txt; }
 
 function normalizeOnOffTo01(x) {
   const v = String(x ?? "").trim().toLowerCase();
@@ -246,7 +252,6 @@ function parseHistoryText(text, isDriver=false) {
     }
     out.push({ t, v });
   }
-
   out.sort((a,b) => a.t - b.t);
   return out;
 }
@@ -256,7 +261,6 @@ async function fetchText(url) {
   if (!res.ok) throw new Error(`HTTP ${res.status} al cargar ${url}`);
   return await res.text();
 }
-
 async function fetchJSON(url) {
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) throw new Error(`HTTP ${res.status} al cargar ${url}`);
@@ -267,9 +271,8 @@ function rangeToMs(r) {
   if (r === "24h") return 24 * 60 * 60 * 1000;
   if (r === "7d")  return 7  * 24 * 60 * 60 * 1000;
   if (r === "30d") return 30 * 24 * 60 * 60 * 1000;
-  return null; // all
+  return null;
 }
-
 function filterByRange(series, rangeKey) {
   const ms = rangeToMs(rangeKey);
   if (!ms) return series;
@@ -278,7 +281,8 @@ function filterByRange(series, rangeKey) {
   return series.filter(p => p.t.getTime() >= minT);
 }
 
-function buildCheckboxRow(container, item, label, checked, onChange) {
+/** Construye filas con checkbox + estado opcional (para D) */
+function buildCheckboxRow(container, item, label, checked, onChange, badgeText=null, badgeClass="") {
   const row = document.createElement("div");
   row.className = "row";
 
@@ -296,9 +300,84 @@ function buildCheckboxRow(container, item, label, checked, onChange) {
   row.appendChild(cb);
   row.appendChild(code);
   row.appendChild(span);
+
+  if (badgeText !== null) {
+    const b = document.createElement("span");
+    b.className = "badge " + (badgeClass || "");
+    b.textContent = badgeText;
+    row.appendChild(b);
+  }
+
   container.appendChild(row);
 }
 
+function labelFor(item) {
+  const s = state.sensors.find(x => x.item === item);
+  if (s) return `${s.item} · ${s.label || ""}`.trim();
+  const d = state.drivers.find(x => x.item === item);
+  if (d) return `${d.item} · ${d.label || ""}`.trim();
+  return item;
+}
+
+/** Saca arrays de drivers/sensors aunque el JSON use otras keys */
+function pickArrays(meta) {
+  const arrays = [];
+  for (const k of Object.keys(meta || {})) {
+    if (Array.isArray(meta[k])) arrays.push(meta[k]);
+  }
+  return arrays;
+}
+
+/** Normaliza item tipo "d1" -> "D1" etc */
+function normItem(x) {
+  const s = String(x ?? "").trim();
+  if (!s) return "";
+  const m = s.match(/^([sSdD])\s*0*(\d+)$/);
+  if (m) return m[1].toUpperCase() + m[2];
+  return s;
+}
+
+/** Extrae sensores S y drivers D de cualquier array que exista en latest_all.json */
+function extractSD(meta) {
+  const all = [];
+  for (const arr of pickArrays(meta)) {
+    for (const o of (arr || [])) {
+      if (o && typeof o === "object") all.push(o);
+    }
+  }
+
+  const sensors = [];
+  const drivers = [];
+
+  for (const o of all) {
+    const item = normItem(o.item);
+    if (!item) continue;
+
+    const rec = {
+      item,
+      label: o.label || o.name || "",
+      units: o.units || "",
+      value: (o.value !== undefined ? o.value : (o.state !== undefined ? o.state : undefined))
+    };
+
+    if (/^S\d+$/.test(item)) sensors.push(rec);
+    if (/^D\d+$/.test(item)) drivers.push(rec);
+  }
+
+  // dedupe por item (último gana)
+  const dedupe = (arr) => {
+    const m = new Map();
+    for (const x of arr) m.set(x.item, x);
+    return Array.from(m.values()).sort((a,b) => Number(a.item.slice(1)) - Number(b.item.slice(1)));
+  };
+
+  return {
+    sensors: dedupe(sensors),
+    drivers: dedupe(drivers)
+  };
+}
+
+/** Render de listas */
 function renderLists() {
   const sList = $("sList");
   const dList = $("dList");
@@ -309,55 +388,84 @@ function renderLists() {
     buildCheckboxRow(
       sList,
       s.item,
-      `${s.label || ""}${s.units ? " ("+s.units+")" : ""}`,
+      `${s.label || ""}${s.units ? " ("+s.units+")" : ""}`.trim(),
       state.selectedS.has(s.item),
-      (ok) => {
-        if (ok) state.selectedS.add(s.item);
-        else state.selectedS.delete(s.item);
-        redrawAll();
-      }
+      (ok) => { ok ? state.selectedS.add(s.item) : state.selectedS.delete(s.item); redrawAll(); }
     );
   }
 
   for (const d of state.drivers) {
+    const v = state.latestValue.get(d.item);
+    let badgeText = null, badgeClass = "";
+    const v01 = normalizeOnOffTo01(v);
+    if (v !== undefined && v !== null && v !== "") {
+      if (v01 === 1) { badgeText = "ON"; badgeClass = "on"; }
+      else if (v01 === 0) { badgeText = "OFF"; badgeClass = "off"; }
+      else { badgeText = String(v); }
+    }
+
     buildCheckboxRow(
       dList,
       d.item,
-      d.label || "",
+      (d.label || "").trim(),
       state.selectedD.has(d.item),
-      (ok) => {
-        if (ok) state.selectedD.add(d.item);
-        else state.selectedD.delete(d.item);
-        redrawAll();
-      }
+      (ok) => { ok ? state.selectedD.add(d.item) : state.selectedD.delete(d.item); redrawAll(); },
+      badgeText,
+      badgeClass
     );
   }
 }
 
-function fileForItem(item) {
-  if (/^S\d+$/.test(item)) return `${DATA_DIR}/${item}.txt`;
-  if (/^D\d+$/.test(item)) return `${DATA_DIR}/d_${item}.txt`;
-  return null;
+/** Genera candidatos de nombre de fichero para un item */
+function candidateFiles(item) {
+  const n = normItem(item); // "D1"
+  const low = n.toLowerCase(); // "d1"
+  const num = n.replace(/^[SD]/, ""); // "1"
+  if (/^S\d+$/.test(n)) {
+    return [
+      `${DATA_DIR}/${n}.txt`,
+      `${DATA_DIR}/${low}.txt`,
+      `${DATA_DIR}/S${num}.txt`,
+      `${DATA_DIR}/s${num}.txt`,
+    ];
+  }
+  if (/^D\d+$/.test(n)) {
+    return [
+      `${DATA_DIR}/d_${n}.txt`,
+      `${DATA_DIR}/d_${low}.txt`,
+      `${DATA_DIR}/d-${n}.txt`,
+      `${DATA_DIR}/${n}.txt`,
+      `${DATA_DIR}/${low}.txt`,
+      `${DATA_DIR}/dD${num}.txt`,
+      `${DATA_DIR}/d${n}.txt`,
+    ];
+  }
+  return [];
 }
 
+/** Intenta cargar serie probando varios nombres */
 async function loadSeries(item) {
   if (state.cache.has(item)) return state.cache.get(item);
-  const url = fileForItem(item);
-  if (!url) return [];
 
-  const isDriver = /^D\d+$/.test(item);
-  const txt = await fetchText(url);
-  const series = parseHistoryText(txt, isDriver);
-  state.cache.set(item, series);
-  return series;
-}
+  const isDriver = /^D\d+$/.test(normItem(item));
+  const files = candidateFiles(item);
+  let lastErr = null;
 
-function labelFor(item) {
-  const s = state.sensors.find(x => x.item === item);
-  if (s) return `${s.item} · ${s.label || ""}`.trim();
-  const d = state.drivers.find(x => x.item === item);
-  if (d) return `${d.item} · ${d.label || ""}`.trim();
-  return item;
+  for (const url of files) {
+    try {
+      const txt = await fetchText(url);
+      const series = parseHistoryText(txt, isDriver);
+      state.cache.set(item, series);
+      return series;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+
+  // si no encuentra ninguno, cachea vacío para no reintentar infinito
+  state.cache.set(item, []);
+  if (lastErr) console.warn("No pude cargar histórico para", item, "probé:", files, "último error:", lastErr);
+  return [];
 }
 
 function emptyLayoutCommon(title) {
@@ -393,7 +501,6 @@ async function redrawS(rangeKey) {
     ...emptyLayoutCommon("Temperaturas (S)"),
     yaxis: { title: "Temperatura (°C)", showgrid: true, zeroline: false, automargin: true }
   };
-
   const config = { responsive: true, scrollZoom: true, displaylogo: false };
 
   if (!traces.length) {
@@ -436,7 +543,6 @@ async function redrawD(rangeKey) {
     ...emptyLayoutCommon("Drivers (D)"),
     yaxis: { title: "Estado (0/1)", range: [-0.1, 1.1], showgrid: true, zeroline: false, automargin: true }
   };
-
   const config = { responsive: true, scrollZoom: true, displaylogo: false };
 
   if (!traces.length) {
@@ -494,7 +600,7 @@ function resetZoomS() {
 }
 function resetZoomD() {
   if (!window.Plotly) return;
-  Plotly.relayout("plotD", { "xaxis.autorange": true, "yaxis.autorange": false });
+  Plotly.relayout("plotD", { "xaxis.autorange": true });
 }
 
 async function init() {
@@ -506,7 +612,7 @@ async function init() {
     showError(
       "No se pudo cargar Plotly.\n" +
       "Si estás abriendo desde github.com/blob, no va a funcionar.\n" +
-      "Ábrelo desde GitHub Pages (https://TUUSUARIO.github.io/TUREPO/visor.html).\n"
+      "Ábrelo desde GitHub Pages.\n"
     );
     return;
   }
@@ -516,24 +622,35 @@ async function init() {
     const meta = await fetchJSON(`${DATA_DIR}/latest_all.json`);
     state.meta = meta;
 
-    state.sensors = (meta.sensors || [])
-      .filter(x => /^S\d+$/.test(String(x.item||"").trim()))
-      .map(x => ({ item: String(x.item).trim(), label: x.label || "", units: x.units || "" }))
-      .sort((a,b) => Number(a.item.slice(1)) - Number(b.item.slice(1)));
+    const { sensors, drivers } = extractSD(meta);
 
-    state.drivers = (meta.drivers || [])
-      .filter(x => /^D\d+$/.test(String(x.item||"").trim()))
-      .map(x => ({ item: String(x.item).trim(), label: x.label || "", units: x.units || "" }))
-      .sort((a,b) => Number(a.item.slice(1)) - Number(b.item.slice(1)));
+    state.sensors = sensors.map(x => ({ item: x.item, label: x.label || "", units: x.units || "" }));
+    state.drivers = drivers.map(x => ({ item: x.item, label: x.label || "", units: x.units || "" }));
 
-    // selección inicial vacía (si quieres defaults, añade aquí)
+    // guarda valores actuales si existen
+    state.latestValue.clear();
+    for (const x of [...sensors, ...drivers]) {
+      if (x.value !== undefined) state.latestValue.set(x.item, x.value);
+    }
+
+    // Selección inicial: si hay pocos drivers, los marco todos (así “se ven” sí o sí)
     state.selectedS = new Set();
     state.selectedD = new Set();
+    if (state.drivers.length > 0) state.drivers.forEach(d => state.selectedD.add(d.item));
 
     renderLists();
-
-    // dibuja vacío
     await redrawAll();
+
+    // Si NO detectó drivers, lo aviso con pistas concretas
+    if (state.drivers.length === 0) {
+      showError(
+        "He cargado latest_all.json pero no he encontrado ningún driver D.\n" +
+        "Causas típicas:\n" +
+        " - Tu JSON no incluye objetos con item=\"D1\", \"D2\"...\n" +
+        " - Los drivers vienen con otro formato de 'item'.\n" +
+        "Solución: abre la consola (F12) y mira el JSON. Los drivers deben tener item tipo D1.\n"
+      );
+    }
 
   } catch (e) {
     console.error(e);
@@ -547,31 +664,25 @@ $("btnReload").addEventListener("click", async () => {
   state.cache.clear();
   await init();
 });
-
 $("btnResetZoomS").addEventListener("click", resetZoomS);
 $("btnResetZoomD").addEventListener("click", resetZoomD);
-
 $("rangeSel").addEventListener("change", () => redrawAll());
 
 $("sAll").addEventListener("click", () => {
   state.sensors.forEach(s => state.selectedS.add(s.item));
-  renderLists();
-  redrawAll();
+  renderLists(); redrawAll();
 });
 $("sNone").addEventListener("click", () => {
   state.selectedS.clear();
-  renderLists();
-  redrawAll();
+  renderLists(); redrawAll();
 });
 $("dAll").addEventListener("click", () => {
   state.drivers.forEach(d => state.selectedD.add(d.item));
-  renderLists();
-  redrawAll();
+  renderLists(); redrawAll();
 });
 $("dNone").addEventListener("click", () => {
   state.selectedD.clear();
-  renderLists();
-  redrawAll();
+  renderLists(); redrawAll();
 });
 
 init();
