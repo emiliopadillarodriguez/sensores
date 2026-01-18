@@ -1,16 +1,16 @@
 {
-  "timestamp_utc": "2026-01-18T21:55:30+00:00",
+  "timestamp_utc": "2026-01-18T22:27:48+00:00",
   "drivers": [
     {
       "item": "D1",
       "label": "M-P B. 5.2 - Calefacción",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
       "item": "D2",
       "label": "M-P B. 5.1 - Calefacción",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -40,13 +40,13 @@
     {
       "item": "D7",
       "label": "M-P B. 3B.1 - Sec. ACS",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
       "item": "D8",
       "label": "M-P B. 3B.2 - Sec. ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {

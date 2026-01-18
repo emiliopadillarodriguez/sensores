@@ -1,58 +1,58 @@
 {
-  "timestamp_utc": "2026-01-18T21:55:30+00:00",
+  "timestamp_utc": "2026-01-18T22:27:48+00:00",
   "sensors": [
     {
       "item": "S1",
       "label": "Tª Exterior",
-      "value": "3.12",
+      "value": "0.49",
       "units": "ºC"
     },
     {
       "item": "S2",
       "label": "Tª Imp. Cald. 1 ACS",
-      "value": "18.46",
+      "value": "18.63",
       "units": "DegC"
     },
     {
       "item": "S3",
       "label": "Tª Imp. Cald. 2 Calef.",
-      "value": "66.89",
+      "value": "68.39",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "Tª Ret. Cald. 1 ACS",
-      "value": "61.82",
+      "value": "63.58",
       "units": "DegC"
     },
     {
       "item": "S5",
       "label": "Tª Ret. Cald. 2 Calef.",
-      "value": "64.33",
+      "value": "64.75",
       "units": "DegC"
     },
     {
       "item": "S7",
       "label": "Tª Ida Calefacción",
-      "value": "63.37",
+      "value": "64.36",
       "units": "DegC"
     },
     {
       "item": "S8",
       "label": "Tª Ida Primario ACS",
-      "value": "66.87",
+      "value": "68.25",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "Tª Depósito ACS",
-      "value": "50.19",
+      "value": "52.30",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "Tª Consumo ACS",
-      "value": "50.22",
+      "value": "52.17",
       "units": "DegC"
     },
     {
@@ -64,25 +64,25 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "45.66",
+      "value": "47.11",
       "units": "DegC"
     },
     {
       "item": "S14",
       "label": "Tª Retorno Calefacción",
-      "value": "64.54",
+      "value": "65.11",
       "units": "DegC"
     },
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "62.20",
+      "value": "63.96",
       "units": "DegC"
     },
     {
       "item": "S16",
       "label": "Tª Paneles Solares",
-      "value": "0.54",
+      "value": "-0.04",
       "units": "DegC"
     },
     {
@@ -94,7 +94,7 @@
     {
       "item": "S18",
       "label": "Tª Deposito 2 Solar",
-      "value": "17.71",
+      "value": "17.51",
       "units": "DegC"
     },
     {
