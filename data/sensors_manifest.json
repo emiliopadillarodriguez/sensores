@@ -1,4 +1,83 @@
 {
-  "timestamp_utc": "2026-01-31T10:00:08+00:00",
-  "files": []
+  "timestamp_utc": "2026-01-31T10:39:10+00:00",
+  "files": [
+    {
+      "item": "S12",
+      "label": "Energía C. Calefaccion",
+      "units": "WH",
+      "file": "S12.txt"
+    },
+    {
+      "item": "S13",
+      "label": "Tª Retorno ACS",
+      "units": "DegC",
+      "file": "S13.txt"
+    },
+    {
+      "item": "S14",
+      "label": "Tª Retorno Calefacción",
+      "units": "DegC",
+      "file": "S14.txt"
+    },
+    {
+      "item": "S15",
+      "label": "Tª Retorno Primario ACS",
+      "units": "DegC",
+      "file": "S15.txt"
+    },
+    {
+      "item": "S16",
+      "label": "Tª Paneles Solares",
+      "units": "DegC",
+      "file": "S16.txt"
+    },
+    {
+      "item": "S17",
+      "label": "Tª Deposito 1 Solar",
+      "units": "DegC",
+      "file": "S17.txt"
+    },
+    {
+      "item": "S18",
+      "label": "Tª Deposito 2 Solar",
+      "units": "DegC",
+      "file": "S18.txt"
+    },
+    {
+      "item": "S19",
+      "label": "Energía C. Solar",
+      "units": "WH",
+      "file": "S19.txt"
+    },
+    {
+      "item": "S20",
+      "label": "Energía C. ACS",
+      "units": "WH",
+      "file": "S20.txt"
+    },
+    {
+      "item": "S21",
+      "label": "Volumen C. Calefaccion",
+      "units": "m3",
+      "file": "S21.txt"
+    },
+    {
+      "item": "S27",
+      "label": "Tª Dif. C. Calefaccion",
+      "units": "DegC",
+      "file": "S27.txt"
+    },
+    {
+      "item": "S28",
+      "label": "Tª Dif. C. Solar",
+      "units": "DegC",
+      "file": "S28.txt"
+    },
+    {
+      "item": "S29",
+      "label": "Tª Dif. C. ACS",
+      "units": "DegC",
+      "file": "S29.txt"
+    }
+  ]
 }
