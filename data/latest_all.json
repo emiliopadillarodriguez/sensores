@@ -1,6 +1,561 @@
 {
-  "timestamp_utc": "2026-02-01T23:59:09+00:00",
-  "sensors": [],
-  "drivers": [],
-  "items": []
+  "timestamp_utc": "2026-02-02T03:15:36+00:00",
+  "sensors": [
+    {
+      "item": "S1",
+      "label": "Tª Exterior",
+      "value": "5.96",
+      "units": "ºC"
+    },
+    {
+      "item": "S2",
+      "label": "Tª Imp. Cald. 1 ACS",
+      "value": "20.58",
+      "units": "DegC"
+    },
+    {
+      "item": "S3",
+      "label": "Tª Imp. Cald. 2 Calef.",
+      "value": "69.42",
+      "units": "DegC"
+    },
+    {
+      "item": "S4",
+      "label": "Tª Ret. Cald. 1 ACS",
+      "value": "67.20",
+      "units": "DegC"
+    },
+    {
+      "item": "S5",
+      "label": "Tª Ret. Cald. 2 Calef.",
+      "value": "65.13",
+      "units": "DegC"
+    },
+    {
+      "item": "S7",
+      "label": "Tª Ida Calefacción",
+      "value": "65.94",
+      "units": "DegC"
+    },
+    {
+      "item": "S8",
+      "label": "Tª Ida Primario ACS",
+      "value": "69.42",
+      "units": "DegC"
+    },
+    {
+      "item": "S9",
+      "label": "Tª Depósito ACS",
+      "value": "60.46",
+      "units": "DegC"
+    },
+    {
+      "item": "S10",
+      "label": "Tª Consumo ACS",
+      "value": "60.47",
+      "units": "DegC"
+    },
+    {
+      "item": "S12",
+      "label": "Energía C. Calefaccion",
+      "value": "351400000.00",
+      "units": "WH"
+    },
+    {
+      "item": "S13",
+      "label": "Tª Retorno ACS",
+      "value": "55.88",
+      "units": "DegC"
+    },
+    {
+      "item": "S14",
+      "label": "Tª Retorno Calefacción",
+      "value": "65.38",
+      "units": "DegC"
+    },
+    {
+      "item": "S15",
+      "label": "Tª Retorno Primario ACS",
+      "value": "67.66",
+      "units": "DegC"
+    },
+    {
+      "item": "S16",
+      "label": "Tª Paneles Solares",
+      "value": "8.28",
+      "units": "DegC"
+    },
+    {
+      "item": "S17",
+      "label": "Tª Deposito 1 Solar",
+      "value": "10.57",
+      "units": "DegC"
+    },
+    {
+      "item": "S18",
+      "label": "Tª Deposito 2 Solar",
+      "value": "14.23",
+      "units": "DegC"
+    },
+    {
+      "item": "S19",
+      "label": "Energía C. Solar",
+      "value": "6830000.00",
+      "units": "WH"
+    },
+    {
+      "item": "S20",
+      "label": "Energía C. ACS",
+      "value": "198240000.00",
+      "units": "WH"
+    },
+    {
+      "item": "S21",
+      "label": "Volumen C. Calefaccion",
+      "value": "202070.00",
+      "units": "m3"
+    },
+    {
+      "item": "S27",
+      "label": "Tª Dif. C. Calefaccion",
+      "value": "2.88",
+      "units": "DegC"
+    },
+    {
+      "item": "S28",
+      "label": "Tª Dif. C. Solar",
+      "value": "3.33",
+      "units": "DegC"
+    },
+    {
+      "item": "S29",
+      "label": "Tª Dif. C. ACS",
+      "value": "7.73",
+      "units": "DegC"
+    }
+  ],
+  "drivers": [
+    {
+      "item": "D1",
+      "label": "M-P B. 5.2 - Calefacción",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D2",
+      "label": "M-P B. 5.1 - Calefacción",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D3",
+      "label": "ON-OFF B. 1 Caldera ACS",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D4",
+      "label": "M-P B. 2 - Caldera de Calefacción",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D5",
+      "label": "ON-OFF B. 3A.1 - Prim. ACS",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D6",
+      "label": "ON-OFF B. 3A.2 - Prim. ACS",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D7",
+      "label": "M-P B. 3B.1 - Sec. ACS",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D8",
+      "label": "M-P B. 3B.2 - Sec. ACS",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D9",
+      "label": "M-P B. 7.1 - Paneles Solares",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D10",
+      "label": "M-P B. 7.2 - Paneles Solares",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D12",
+      "label": "A-C V2V Caldera 2",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D13",
+      "label": "M-P Quemador Caldera 2",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D15",
+      "label": "A-C V2V Caldera 1",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D16",
+      "label": "M-P Quemador Caldera 1",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D17",
+      "label": "M-P B. 6 - Sec. Paneles Solares",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D19",
+      "label": "V3V Aerotermo",
+      "value": "0.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D20",
+      "label": "V3V Consumo ACS",
+      "value": "0.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D21",
+      "label": "V3V Piscina",
+      "value": "0.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D22",
+      "label": "V3V Intercambiador Solar",
+      "value": "100.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D24",
+      "label": "M-P B. 4 Retorno ACS",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D27",
+      "label": "Regulacion Quemador Caldera",
+      "value": "100.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D28",
+      "label": "On-Off B. 8.1 - Piscina",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D29",
+      "label": "On-Off B. 8.2 - Piscina",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D30",
+      "label": "On-Off Aerotermo",
+      "value": "Off",
+      "units": "Normal"
+    }
+  ],
+  "items": [
+    {
+      "item": "S1",
+      "label": "Tª Exterior",
+      "value": "5.96",
+      "units": "ºC"
+    },
+    {
+      "item": "S2",
+      "label": "Tª Imp. Cald. 1 ACS",
+      "value": "20.58",
+      "units": "DegC"
+    },
+    {
+      "item": "S3",
+      "label": "Tª Imp. Cald. 2 Calef.",
+      "value": "69.42",
+      "units": "DegC"
+    },
+    {
+      "item": "S4",
+      "label": "Tª Ret. Cald. 1 ACS",
+      "value": "67.20",
+      "units": "DegC"
+    },
+    {
+      "item": "S5",
+      "label": "Tª Ret. Cald. 2 Calef.",
+      "value": "65.13",
+      "units": "DegC"
+    },
+    {
+      "item": "S7",
+      "label": "Tª Ida Calefacción",
+      "value": "65.94",
+      "units": "DegC"
+    },
+    {
+      "item": "S8",
+      "label": "Tª Ida Primario ACS",
+      "value": "69.42",
+      "units": "DegC"
+    },
+    {
+      "item": "S9",
+      "label": "Tª Depósito ACS",
+      "value": "60.46",
+      "units": "DegC"
+    },
+    {
+      "item": "S10",
+      "label": "Tª Consumo ACS",
+      "value": "60.47",
+      "units": "DegC"
+    },
+    {
+      "item": "S12",
+      "label": "Energía C. Calefaccion",
+      "value": "351400000.00",
+      "units": "WH"
+    },
+    {
+      "item": "S13",
+      "label": "Tª Retorno ACS",
+      "value": "55.88",
+      "units": "DegC"
+    },
+    {
+      "item": "S14",
+      "label": "Tª Retorno Calefacción",
+      "value": "65.38",
+      "units": "DegC"
+    },
+    {
+      "item": "S15",
+      "label": "Tª Retorno Primario ACS",
+      "value": "67.66",
+      "units": "DegC"
+    },
+    {
+      "item": "S16",
+      "label": "Tª Paneles Solares",
+      "value": "8.28",
+      "units": "DegC"
+    },
+    {
+      "item": "S17",
+      "label": "Tª Deposito 1 Solar",
+      "value": "10.57",
+      "units": "DegC"
+    },
+    {
+      "item": "S18",
+      "label": "Tª Deposito 2 Solar",
+      "value": "14.23",
+      "units": "DegC"
+    },
+    {
+      "item": "S19",
+      "label": "Energía C. Solar",
+      "value": "6830000.00",
+      "units": "WH"
+    },
+    {
+      "item": "S20",
+      "label": "Energía C. ACS",
+      "value": "198240000.00",
+      "units": "WH"
+    },
+    {
+      "item": "S21",
+      "label": "Volumen C. Calefaccion",
+      "value": "202070.00",
+      "units": "m3"
+    },
+    {
+      "item": "S27",
+      "label": "Tª Dif. C. Calefaccion",
+      "value": "2.88",
+      "units": "DegC"
+    },
+    {
+      "item": "S28",
+      "label": "Tª Dif. C. Solar",
+      "value": "3.33",
+      "units": "DegC"
+    },
+    {
+      "item": "S29",
+      "label": "Tª Dif. C. ACS",
+      "value": "7.73",
+      "units": "DegC"
+    },
+    {
+      "item": "D1",
+      "label": "M-P B. 5.2 - Calefacción",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D2",
+      "label": "M-P B. 5.1 - Calefacción",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D3",
+      "label": "ON-OFF B. 1 Caldera ACS",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D4",
+      "label": "M-P B. 2 - Caldera de Calefacción",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D5",
+      "label": "ON-OFF B. 3A.1 - Prim. ACS",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D6",
+      "label": "ON-OFF B. 3A.2 - Prim. ACS",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D7",
+      "label": "M-P B. 3B.1 - Sec. ACS",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D8",
+      "label": "M-P B. 3B.2 - Sec. ACS",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D9",
+      "label": "M-P B. 7.1 - Paneles Solares",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D10",
+      "label": "M-P B. 7.2 - Paneles Solares",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D12",
+      "label": "A-C V2V Caldera 2",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D13",
+      "label": "M-P Quemador Caldera 2",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D15",
+      "label": "A-C V2V Caldera 1",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D16",
+      "label": "M-P Quemador Caldera 1",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D17",
+      "label": "M-P B. 6 - Sec. Paneles Solares",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D19",
+      "label": "V3V Aerotermo",
+      "value": "0.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D20",
+      "label": "V3V Consumo ACS",
+      "value": "0.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D21",
+      "label": "V3V Piscina",
+      "value": "0.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D22",
+      "label": "V3V Intercambiador Solar",
+      "value": "100.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D24",
+      "label": "M-P B. 4 Retorno ACS",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D27",
+      "label": "Regulacion Quemador Caldera",
+      "value": "100.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D28",
+      "label": "On-Off B. 8.1 - Piscina",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D29",
+      "label": "On-Off B. 8.2 - Piscina",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D30",
+      "label": "On-Off Aerotermo",
+      "value": "Off",
+      "units": "Normal"
+    }
+  ]
 }
