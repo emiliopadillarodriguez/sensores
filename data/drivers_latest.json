@@ -1,6 +1,66 @@
 {
-  "timestamp_utc": "2026-02-03T07:56:16+00:00",
+  "timestamp_utc": "2026-02-03T08:51:41+00:00",
   "drivers": [
+    {
+      "item": "D12",
+      "label": "A-C V2V Caldera 2",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D13",
+      "label": "M-P Quemador Caldera 2",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D15",
+      "label": "A-C V2V Caldera 1",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D16",
+      "label": "M-P Quemador Caldera 1",
+      "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D17",
+      "label": "M-P B. 6 - Sec. Paneles Solares",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D19",
+      "label": "V3V Aerotermo",
+      "value": "0.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D20",
+      "label": "V3V Consumo ACS",
+      "value": "100.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D21",
+      "label": "V3V Piscina",
+      "value": "0.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D22",
+      "label": "V3V Intercambiador Solar",
+      "value": "100.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D24",
+      "label": "M-P B. 4 Retorno ACS",
+      "value": "On",
+      "units": "Normal"
+    },
     {
       "item": "D27",
       "label": "Regulacion Quemador Caldera",
