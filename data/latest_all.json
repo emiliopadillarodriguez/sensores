@@ -1,58 +1,58 @@
 {
-  "timestamp_utc": "2026-02-08T05:17:27+00:00",
+  "timestamp_utc": "2026-02-08T06:27:13+00:00",
   "sensors": [
     {
       "item": "S1",
       "label": "Tª Exterior",
-      "value": "1.08",
+      "value": "1.19",
       "units": "ºC"
     },
     {
       "item": "S2",
       "label": "Tª Imp. Cald. 1 ACS",
-      "value": "18.05",
+      "value": "18.01",
       "units": "DegC"
     },
     {
       "item": "S3",
       "label": "Tª Imp. Cald. 2 Calef.",
-      "value": "67.07",
+      "value": "66.89",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "Tª Ret. Cald. 1 ACS",
-      "value": "64.75",
+      "value": "65.13",
       "units": "DegC"
     },
     {
       "item": "S5",
       "label": "Tª Ret. Cald. 2 Calef.",
-      "value": "57.95",
+      "value": "61.18",
       "units": "DegC"
     },
     {
       "item": "S7",
       "label": "Tª Ida Calefacción",
-      "value": "62.98",
+      "value": "63.18",
       "units": "DegC"
     },
     {
       "item": "S8",
       "label": "Tª Ida Primario ACS",
-      "value": "66.68",
+      "value": "66.89",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "Tª Depósito ACS",
-      "value": "60.07",
+      "value": "60.82",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "Tª Consumo ACS",
-      "value": "60.07",
+      "value": "60.84",
       "units": "DegC"
     },
     {
@@ -64,19 +64,19 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "56.32",
+      "value": "56.47",
       "units": "DegC"
     },
     {
       "item": "S14",
       "label": "Tª Retorno Calefacción",
-      "value": "58.40",
+      "value": "61.43",
       "units": "DegC"
     },
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "65.32",
+      "value": "65.53",
       "units": "DegC"
     },
     {
@@ -88,7 +88,7 @@
     {
       "item": "S17",
       "label": "Tª Deposito 1 Solar",
-      "value": "10.88",
+      "value": "10.91",
       "units": "DegC"
     },
     {
@@ -284,55 +284,55 @@
     {
       "item": "S1",
       "label": "Tª Exterior",
-      "value": "1.08",
+      "value": "1.19",
       "units": "ºC"
     },
     {
       "item": "S2",
       "label": "Tª Imp. Cald. 1 ACS",
-      "value": "18.05",
+      "value": "18.01",
       "units": "DegC"
     },
     {
       "item": "S3",
       "label": "Tª Imp. Cald. 2 Calef.",
-      "value": "67.07",
+      "value": "66.89",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "Tª Ret. Cald. 1 ACS",
-      "value": "64.75",
+      "value": "65.13",
       "units": "DegC"
     },
     {
       "item": "S5",
       "label": "Tª Ret. Cald. 2 Calef.",
-      "value": "57.95",
+      "value": "61.18",
       "units": "DegC"
     },
     {
       "item": "S7",
       "label": "Tª Ida Calefacción",
-      "value": "62.98",
+      "value": "63.18",
       "units": "DegC"
     },
     {
       "item": "S8",
       "label": "Tª Ida Primario ACS",
-      "value": "66.68",
+      "value": "66.89",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "Tª Depósito ACS",
-      "value": "60.07",
+      "value": "60.82",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "Tª Consumo ACS",
-      "value": "60.07",
+      "value": "60.84",
       "units": "DegC"
     },
     {
@@ -344,19 +344,19 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "56.32",
+      "value": "56.47",
       "units": "DegC"
     },
     {
       "item": "S14",
       "label": "Tª Retorno Calefacción",
-      "value": "58.40",
+      "value": "61.43",
       "units": "DegC"
     },
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "65.32",
+      "value": "65.53",
       "units": "DegC"
     },
     {
@@ -368,7 +368,7 @@
     {
       "item": "S17",
       "label": "Tª Deposito 1 Solar",
-      "value": "10.88",
+      "value": "10.91",
       "units": "DegC"
     },
     {
