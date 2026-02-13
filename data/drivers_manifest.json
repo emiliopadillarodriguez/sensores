@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-02-13T19:04:25+00:00",
+  "timestamp_utc": "2026-02-13T19:54:54+00:00",
   "files": [
     {
       "item": "D1",
@@ -120,30 +120,6 @@
       "label": "M-P B. 4 Retorno ACS",
       "units": "Normal",
       "file": "drv_D24.txt"
-    },
-    {
-      "item": "D27",
-      "label": "Regulacion Quemador Caldera",
-      "units": "Normal",
-      "file": "drv_D27.txt"
-    },
-    {
-      "item": "D28",
-      "label": "On-Off B. 8.1 - Piscina",
-      "units": "Normal",
-      "file": "drv_D28.txt"
-    },
-    {
-      "item": "D29",
-      "label": "On-Off B. 8.2 - Piscina",
-      "units": "Normal",
-      "file": "drv_D29.txt"
-    },
-    {
-      "item": "D30",
-      "label": "On-Off Aerotermo",
-      "units": "Normal",
-      "file": "drv_D30.txt"
     }
   ]
 }
