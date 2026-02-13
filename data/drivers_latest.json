@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-02-13T19:54:54+00:00",
+  "timestamp_utc": "2026-02-13T20:49:40+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -119,6 +119,30 @@
       "item": "D24",
       "label": "M-P B. 4 Retorno ACS",
       "value": "On",
+      "units": "Normal"
+    },
+    {
+      "item": "D27",
+      "label": "Regulacion Quemador Caldera",
+      "value": "100.00",
+      "units": "Normal"
+    },
+    {
+      "item": "D28",
+      "label": "On-Off B. 8.1 - Piscina",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D29",
+      "label": "On-Off B. 8.2 - Piscina",
+      "value": "Off",
+      "units": "Normal"
+    },
+    {
+      "item": "D30",
+      "label": "On-Off Aerotermo",
+      "value": "Off",
       "units": "Normal"
     }
   ]
