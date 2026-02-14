@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-02-14T11:01:21+00:00",
+  "timestamp_utc": "2026-02-14T11:38:00+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -58,7 +58,7 @@
     {
       "item": "D10",
       "label": "M-P B. 7.2 - Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -88,7 +88,7 @@
     {
       "item": "D17",
       "label": "M-P B. 6 - Sec. Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -112,7 +112,7 @@
     {
       "item": "D22",
       "label": "V3V Intercambiador Solar",
-      "value": "0.00",
+      "value": "100.00",
       "units": "Normal"
     },
     {
