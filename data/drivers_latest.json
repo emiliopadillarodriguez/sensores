@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-02-15T11:56:46+00:00",
+  "timestamp_utc": "2026-02-15T13:10:24+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -112,7 +112,7 @@
     {
       "item": "D22",
       "label": "V3V Intercambiador Solar",
-      "value": "100.00",
+      "value": "0.00",
       "units": "Normal"
     },
     {
