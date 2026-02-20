@@ -1,10 +1,10 @@
 {
-  "timestamp_utc": "2026-02-20T18:58:31+00:00",
+  "timestamp_utc": "2026-02-20T19:41:06+00:00",
   "drivers": [
     {
       "item": "D1",
       "label": "M-P B. 5.2 - Calefacción",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -22,13 +22,13 @@
     {
       "item": "D4",
       "label": "M-P B. 2 - Caldera de Calefacción",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
       "item": "D5",
       "label": "ON-OFF B. 3A.1 - Prim. ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -40,7 +40,7 @@
     {
       "item": "D7",
       "label": "M-P B. 3B.1 - Sec. ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -64,7 +64,7 @@
     {
       "item": "D12",
       "label": "A-C V2V Caldera 2",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -76,7 +76,7 @@
     {
       "item": "D15",
       "label": "A-C V2V Caldera 1",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -112,19 +112,19 @@
     {
       "item": "D22",
       "label": "V3V Intercambiador Solar",
-      "value": "100.00",
+      "value": "0.00",
       "units": "Normal"
     },
     {
       "item": "D24",
       "label": "M-P B. 4 Retorno ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
       "item": "D27",
       "label": "Regulacion Quemador Caldera",
-      "value": "100.00",
+      "value": "0.00",
       "units": "Normal"
     },
     {
