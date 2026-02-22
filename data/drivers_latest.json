@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-02-22T19:56:37+00:00",
+  "timestamp_utc": "2026-02-22T20:37:30+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -100,7 +100,7 @@
     {
       "item": "D20",
       "label": "V3V Consumo ACS",
-      "value": "100.00",
+      "value": "9.18",
       "units": "Normal"
     },
     {
