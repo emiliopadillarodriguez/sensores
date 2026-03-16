@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-03-16T15:33:05+00:00",
+  "timestamp_utc": "2026-03-16T16:43:48+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -124,7 +124,7 @@
     {
       "item": "D27",
       "label": "Regulacion Quemador Caldera",
-      "value": "100.00",
+      "value": "84.47",
       "units": "Normal"
     },
     {
