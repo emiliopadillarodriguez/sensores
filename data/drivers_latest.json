@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-03-25T13:50:53+00:00",
+  "timestamp_utc": "2026-03-25T15:08:42+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -100,7 +100,7 @@
     {
       "item": "D20",
       "label": "V3V Consumo ACS",
-      "value": "1.39",
+      "value": "0.00",
       "units": "Normal"
     },
     {
@@ -124,7 +124,7 @@
     {
       "item": "D27",
       "label": "Regulacion Quemador Caldera",
-      "value": "90.32",
+      "value": "100.00",
       "units": "Normal"
     },
     {
