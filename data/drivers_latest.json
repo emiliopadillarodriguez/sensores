@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-04-05T09:10:06+00:00",
+  "timestamp_utc": "2026-04-05T09:57:58+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -100,7 +100,7 @@
     {
       "item": "D20",
       "label": "V3V Consumo ACS",
-      "value": "0.00",
+      "value": "100.00",
       "units": "Normal"
     },
     {
@@ -112,7 +112,7 @@
     {
       "item": "D22",
       "label": "V3V Intercambiador Solar",
-      "value": "100.00",
+      "value": "0.00",
       "units": "Normal"
     },
     {
