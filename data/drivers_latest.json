@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-04-16T16:06:44+00:00",
+  "timestamp_utc": "2026-04-16T17:45:36+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -16,7 +16,7 @@
     {
       "item": "D3",
       "label": "ON-OFF B. 1 Caldera ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -58,7 +58,7 @@
     {
       "item": "D10",
       "label": "M-P B. 7.2 - Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -70,7 +70,7 @@
     {
       "item": "D13",
       "label": "M-P Quemador Caldera 2",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
