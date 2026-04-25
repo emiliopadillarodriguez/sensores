@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-04-25T09:12:05+00:00",
+  "timestamp_utc": "2026-04-25T10:08:15+00:00",
   "files": [
     {
       "item": "S1",
@@ -114,6 +114,24 @@
       "label": "Volumen C. Calefaccion",
       "units": "m3",
       "file": "S21.txt"
+    },
+    {
+      "item": "S27",
+      "label": "Tª Dif. C. Calefaccion",
+      "units": "DegC",
+      "file": "S27.txt"
+    },
+    {
+      "item": "S28",
+      "label": "Tª Dif. C. Solar",
+      "units": "DegC",
+      "file": "S28.txt"
+    },
+    {
+      "item": "S29",
+      "label": "Tª Dif. C. ACS",
+      "units": "DegC",
+      "file": "S29.txt"
     }
   ]
 }
