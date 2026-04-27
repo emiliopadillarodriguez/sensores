@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-04-27T17:08:29+00:00",
+  "timestamp_utc": "2026-04-27T18:41:49+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -16,7 +16,7 @@
     {
       "item": "D3",
       "label": "ON-OFF B. 1 Caldera ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -100,7 +100,7 @@
     {
       "item": "D20",
       "label": "V3V Consumo ACS",
-      "value": "82.54",
+      "value": "0.00",
       "units": "Normal"
     },
     {
