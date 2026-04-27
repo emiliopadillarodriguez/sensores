@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-04-27T15:20:50+00:00",
+  "timestamp_utc": "2026-04-27T17:08:29+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -58,7 +58,7 @@
     {
       "item": "D10",
       "label": "M-P B. 7.2 - Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -70,7 +70,7 @@
     {
       "item": "D13",
       "label": "M-P Quemador Caldera 2",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -100,7 +100,7 @@
     {
       "item": "D20",
       "label": "V3V Consumo ACS",
-      "value": "100.00",
+      "value": "82.54",
       "units": "Normal"
     },
     {
