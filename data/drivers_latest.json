@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-06-08T04:48:36+00:00",
+  "timestamp_utc": "2026-06-08T09:27:05+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -58,7 +58,7 @@
     {
       "item": "D10",
       "label": "M-P B. 7.2 - Paneles Solares",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
