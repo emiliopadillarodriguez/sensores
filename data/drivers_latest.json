@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-06-08T09:27:05+00:00",
+  "timestamp_utc": "2026-06-08T13:50:52+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -34,7 +34,7 @@
     {
       "item": "D6",
       "label": "ON-OFF B. 3A.2 - Prim. ACS",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
