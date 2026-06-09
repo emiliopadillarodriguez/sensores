@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-06-09T04:47:04+00:00",
+  "timestamp_utc": "2026-06-09T08:35:16+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -28,7 +28,7 @@
     {
       "item": "D5",
       "label": "ON-OFF B. 3A.1 - Prim. ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -46,7 +46,7 @@
     {
       "item": "D8",
       "label": "M-P B. 3B.2 - Sec. ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -58,7 +58,7 @@
     {
       "item": "D10",
       "label": "M-P B. 7.2 - Paneles Solares",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
