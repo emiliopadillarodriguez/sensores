@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-06-17T14:02:17+00:00",
+  "timestamp_utc": "2026-06-17T17:25:06+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -16,7 +16,7 @@
     {
       "item": "D3",
       "label": "ON-OFF B. 1 Caldera ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -64,19 +64,19 @@
     {
       "item": "D12",
       "label": "A-C V2V Caldera 2",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
       "item": "D13",
       "label": "M-P Quemador Caldera 2",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
       "item": "D15",
       "label": "A-C V2V Caldera 1",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -124,7 +124,7 @@
     {
       "item": "D27",
       "label": "Regulacion Quemador Caldera",
-      "value": "100.00",
+      "value": "0.00",
       "units": "Normal"
     },
     {
