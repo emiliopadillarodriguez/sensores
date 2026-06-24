@@ -1,6 +1,60 @@
 {
-  "timestamp_utc": "2026-06-24T21:49:00+00:00",
+  "timestamp_utc": "2026-06-24T23:12:51+00:00",
   "sensors": [
+    {
+      "item": "S1",
+      "label": "Tª Exterior",
+      "value": "29.67",
+      "units": "ºC"
+    },
+    {
+      "item": "S2",
+      "label": "Tª Imp. Cald. 1 ACS",
+      "value": "36.81",
+      "units": "DegC"
+    },
+    {
+      "item": "S3",
+      "label": "Tª Imp. Cald. 2 Calef.",
+      "value": "60.88",
+      "units": "DegC"
+    },
+    {
+      "item": "S4",
+      "label": "Tª Ret. Cald. 1 ACS",
+      "value": "44.87",
+      "units": "DegC"
+    },
+    {
+      "item": "S5",
+      "label": "Tª Ret. Cald. 2 Calef.",
+      "value": "40.05",
+      "units": "DegC"
+    },
+    {
+      "item": "S7",
+      "label": "Tª Ida Calefacción",
+      "value": "39.05",
+      "units": "DegC"
+    },
+    {
+      "item": "S8",
+      "label": "Tª Ida Primario ACS",
+      "value": "39.84",
+      "units": "DegC"
+    },
+    {
+      "item": "S9",
+      "label": "Tª Depósito ACS",
+      "value": "48.99",
+      "units": "DegC"
+    },
+    {
+      "item": "S10",
+      "label": "Tª Consumo ACS",
+      "value": "49.11",
+      "units": "DegC"
+    },
     {
       "item": "S12",
       "label": "Energía C. Calefaccion",
@@ -10,7 +64,7 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "48.42",
+      "value": "47.94",
       "units": "DegC"
     },
     {
@@ -22,25 +76,25 @@
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "41.57",
+      "value": "47.58",
       "units": "DegC"
     },
     {
       "item": "S16",
       "label": "Tª Paneles Solares",
-      "value": "34.12",
+      "value": "31.56",
       "units": "DegC"
     },
     {
       "item": "S17",
       "label": "Tª Deposito 1 Solar",
-      "value": "58.27",
+      "value": "56.63",
       "units": "DegC"
     },
     {
       "item": "S18",
       "label": "Tª Deposito 2 Solar",
-      "value": "53.66",
+      "value": "52.81",
       "units": "DegC"
     },
     {
@@ -228,6 +282,60 @@
   ],
   "items": [
     {
+      "item": "S1",
+      "label": "Tª Exterior",
+      "value": "29.67",
+      "units": "ºC"
+    },
+    {
+      "item": "S2",
+      "label": "Tª Imp. Cald. 1 ACS",
+      "value": "36.81",
+      "units": "DegC"
+    },
+    {
+      "item": "S3",
+      "label": "Tª Imp. Cald. 2 Calef.",
+      "value": "60.88",
+      "units": "DegC"
+    },
+    {
+      "item": "S4",
+      "label": "Tª Ret. Cald. 1 ACS",
+      "value": "44.87",
+      "units": "DegC"
+    },
+    {
+      "item": "S5",
+      "label": "Tª Ret. Cald. 2 Calef.",
+      "value": "40.05",
+      "units": "DegC"
+    },
+    {
+      "item": "S7",
+      "label": "Tª Ida Calefacción",
+      "value": "39.05",
+      "units": "DegC"
+    },
+    {
+      "item": "S8",
+      "label": "Tª Ida Primario ACS",
+      "value": "39.84",
+      "units": "DegC"
+    },
+    {
+      "item": "S9",
+      "label": "Tª Depósito ACS",
+      "value": "48.99",
+      "units": "DegC"
+    },
+    {
+      "item": "S10",
+      "label": "Tª Consumo ACS",
+      "value": "49.11",
+      "units": "DegC"
+    },
+    {
       "item": "S12",
       "label": "Energía C. Calefaccion",
       "value": "351400000.00",
@@ -236,7 +344,7 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "48.42",
+      "value": "47.94",
       "units": "DegC"
     },
     {
@@ -248,25 +356,25 @@
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "41.57",
+      "value": "47.58",
       "units": "DegC"
     },
     {
       "item": "S16",
       "label": "Tª Paneles Solares",
-      "value": "34.12",
+      "value": "31.56",
       "units": "DegC"
     },
     {
       "item": "S17",
       "label": "Tª Deposito 1 Solar",
-      "value": "58.27",
+      "value": "56.63",
       "units": "DegC"
     },
     {
       "item": "S18",
       "label": "Tª Deposito 2 Solar",
-      "value": "53.66",
+      "value": "52.81",
       "units": "DegC"
     },
     {
