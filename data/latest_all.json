@@ -1,28 +1,28 @@
 {
-  "timestamp_utc": "2026-07-11T18:37:06+00:00",
+  "timestamp_utc": "2026-07-11T19:53:23+00:00",
   "sensors": [
     {
       "item": "S1",
       "label": "Tª Exterior",
-      "value": "35.19",
+      "value": "31.59",
       "units": "ºC"
     },
     {
       "item": "S2",
       "label": "Tª Imp. Cald. 1 ACS",
-      "value": "35.60",
+      "value": "35.69",
       "units": "DegC"
     },
     {
       "item": "S3",
       "label": "Tª Imp. Cald. 2 Calef.",
-      "value": "52.07",
+      "value": "59.15",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "Tª Ret. Cald. 1 ACS",
-      "value": "39.54",
+      "value": "39.44",
       "units": "DegC"
     },
     {
@@ -40,19 +40,19 @@
     {
       "item": "S8",
       "label": "Tª Ida Primario ACS",
-      "value": "42.83",
+      "value": "43.34",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "Tª Depósito ACS",
-      "value": "48.65",
+      "value": "50.08",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "Tª Consumo ACS",
-      "value": "48.67",
+      "value": "50.22",
       "units": "DegC"
     },
     {
@@ -64,7 +64,7 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "47.23",
+      "value": "48.99",
       "units": "DegC"
     },
     {
@@ -76,25 +76,25 @@
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "40.27",
+      "value": "40.40",
       "units": "DegC"
     },
     {
       "item": "S16",
       "label": "Tª Paneles Solares",
-      "value": "50.68",
+      "value": "35.60",
       "units": "DegC"
     },
     {
       "item": "S17",
       "label": "Tª Deposito 1 Solar",
-      "value": "66.30",
+      "value": "62.22",
       "units": "DegC"
     },
     {
       "item": "S18",
       "label": "Tª Deposito 2 Solar",
-      "value": "59.16",
+      "value": "55.72",
       "units": "DegC"
     },
     {
@@ -186,7 +186,7 @@
     {
       "item": "D9",
       "label": "M-P B. 7.1 - Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -284,25 +284,25 @@
     {
       "item": "S1",
       "label": "Tª Exterior",
-      "value": "35.19",
+      "value": "31.59",
       "units": "ºC"
     },
     {
       "item": "S2",
       "label": "Tª Imp. Cald. 1 ACS",
-      "value": "35.60",
+      "value": "35.69",
       "units": "DegC"
     },
     {
       "item": "S3",
       "label": "Tª Imp. Cald. 2 Calef.",
-      "value": "52.07",
+      "value": "59.15",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "Tª Ret. Cald. 1 ACS",
-      "value": "39.54",
+      "value": "39.44",
       "units": "DegC"
     },
     {
@@ -320,19 +320,19 @@
     {
       "item": "S8",
       "label": "Tª Ida Primario ACS",
-      "value": "42.83",
+      "value": "43.34",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "Tª Depósito ACS",
-      "value": "48.65",
+      "value": "50.08",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "Tª Consumo ACS",
-      "value": "48.67",
+      "value": "50.22",
       "units": "DegC"
     },
     {
@@ -344,7 +344,7 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "47.23",
+      "value": "48.99",
       "units": "DegC"
     },
     {
@@ -356,25 +356,25 @@
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "40.27",
+      "value": "40.40",
       "units": "DegC"
     },
     {
       "item": "S16",
       "label": "Tª Paneles Solares",
-      "value": "50.68",
+      "value": "35.60",
       "units": "DegC"
     },
     {
       "item": "S17",
       "label": "Tª Deposito 1 Solar",
-      "value": "66.30",
+      "value": "62.22",
       "units": "DegC"
     },
     {
       "item": "S18",
       "label": "Tª Deposito 2 Solar",
-      "value": "59.16",
+      "value": "55.72",
       "units": "DegC"
     },
     {
@@ -464,7 +464,7 @@
     {
       "item": "D9",
       "label": "M-P B. 7.1 - Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
