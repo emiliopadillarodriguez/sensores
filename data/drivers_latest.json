@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-07-21T18:01:38+00:00",
+  "timestamp_utc": "2026-07-21T19:53:16+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -46,13 +46,13 @@
     {
       "item": "D8",
       "label": "M-P B. 3B.2 - Sec. ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
       "item": "D9",
       "label": "M-P B. 7.1 - Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
