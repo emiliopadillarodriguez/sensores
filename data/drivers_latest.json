@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-07-21T15:10:10+00:00",
+  "timestamp_utc": "2026-07-21T16:43:14+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -46,13 +46,13 @@
     {
       "item": "D8",
       "label": "M-P B. 3B.2 - Sec. ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
       "item": "D9",
       "label": "M-P B. 7.1 - Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -88,19 +88,19 @@
     {
       "item": "D17",
       "label": "M-P B. 6 - Sec. Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
       "item": "D19",
       "label": "V3V Aerotermo",
-      "value": "100.00",
+      "value": "0.00",
       "units": "Normal"
     },
     {
       "item": "D20",
       "label": "V3V Consumo ACS",
-      "value": "100.00",
+      "value": "0.00",
       "units": "Normal"
     },
     {
@@ -118,7 +118,7 @@
     {
       "item": "D24",
       "label": "M-P B. 4 Retorno ACS",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -142,7 +142,7 @@
     {
       "item": "D30",
       "label": "On-Off Aerotermo",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     }
   ]
