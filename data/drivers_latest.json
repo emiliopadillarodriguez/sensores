@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-08-07T14:59:18+00:00",
+  "timestamp_utc": "2026-08-07T16:03:55+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -64,19 +64,19 @@
     {
       "item": "D12",
       "label": "A-C V2V Caldera 2",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
       "item": "D13",
       "label": "M-P Quemador Caldera 2",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
       "item": "D15",
       "label": "A-C V2V Caldera 1",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
@@ -88,7 +88,7 @@
     {
       "item": "D17",
       "label": "M-P B. 6 - Sec. Paneles Solares",
-      "value": "On",
+      "value": "Off",
       "units": "Normal"
     },
     {
@@ -112,7 +112,7 @@
     {
       "item": "D22",
       "label": "V3V Intercambiador Solar",
-      "value": "0.00",
+      "value": "100.00",
       "units": "Normal"
     },
     {
