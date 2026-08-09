@@ -1,10 +1,10 @@
 {
-  "timestamp_utc": "2026-08-09T23:11:55+00:00",
+  "timestamp_utc": "2026-08-09T23:49:45+00:00",
   "sensors": [
     {
       "item": "S1",
       "label": "Tª Exterior",
-      "value": "24.69",
+      "value": "23.77",
       "units": "ºC"
     },
     {
@@ -16,19 +16,19 @@
     {
       "item": "S3",
       "label": "Tª Imp. Cald. 2 Calef.",
-      "value": "57.96",
+      "value": "67.66",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "Tª Ret. Cald. 1 ACS",
-      "value": "47.56",
+      "value": "47.71",
       "units": "DegC"
     },
     {
       "item": "S5",
       "label": "Tª Ret. Cald. 2 Calef.",
-      "value": "41.34",
+      "value": "41.70",
       "units": "DegC"
     },
     {
@@ -40,19 +40,19 @@
     {
       "item": "S8",
       "label": "Tª Ida Primario ACS",
-      "value": "40.99",
+      "value": "43.34",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "Tª Depósito ACS",
-      "value": "51.38",
+      "value": "50.53",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "Tª Consumo ACS",
-      "value": "51.42",
+      "value": "50.68",
       "units": "DegC"
     },
     {
@@ -64,31 +64,31 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "49.23",
+      "value": "48.76",
       "units": "DegC"
     },
     {
       "item": "S14",
       "label": "Tª Retorno Calefacción",
-      "value": "41.81",
+      "value": "42.16",
       "units": "DegC"
     },
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "48.29",
+      "value": "48.40",
       "units": "DegC"
     },
     {
       "item": "S16",
       "label": "Tª Paneles Solares",
-      "value": "24.90",
+      "value": "24.83",
       "units": "DegC"
     },
     {
       "item": "S17",
       "label": "Tª Deposito 1 Solar",
-      "value": "30.27",
+      "value": "30.17",
       "units": "DegC"
     },
     {
@@ -284,7 +284,7 @@
     {
       "item": "S1",
       "label": "Tª Exterior",
-      "value": "24.69",
+      "value": "23.77",
       "units": "ºC"
     },
     {
@@ -296,19 +296,19 @@
     {
       "item": "S3",
       "label": "Tª Imp. Cald. 2 Calef.",
-      "value": "57.96",
+      "value": "67.66",
       "units": "DegC"
     },
     {
       "item": "S4",
       "label": "Tª Ret. Cald. 1 ACS",
-      "value": "47.56",
+      "value": "47.71",
       "units": "DegC"
     },
     {
       "item": "S5",
       "label": "Tª Ret. Cald. 2 Calef.",
-      "value": "41.34",
+      "value": "41.70",
       "units": "DegC"
     },
     {
@@ -320,19 +320,19 @@
     {
       "item": "S8",
       "label": "Tª Ida Primario ACS",
-      "value": "40.99",
+      "value": "43.34",
       "units": "DegC"
     },
     {
       "item": "S9",
       "label": "Tª Depósito ACS",
-      "value": "51.38",
+      "value": "50.53",
       "units": "DegC"
     },
     {
       "item": "S10",
       "label": "Tª Consumo ACS",
-      "value": "51.42",
+      "value": "50.68",
       "units": "DegC"
     },
     {
@@ -344,31 +344,31 @@
     {
       "item": "S13",
       "label": "Tª Retorno ACS",
-      "value": "49.23",
+      "value": "48.76",
       "units": "DegC"
     },
     {
       "item": "S14",
       "label": "Tª Retorno Calefacción",
-      "value": "41.81",
+      "value": "42.16",
       "units": "DegC"
     },
     {
       "item": "S15",
       "label": "Tª Retorno Primario ACS",
-      "value": "48.29",
+      "value": "48.40",
       "units": "DegC"
     },
     {
       "item": "S16",
       "label": "Tª Paneles Solares",
-      "value": "24.90",
+      "value": "24.83",
       "units": "DegC"
     },
     {
       "item": "S17",
       "label": "Tª Deposito 1 Solar",
-      "value": "30.27",
+      "value": "30.17",
       "units": "DegC"
     },
     {
