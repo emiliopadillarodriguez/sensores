@@ -1,66 +1,6 @@
 {
-  "timestamp_utc": "2026-09-07T15:53:19+00:00",
+  "timestamp_utc": "2026-09-07T19:47:43+00:00",
   "files": [
-    {
-      "item": "D1",
-      "label": "M-P B. 5.2 - Calefacción",
-      "units": "Normal",
-      "file": "drv_D1.txt"
-    },
-    {
-      "item": "D2",
-      "label": "M-P B. 5.1 - Calefacción",
-      "units": "Normal",
-      "file": "drv_D2.txt"
-    },
-    {
-      "item": "D3",
-      "label": "ON-OFF B. 1 Caldera ACS",
-      "units": "Normal",
-      "file": "drv_D3.txt"
-    },
-    {
-      "item": "D4",
-      "label": "M-P B. 2 - Caldera de Calefacción",
-      "units": "Normal",
-      "file": "drv_D4.txt"
-    },
-    {
-      "item": "D5",
-      "label": "ON-OFF B. 3A.1 - Prim. ACS",
-      "units": "Normal",
-      "file": "drv_D5.txt"
-    },
-    {
-      "item": "D6",
-      "label": "ON-OFF B. 3A.2 - Prim. ACS",
-      "units": "Normal",
-      "file": "drv_D6.txt"
-    },
-    {
-      "item": "D7",
-      "label": "M-P B. 3B.1 - Sec. ACS",
-      "units": "Normal",
-      "file": "drv_D7.txt"
-    },
-    {
-      "item": "D8",
-      "label": "M-P B. 3B.2 - Sec. ACS",
-      "units": "Normal",
-      "file": "drv_D8.txt"
-    },
-    {
-      "item": "D9",
-      "label": "M-P B. 7.1 - Paneles Solares",
-      "units": "Normal",
-      "file": "drv_D9.txt"
-    },
-    {
-      "item": "D10",
-      "label": "M-P B. 7.2 - Paneles Solares",
-      "units": "Normal",
-      "file": "drv_D10.txt"
-    },
     {
       "item": "D12",
       "label": "A-C V2V Caldera 2",
