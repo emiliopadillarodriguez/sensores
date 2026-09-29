@@ -1,5 +1,5 @@
 {
-  "timestamp_utc": "2026-09-29T02:00:23+00:00",
+  "timestamp_utc": "2026-09-29T08:35:21+00:00",
   "drivers": [
     {
       "item": "D1",
@@ -16,7 +16,7 @@
     {
       "item": "D3",
       "label": "ON-OFF B. 1 Caldera ACS",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
@@ -28,7 +28,7 @@
     {
       "item": "D5",
       "label": "ON-OFF B. 3A.1 - Prim. ACS",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
@@ -40,7 +40,7 @@
     {
       "item": "D7",
       "label": "M-P B. 3B.1 - Sec. ACS",
-      "value": "Off",
+      "value": "On",
       "units": "Normal"
     },
     {
